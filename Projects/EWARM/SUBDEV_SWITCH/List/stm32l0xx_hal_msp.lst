@@ -1,0 +1,853 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        21/Jul/2017  13:42:47
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  F:\demo\SUBDEV_SWITCH\Projects\Src\stm32l0xx_hal_msp.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Projects\Src\stm32l0xx_hal_msp.c -D STM32L053xx
+#        -D USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\stm32l0xx_hal_msp.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\stm32l0xx_hal_msp.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Projects\Src\stm32l0xx_hal_msp.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    Templates/Src/stm32l0xx_hal_msp.c
+      4            * @author  MCD Application Team
+      5            * @version V1.0.0
+      6            * @date    18-June-2014
+      7            * @brief   HAL MSP module.
+      8            *         
+      9            @verbatim
+     10           ===============================================================================
+     11                               ##### How to use this driver #####
+     12           ===============================================================================
+     13              [..]
+     14              This file is generated automatically by STM32CubeMX and eventually modified 
+     15              by the user
+     16          
+     17            @endverbatim
+     18            ******************************************************************************
+     19            * @attention
+     20            *
+     21            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+     22            *
+     23            * Redistribution and use in source and binary forms, with or without modification,
+     24            * are permitted provided that the following conditions are met:
+     25            *   1. Redistributions of source code must retain the above copyright notice,
+     26            *      this list of conditions and the following disclaimer.
+     27            *   2. Redistributions in binary form must reproduce the above copyright notice,
+     28            *      this list of conditions and the following disclaimer in the documentation
+     29            *      and/or other materials provided with the distribution.
+     30            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+     31            *      may be used to endorse or promote products derived from this software
+     32            *      without specific prior written permission.
+     33            *
+     34            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+     35            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     36            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     37            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+     38            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+     39            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+     40            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+     41            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+     42            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     43            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     44            *
+     45            ******************************************************************************
+     46            */ 
+     47          
+     48          /* Includes ------------------------------------------------------------------*/
+     49          #include "stm32l0xx_hal_msp.h"    
+     50          #include <string.h>
+     51          
+     52          /** @addtogroup STM32L0xx_HAL_Driver
+     53            * @{
+     54            */
+     55          
+     56          /** @defgroup HAL_MSP
+     57            * @brief HAL MSP module.
+     58            * @{
+     59            */
+     60          
+     61          /* Private typedef -----------------------------------------------------------*/
+     62          /* Private define ------------------------------------------------------------*/
+     63          /* Private macro -------------------------------------------------------------*/
+     64          /* Private variables ---------------------------------------------------------*/
+     65          /* Private function prototypes -----------------------------------------------*/
+     66          /* Private functions ---------------------------------------------------------*/
+     67          	
+     68          
+     69          /** @defgroup HAL_MSP_Private_Functions
+     70            * @{
+     71            */
+     72          	
+     73          SPI_HandleTypeDef SpiHandle;
+     74          
+     75          
+     76          /* IWDG and TIM handlers declaration */ 
+     77          IWDG_HandleTypeDef   IwdgHandle;                        /* 独立看门狗 */
+     78          TIM_HandleTypeDef    Input_Handle;                      /* 独立看门狗定时器 */
+     79          u16 tmpCC4[2] = {0, 0};
+     80          volatile uint32_t uwLsiFreq = 0;
+     81          volatile uint32_t uwCaptureNumber = 0;
+     82          volatile uint32_t uwPeriodValue = 0;
+     83          
+     84          volatile u8 Pvd_Flag=0;
+     85          
+     86          
+     87          /**
+     88            * @brief  Turns selected PIN ON.
+     89            * @param  GPIOx: Specifies GPIO.
+     90            * @param  GPIO_Pinx: Specifies PIN.  
+     91            * @retval None
+     92            */
+     93          void GPIOx_PINx_SET(GPIO_TypeDef* GPIOx,u16 GPIO_Pinx)
+     94          {
+     95            HAL_GPIO_WritePin(GPIOx, GPIO_Pinx, GPIO_PIN_SET);
+     96          }
+     97          
+     98          /**
+     99            * @brief  Turns selected PIN OFF.
+    100            * @param  GPIOx: Specifies GPIO.
+    101            * @param  GPIO_Pinx: Specifies PIN.  
+    102            * @retval None
+    103            */
+    104          void GPIOx_PINx_RESET(GPIO_TypeDef* GPIOx,u16 GPIO_Pinx)
+    105          {
+    106            HAL_GPIO_WritePin(GPIOx, GPIO_Pinx, GPIO_PIN_RESET);
+    107          }
+    108          
+    109          void Led_Init(void)
+    110          {
+    111            GPIO_InitTypeDef  GPIO_InitStruct;
+    112          
+    113            /* Enable the GPIO Clock */  
+    114            LED_RUN_GPIO_CLK_ENABLE();
+    115          
+    116            /* Configure the GPIO pin */
+    117            GPIO_InitStruct.Pin = LED_RUN_PIN;
+    118            GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    119            GPIO_InitStruct.Pull = GPIO_PULLUP;
+    120            GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+    121            HAL_GPIO_Init(LED_RUN_GPIO, &GPIO_InitStruct);  
+    122            LED_RUN_ON();
+    123            HAL_Delay(1000);
+    124            LED_RUN_OFF();
+    125          }
+    126          
+    127          void Led_DeInit(void)
+    128          {
+    129            GPIO_InitTypeDef  GPIO_InitStruct;
+    130          
+    131            /* Configure the GPIO pin */
+    132            GPIO_InitStruct.Pin = LED_RUN_PIN;
+    133            GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    134            GPIO_InitStruct.Pull = GPIO_NOPULL;
+    135            HAL_GPIO_Init(LED_RUN_GPIO, &GPIO_InitStruct);  
+    136          }
+    137          
+    138          void Led_Run_Toggle(void) 
+    139          {
+    140            HAL_GPIO_TogglePin(LED_RUN_GPIO, LED_RUN_PIN);
+    141          }
+    142          
+    143          
+    144          void Led_Run_Blink(u8 fre, u16 delay_m)
+    145          {
+    146            u8 i; 
+    147            Led_Init();
+    148            for(i=0;i<fre;i++)
+    149            {
+    150              LED_RUN_ON();
+    151              HAL_Delay(delay_m);
+    152              LED_RUN_OFF();
+    153              HAL_Delay(delay_m);
+    154            }
+    155            Led_DeInit();
+    156          }
+    157          
+    158          void Led_Run_Error(void)
+    159          {
+    160            Led_Init();
+    161            while(1)
+    162            {
+    163              Led_Run_Toggle();
+    164              HAL_Delay(1000);
+    165            }
+    166          }
+    167          
+    168          /**
+    169            * @brief  This function is executed in case of error occurrence.
+    170            * @param  None
+    171            * @retval None
+    172            */
+    173          void Error_Handler(void)
+    174          {
+    175            /* User may add here some code to deal with this error */
+    176            while(1)
+    177            {
+    178              HAL_NVIC_SystemReset();
+    179            }
+    180          }
+    181          
+    182          /**
+    183            * @brief  System Clock Configuration
+    184            *         The system Clock is configured as follow : 
+    185            *            System Clock source            = PLL (HSI)
+    186            *            SYSCLK(Hz)                     = 2000000
+    187            *            HCLK(Hz)                       = 2000000
+    188            *            AHB Prescaler                  = 1
+    189            *            APB1 Prescaler                 = 1
+    190            *            APB2 Prescaler                 = 1
+    191            *            HSI Frequency(Hz)              = 16000000
+    192            *            PLL_MUL                        = 4
+    193            *            PLL_DIV                        = 2
+    194            *            Flash Latency(WS)              = 1
+    195            *            Main regulator output voltage  = Scale1 mode
+    196            * @param  None
+    197            * @retval None
+    198            */
+    199          void SystemClock_Config(void)
+    200          {
+    201          
+    202            RCC_ClkInitTypeDef RCC_ClkInitStruct;
+    203            RCC_OscInitTypeDef RCC_OscInitStruct;
+    204            
+    205            /* Enable Power Control clock */
+    206            __PWR_CLK_ENABLE();
+    207          
+    208            /* The voltage scaling allows optimizing the power consumption when the device is 
+    209               clocked below the maximum system frequency, to update the voltage scaling value 
+    210               regarding system frequency refer to product datasheet.  */
+    211            __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+    212          
+    213            /* Enable HSI Oscillator and activate PLL with HSI as source */
+    214            RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+    215            RCC_OscInitStruct.HSEState = RCC_HSE_OFF;
+    216            RCC_OscInitStruct.HSIState = RCC_HSI_DIV4;
+    217            RCC_OscInitStruct.PLL.PLLState = RCC_PLL_OFF;
+    218            RCC_OscInitStruct.HSICalibrationValue = 0x10;
+    219            if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+    220            {
+    221              Error_Handler();
+    222            }
+    223          
+    224            /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2 
+    225               clocks dividers */
+    226            RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+    227            RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+    228            RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV4;
+    229            RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;  
+    230            RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;  
+    231            if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+    232            {
+    233              Error_Handler();
+    234            }
+    235          }
+    236          
+    237          
+    238          
+    239          /** @defgroup HAL_MSP_Private_Functions
+    240            * @{
+    241            */
+    242          void HAL_IWDG_MspInit(IWDG_HandleTypeDef* hiwdg)
+    243          {
+    244            __PWR_CLK_ENABLE(); 
+    245          
+    246            HAL_PWR_EnableBkUpAccess();
+    247             
+    248          }
+    249          
+    250          /**
+    251            * @brief TIM MSP Initialization 
+    252            *        This function configures the hardware resources used in this example: 
+    253            *           - Peripheral's clock enable
+    254            *           - Peripheral's GPIO Configuration  
+    255            * @param htim: TIM handle pointer
+    256            * @retval None
+    257            */
+    258          void HAL_TIM_IC_MspInit(TIM_HandleTypeDef *htim)
+    259          {
+    260            
+    261            /*## Enable peripherals and GPIO Clocks ####################################*/
+    262            /* RCC LSI clock enable */
+    263            __HAL_RCC_LSI_ENABLE();
+    264            
+    265            /* Wait till LSI is ready */
+    266            while (__HAL_RCC_GET_FLAG(RCC_FLAG_LSIRDY) == RESET)
+    267            {}
+    268          
+    269            /* TIMx Peripheral clock enable */
+    270            __TIM21_CLK_ENABLE();
+    271            
+    272            /*## Configure the NVIC for TIMx ###########################################*/
+    273            HAL_NVIC_SetPriority(TIM21_IRQn,1,0);
+    274            
+    275            /* Enable the TIM21 global Interrupt */
+    276            HAL_NVIC_EnableIRQ(TIM21_IRQn);
+    277          }
+    278          
+    279          /**
+    280            * @brief  Configures TIM21 to measure the LSI oscillator frequency. 
+    281            * @param  None
+    282            * @retval LSI Frequency
+    283            */
+    284          static u32 GetLSIFrequency(void)
+    285          {
+    286            TIM_IC_InitTypeDef    TIMInput_Config;
+    287          
+    288            /* Configure the TIM peripheral *********************************************/ 
+    289            /* Set TIMx instance */  
+    290            Input_Handle.Instance = TIM21;
+    291            
+    292            /* TIM21 configuration: Input Capture mode ---------------------
+    293               The LSI oscillator is connected to TIM21 CH1.
+    294               The Rising edge is used as active edge.
+    295               The TIM21 CCR1 is used to compute the frequency value. 
+    296            ------------------------------------------------------------ */
+    297            Input_Handle.Init.Prescaler         = 0; 
+    298            Input_Handle.Init.CounterMode       = TIM_COUNTERMODE_UP;  
+    299            Input_Handle.Init.Period            = 0xFFFF; 
+    300            Input_Handle.Init.ClockDivision     = 0;     
+    301            if(HAL_TIM_IC_Init(&Input_Handle) != HAL_OK)
+    302            {
+    303              /* Initialization Error */
+    304              Error_Handler();
+    305            }
+    306            
+    307            /* Connect internally the TIM21_CH1 Input Capture to the LSI clock output */
+    308            HAL_TIMEx_RemapConfig(&Input_Handle, TIM21_TI1_LSI);
+    309            
+    310            /* Configure the Input Capture of channel 1 */
+    311            TIMInput_Config.ICPolarity  = TIM_ICPOLARITY_RISING;
+    312            TIMInput_Config.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    313            TIMInput_Config.ICPrescaler = TIM_ICPSC_DIV8;
+    314            TIMInput_Config.ICFilter    = 0;
+    315            if(HAL_TIM_IC_ConfigChannel(&Input_Handle, &TIMInput_Config, TIM_CHANNEL_1) != HAL_OK)
+    316            {
+    317              /* Initialization Error */
+    318              Error_Handler();
+    319            }
+    320          
+    321            /* Start the TIM Input Capture measurement in interrupt mode */
+    322            if(HAL_TIM_IC_Start_IT(&Input_Handle, TIM_CHANNEL_1) != HAL_OK)
+    323            {
+    324              Error_Handler();
+    325            }
+    326          
+    327            /* Wait until the TIM21 get 2 LSI edges */
+    328            while(uwCaptureNumber != 2)
+    329            {
+    330            }
+    331          
+    332            /* Disable TIM21 CC1 Interrupt Request */
+    333            HAL_TIM_IC_Stop_IT(&Input_Handle, TIM_CHANNEL_1);
+    334            
+    335            /* Deinitialize the TIM21 peripheral registers to their default reset values */
+    336            HAL_TIM_IC_DeInit(&Input_Handle);
+    337          
+    338            return uwLsiFreq;
+    339          }
+    340          
+    341          /**
+    342            * @brief  Input Capture callback in non blocking mode 
+    343            * @param  htim : TIM IC handle
+    344            * @retval None
+    345          */
+    346          void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+    347          {    
+    348            /* Get the Input Capture value */
+    349            tmpCC4[uwCaptureNumber++] = HAL_TIM_ReadCapturedValue(&Input_Handle, TIM_CHANNEL_1);
+    350            
+    351            if (uwCaptureNumber >= 2)
+    352            {
+    353              /* Compute the period length */
+    354              uwPeriodValue = (uint16_t)(0xFFFF - tmpCC4[0] + tmpCC4[1] + 1);
+    355              
+    356              /* Frequency computation */ 
+    357              uwLsiFreq = (uint32_t) SystemCoreClock / uwPeriodValue;
+    358              uwLsiFreq *= 8;
+    359            }
+    360          }
+    361          
+    362          /**
+    363            * @brief  IWDOG_Init 
+    364            * @param  None
+    365            * @retval None
+    366          */
+    367          void IWDOG_Init(void)
+    368          {
+    369            /*##-1- Check if the system has resumed from IWDG reset ####################*/
+    370            if (__HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST) != RESET)
+    371            {    
+    372              /* Clear reset flags */
+    373              __HAL_RCC_CLEAR_RESET_FLAGS();
+    374            }
+    375          
+    376            /*##-2- Get the LSI frequency: TIM21 is used to measure the LSI frequency ###*/
+    377            uwLsiFreq = GetLSIFrequency();
+    378            
+    379            /*##-3- Configure & Initialize the IWDG peripheral ######################################*/
+    380            /* Set counter reload value to obtain 250ms IWDG TimeOut.
+    381               IWDG counter clock Frequency = LsiFreq/32
+    382               Counter Reload Value = 250ms/IWDG counter clock period
+    383                                    = 0.25s / (32/LsiFreq)
+    384                                    = LsiFreq/(32 * 4)
+    385                                    = LsiFreq/128 */
+    386            IwdgHandle.Instance = IWDG;
+    387          
+    388            IwdgHandle.Init.Prescaler = IWDG_PRESCALER_64;
+    389            IwdgHandle.Init.Reload = uwLsiFreq/128;
+    390            IwdgHandle.Init.Window = IWDG_WINDOW_DISABLE;
+    391          
+    392            if(HAL_IWDG_Init(&IwdgHandle) != HAL_OK)
+    393            {
+    394              /* Initialization Error */
+    395              Error_Handler();
+    396            }
+    397            
+    398            /*##-4- Start the IWDG #####################################################*/ 
+    399            if(HAL_IWDG_Start(&IwdgHandle) != HAL_OK)
+    400            {
+    401              Error_Handler();
+    402            }
+    403          }
+    404          /**
+    405            * @brief  Feed_Dog
+    406            * @param  None
+    407            * @retval None
+    408          */
+    409          void Feed_Dog(void)
+    410          { 
+    411            /* Refresh IWDG: reload counter */
+    412            if(HAL_IWDG_Refresh(&IwdgHandle) != HAL_OK)
+    413            {
+    414              /* Refresh Error */
+    415              Error_Handler();
+    416            }
+    417          }
+    418          
+    419          
+    420          void Eeprom_Write(u32 Address,u8 *write_buf,u16 buf_len)
+    421          {
+    422            u16 i;
+    423            
+    424            if(Address>=USER_DATA_EEPROM_BASE && Address<=USER_DATA_EEPROM_END)
+    425            {
+    426              if(HAL_FLASHEx_DATAEEPROM_Unlock() == HAL_OK)  
+    427              {
+    428                for(i=0;i<buf_len/4;i++)
+    429                  HAL_FLASHEx_DATAEEPROM_Erase(Address+i*4);  //erase a word
+    430                
+    431                for(i=0;i<buf_len;i++)
+    432                {
+    433                  HAL_FLASHEx_DATAEEPROM_Program(TYPEPROGRAM_FASTBYTE, Address+i, *(write_buf+i));
+    434                }
+    435                
+    436                HAL_FLASHEx_DATAEEPROM_Lock();     
+    437              }
+    438            }
+    439          }
+    440          
+    441          
+    442          void Eeprom_Read(u32 Address,u8 *read_buf,u16 buf_len)
+    443          {
+    444            u16 i;
+    445            if(Address>=USER_DATA_EEPROM_BASE && Address<=USER_DATA_EEPROM_END)
+    446            {
+    447              for(i=0;i<buf_len/4;i++)    
+    448                memcpy(read_buf+i*4,(const unsigned char *)(Address+i*4),4);
+    449            }
+    450          }
+    451          
+    452          /**
+    453            * @brief This function provides accurate delay (in ms) based on a variable incremented.
+    454            * @note In the default implementation , SysTick timer is the source of time base.
+    455            *       It is used to generate interrupts at regular time intervals where uwTick
+    456            *       is incremented.
+    457            * @note ThiS function is declared as __weak to be overwritten in case of other
+    458            *       implementations in user file.
+    459            * @param Delay: specifies the delay time length, in milliseconds.
+    460            * @retval None
+    461            */
+    462          void HAL_Delay(volatile u32 Delay)
+    463          {
+    464            u32 tickstart = 0U;
+    465            tickstart = HAL_GetTick();
+    466            while((HAL_GetTick() - tickstart) < Delay)
+    467            {
+    468            }
+    469          }
+    470          					
+    471          /**
+    472            * @brief SPI MSP Initialization 
+    473            *        This function configures the hardware resources used in this example: 
+    474            *           - Peripheral's clock enable
+    475            *           - Peripheral's GPIO Configuration  
+    476            *           - NVIC configuration for SPI interrupt request enable
+    477            * @param hspi: SPI handle pointer
+    478            * @retval None
+    479            */
+    480          void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
+    481          {
+    482            GPIO_InitTypeDef  GPIO_InitStruct;
+    483          
+    484            if (hspi->Instance == SPIx)
+    485            {
+    486              /*##-1- Enable peripherals and GPIO Clocks #################################*/
+    487              
+    488              /* Enable SPI clock */
+    489              SPIx_CLK_ENABLE();
+    490              
+    491              /* Enable GPIO TX/RX clock */
+    492              SPIx_SCK_GPIO_CLK_ENABLE();
+    493              SPIx_MISO_GPIO_CLK_ENABLE();
+    494              SPIx_MOSI_GPIO_CLK_ENABLE();
+    495              SPIx_CS_GPIO_CLK_ENABLE();
+    496                   
+    497          
+    498              /*##-2- Configure peripheral GPIO ##########################################*/
+    499              /* SPI SCK GPIO pin configuration  */
+    500              GPIO_InitStruct.Pin       = SPIx_SCK_PIN;
+    501              GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+    502              GPIO_InitStruct.Pull      = GPIO_PULLUP;
+    503              GPIO_InitStruct.Speed     = GPIO_SPEED_FAST;
+    504              GPIO_InitStruct.Alternate = SPIx_SCK_AF;
+    505              HAL_GPIO_Init(SPIx_SCK_GPIO_PORT, &GPIO_InitStruct);
+    506          
+    507              /* SPI MISO GPIO pin configuration  */
+    508              GPIO_InitStruct.Pin = SPIx_MISO_PIN;
+    509              GPIO_InitStruct.Alternate = SPIx_MISO_AF;
+    510              HAL_GPIO_Init(SPIx_MISO_GPIO_PORT, &GPIO_InitStruct);
+    511          
+    512              /* SPI MOSI GPIO pin configuration  */
+    513              GPIO_InitStruct.Pin = SPIx_MOSI_PIN;
+    514              GPIO_InitStruct.Alternate = SPIx_MOSI_AF;
+    515              HAL_GPIO_Init(SPIx_MOSI_GPIO_PORT, &GPIO_InitStruct);
+    516              
+    517              /* CS MOSI GPIO pin configuration  */
+    518              GPIO_InitStruct.Pin       = SPIx_CS_PIN;
+    519              GPIO_InitStruct.Mode      = GPIO_MODE_OUTPUT_PP;
+    520              GPIO_InitStruct.Pull      = GPIO_PULLUP;
+    521              GPIO_InitStruct.Speed     = GPIO_SPEED_FAST;
+    522              HAL_GPIO_Init(SPIx_CS_GPIO_PORT, &GPIO_InitStruct);
+    523              SPI_CS_SET();	
+    524              
+    525            }
+    526          }
+    527          
+    528          void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
+    529          {
+    530            GPIO_InitTypeDef  GPIO_InitStruct;
+    531          
+    532            if (hspi->Instance == SPIx)
+    533            {
+    534              /* Disnable GPIO TX/RX clock */
+    535              SPIx_CLK_DISABLE();
+    536              
+    537          //    SPIx_SCK_GPIO_CLK_DISABLE();
+    538          //    SPIx_MISO_GPIO_CLK_DISABLE();
+    539          //    SPIx_MOSI_GPIO_CLK_DISABLE();
+    540          //    SPIx_CS_GPIO_CLK_DISABLE();
+    541                   
+    542          
+    543              /*##-2- Configure peripheral GPIO ##########################################*/
+    544              /* SPI SCK GPIO pin configuration  */
+    545              GPIO_InitStruct.Pin       = SPIx_SCK_PIN;
+    546              GPIO_InitStruct.Mode      = GPIO_MODE_ANALOG;
+    547              GPIO_InitStruct.Pull      = GPIO_NOPULL;
+    548              HAL_GPIO_Init(SPIx_SCK_GPIO_PORT, &GPIO_InitStruct);
+    549          
+    550              /* SPI MISO GPIO pin configuration  */
+    551              GPIO_InitStruct.Pin       = SPIx_MISO_PIN;
+    552              GPIO_InitStruct.Mode      = GPIO_MODE_ANALOG;
+    553              GPIO_InitStruct.Pull      = GPIO_NOPULL;
+    554              HAL_GPIO_Init(SPIx_MISO_GPIO_PORT, &GPIO_InitStruct);
+    555          
+    556              /* SPI MOSI GPIO pin configuration  */
+    557              GPIO_InitStruct.Pin       = SPIx_MOSI_PIN;
+    558              GPIO_InitStruct.Mode      = GPIO_MODE_ANALOG;
+    559              GPIO_InitStruct.Pull      = GPIO_NOPULL;
+    560              HAL_GPIO_Init(SPIx_MOSI_GPIO_PORT, &GPIO_InitStruct);
+    561              
+    562              /* CS MOSI GPIO pin configuration  */
+    563              GPIO_InitStruct.Pin       = SPIx_CS_PIN;
+    564              GPIO_InitStruct.Mode      = GPIO_MODE_ANALOG;
+    565              GPIO_InitStruct.Pull      = GPIO_NOPULL;
+    566              HAL_GPIO_Init(SPIx_CS_GPIO_PORT, &GPIO_InitStruct); 
+    567            }
+    568          }
+    569          
+    570          
+    571          void SPI_Init(void)
+    572          {
+    573            /*##-1- Configure the SPI peripheral #######################################*/
+    574            /* Set the SPI parameters */
+    575            SpiHandle.Instance               = SPIx;
+    576            SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+    577            SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
+    578            SpiHandle.Init.CLKPhase          = SPI_PHASE_2EDGE;
+    579            SpiHandle.Init.CLKPolarity       = SPI_POLARITY_HIGH;
+    580            SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
+    581            SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
+    582            SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLED;  
+    583            SpiHandle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLED;
+    584            SpiHandle.Init.CRCPolynomial     = 7;
+    585            SpiHandle.Init.NSS               = SPI_NSS_SOFT;
+    586            SpiHandle.Init.Mode = SPI_MODE_MASTER;
+    587            
+    588            if(HAL_SPI_Init(&SpiHandle) != HAL_OK)
+    589            {
+    590              /* Initialization Error */
+    591              Error_Handler();
+    592            }
+    593          }
+    594          
+    595          void SPI_DeInit(void)
+    596          {
+    597            HAL_SPI_DeInit(&SpiHandle);
+    598          }
+    599          
+    600          /**
+    601            * @brief  Configures the PVD resources.
+    602            * @param  None
+    603            * @retval None
+    604            */
+    605          void PVD_Config(void)
+    606          {
+    607            PWR_PVDTypeDef sConfigPVD;
+    608            
+    609            /*##-1- Enable Power Clock #################################################*/
+    610            __PWR_CLK_ENABLE();
+    611          
+    612            /*##-2- Configure the NVIC for PVD #########################################*/
+    613            HAL_NVIC_SetPriority(PVD_IRQn, 0, 3);
+    614            HAL_NVIC_EnableIRQ(PVD_IRQn);
+    615          
+    616            /* Configure the PVD Level to 5 and generate an interrupt on rising 
+    617               edges(PVD detection level set to 2.9V, refer to the electrical characteristics
+    618               of you device datasheet for more details) */
+    619            sConfigPVD.PVDLevel = PWR_PVDLEVEL_5;  
+    620            sConfigPVD.Mode = PWR_MODE_IT_RISING;
+    621            HAL_PWR_PVDConfig(&sConfigPVD);
+    622          
+    623            /* Enable the PVD Output */
+    624            HAL_PWR_EnablePVD();
+    625          }
+    626          
+    627          
+    628          void HAL_PWR_PVDCallback(void)
+    629          {
+    630            Pvd_Flag=1;
+    631          }
+    632          
+    633          
+    634          /**
+    635            * @brief  Initializes the Global MSP.
+    636            * @param  None
+    637            * @retval None
+    638            */
+    639          void HAL_MspInit(void)
+    640          {
+    641            /* NOTE : This function is generated automatically by STM32CubeMX and eventually  
+    642                      modified by the user
+    643             */ 
+    644          }
+    645          
+    646          /**
+    647            * @brief  DeInitializes the Global MSP.
+    648            * @param  None  
+    649            * @retval None
+    650            */
+    651          void HAL_MspDeInit(void)
+    652          {
+    653            /* NOTE : This function is generated automatically by STM32CubeMX and eventually  
+    654                      modified by the user
+    655             */
+    656          }
+    657          
+    658          
+    659          /**
+    660            * @}
+    661            */
+    662          
+    663          /**
+    664            * @}
+    665            */
+    666          
+    667          /**
+    668            * @}
+    669            */
+    670          
+    671          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+      24   Eeprom_Read
+        24   -> __aeabi_memcpy
+      24   Eeprom_Write
+        24   -> HAL_FLASHEx_DATAEEPROM_Erase
+        24   -> HAL_FLASHEx_DATAEEPROM_Lock
+        24   -> HAL_FLASHEx_DATAEEPROM_Program
+        24   -> HAL_FLASHEx_DATAEEPROM_Unlock
+       8   Error_Handler
+         8   -> HAL_NVIC_SystemReset
+       8   Feed_Dog
+         8   -> HAL_IWDG_Refresh
+         8   -> HAL_NVIC_SystemReset
+       8   GPIOx_PINx_RESET
+         8   -> HAL_GPIO_WritePin
+       8   GPIOx_PINx_SET
+         8   -> HAL_GPIO_WritePin
+      16   HAL_Delay
+        16   -> HAL_GetTick
+       8   HAL_IWDG_MspInit
+         8   -> HAL_PWR_EnableBkUpAccess
+       0   HAL_MspDeInit
+       0   HAL_MspInit
+       0   HAL_PWR_PVDCallback
+      40   HAL_SPI_MspDeInit
+        40   -> HAL_GPIO_Init
+      40   HAL_SPI_MspInit
+        40   -> HAL_GPIO_Init
+        40   -> HAL_GPIO_WritePin
+      16   HAL_TIM_IC_CaptureCallback
+        16   -> HAL_TIM_ReadCapturedValue
+        16 __aeabi_uidiv
+       8   HAL_TIM_IC_MspInit
+         8   -> HAL_NVIC_EnableIRQ
+         8   -> HAL_NVIC_SetPriority
+      32   IWDOG_Init
+        32   -> HAL_IWDG_Init
+        32   -> HAL_IWDG_Start
+        32   -> HAL_NVIC_SystemReset
+        32   -> HAL_TIMEx_RemapConfig
+        32   -> HAL_TIM_IC_ConfigChannel
+        32   -> HAL_TIM_IC_DeInit
+        32   -> HAL_TIM_IC_Init
+        32   -> HAL_TIM_IC_Start_IT
+        32   -> HAL_TIM_IC_Stop_IT
+      24   Led_DeInit
+        24   -> HAL_GPIO_Init
+      32   Led_Init
+        32   -> HAL_Delay
+        32   -> HAL_GPIO_Init
+        32   -> HAL_GPIO_WritePin
+      24   Led_Run_Blink
+        24   -> HAL_Delay
+        24   -> HAL_GPIO_WritePin
+        24   -> Led_DeInit
+        24   -> Led_Init
+       8   Led_Run_Error
+         8   -> HAL_Delay
+         8   -> HAL_GPIO_TogglePin
+         8   -> Led_Init
+       8   Led_Run_Toggle
+         8   -> HAL_GPIO_TogglePin
+      16   PVD_Config
+        16   -> HAL_NVIC_EnableIRQ
+        16   -> HAL_NVIC_SetPriority
+        16   -> HAL_PWR_EnablePVD
+        16   -> HAL_PWR_PVDConfig
+       8   SPI_DeInit
+         8   -> HAL_SPI_DeInit
+       8   SPI_Init
+         8   -> HAL_NVIC_SystemReset
+         8   -> HAL_SPI_Init
+      88   SystemClock_Config
+        88   -> HAL_NVIC_SystemReset
+        88   -> HAL_RCC_ClockConfig
+        88   -> HAL_RCC_OscConfig
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable10
+       4  ??DataTable11
+       4  ??DataTable12
+       4  ??DataTable13
+       4  ??DataTable13_1
+       4  ??DataTable13_10
+       4  ??DataTable13_11
+       4  ??DataTable13_12
+       4  ??DataTable13_13
+       4  ??DataTable13_14
+       4  ??DataTable13_2
+       4  ??DataTable13_3
+       4  ??DataTable13_4
+       4  ??DataTable13_5
+       4  ??DataTable13_6
+       4  ??DataTable13_7
+       4  ??DataTable13_8
+       4  ??DataTable13_9
+       4  ??DataTable8
+       4  ??DataTable9
+       4  ??DataTable9_1
+       4  ??DataTable9_2
+      12  ?Subroutine0
+      46  Eeprom_Read
+      74  Eeprom_Write
+       8  Error_Handler
+      10  Feed_Dog
+      10  GPIOx_PINx_RESET
+      10  GPIOx_PINx_SET
+      24  HAL_Delay
+      20  HAL_IWDG_MspInit
+       2  HAL_MspDeInit
+       2  HAL_MspInit
+       8  HAL_PWR_PVDCallback
+     102  HAL_SPI_MspDeInit
+     140  HAL_SPI_MspInit
+      58  HAL_TIM_IC_CaptureCallback
+      44  HAL_TIM_IC_MspInit
+     196  IWDOG_Init
+      32  Led_DeInit
+      70  Led_Init
+      70  Led_Run_Blink
+      28  Led_Run_Error
+      16  Led_Run_Toggle
+      52  PVD_Config
+       1  Pvd_Flag
+      10  SPI_DeInit
+      46  SPI_Init
+      84  SpiHandle
+     102  SystemClock_Config
+      92  tmpCC4
+          Input_Handle
+          IwdgHandle
+          uwLsiFreq
+          uwCaptureNumber
+          uwPeriodValue
+
+ 
+   177 bytes in section .bss
+ 1 280 bytes in section .text
+ 
+ 1 280 bytes of CODE memory
+   177 bytes of DATA memory
+
+Errors: none
+Warnings: none

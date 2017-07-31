@@ -1,0 +1,469 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:18
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_rng.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_rng.c
+#        -D STM32L053xx -D USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\stm32l0xx_hal_rng.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\stm32l0xx_hal_rng.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_rng.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    stm32l0xx_hal_rng.c
+      4            * @author  MCD Application Team
+      5            * @version V1.1.0
+      6            * @date    18-June-2014
+      7            * @brief   RNG HAL module driver.
+      8            *          This file provides firmware functions to manage the following 
+      9            *          functionalities of the Random Number Generator (RNG) peripheral:
+     10            *           + Initialization/de-initialization functions
+     11            *           + Peripheral Control functions 
+     12            *           + Peripheral State functions
+     13            *         
+     14            @verbatim
+     15            ==============================================================================
+     16                               ##### How to use this driver #####
+     17            ==============================================================================
+     18              [..]
+     19                The RNG HAL driver can be used as follows:
+     20          
+     21                   (#) Enable the RNG controller clock using __RNG_CLK_ENABLE() macro.
+     22                   (#) Activate the RNG peripheral using __HAL_RNG_ENABLE() macro.
+     23                   (#) Wait until the 32 bit Random Number Generator contains a valid 
+     24                       random data using (polling/interrupt) mode.   
+     25                   (#) Get the 32 bit random number using HAL_RNG_GetRandomNumber() function.
+     26            
+     27            @endverbatim
+     28            ******************************************************************************
+     29            * @attention
+     30            *
+     31            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+     32            *
+     33            * Redistribution and use in source and binary forms, with or without modification,
+     34            * are permitted provided that the following conditions are met:
+     35            *   1. Redistributions of source code must retain the above copyright notice,
+     36            *      this list of conditions and the following disclaimer.
+     37            *   2. Redistributions in binary form must reproduce the above copyright notice,
+     38            *      this list of conditions and the following disclaimer in the documentation
+     39            *      and/or other materials provided with the distribution.
+     40            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+     41            *      may be used to endorse or promote products derived from this software
+     42            *      without specific prior written permission.
+     43            *
+     44            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+     45            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     46            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     47            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+     48            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+     49            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+     50            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+     51            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+     52            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     53            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     54            *
+     55            ******************************************************************************
+     56            */ 
+     57          
+     58          /* Includes ------------------------------------------------------------------*/
+     59          #include "stm32l0xx_hal.h"
+     60          
+     61          /** @addtogroup STM32L0xx_HAL_Driver
+     62            * @{
+     63            */
+     64          
+     65          /** @defgroup RNG 
+     66            * @brief RNG HAL module driver.
+     67            * @{
+     68            */
+     69          
+     70          #ifdef HAL_RNG_MODULE_ENABLED
+     71          #if !defined (STM32L051xx) && !defined (STM32L061xx)
+     72          
+     73          /* Private typedef -----------------------------------------------------------*/
+     74          /* Private define ------------------------------------------------------------*/
+     75          #define RNG_TIMEOUT_VALUE     1000
+     76          /* Private macro -------------------------------------------------------------*/
+     77          /* Private variables ---------------------------------------------------------*/
+     78          /* Private function prototypes -----------------------------------------------*/
+     79          /* Private functions ---------------------------------------------------------*/
+     80          
+     81          /** @defgroup RNG_Private_Functions
+     82            * @{
+     83            */
+     84          
+     85          /** @defgroup RNG_Group1 Initialization and de-initialization functions 
+     86           *  @brief    Initialization and Configuration functions. 
+     87           *
+     88          @verbatim    
+     89           ===============================================================================
+     90                    ##### Initialization and de-initialization functions #####
+     91           ===============================================================================
+     92              [..]  This section provides functions allowing to:
+     93                (+) Initialize the RNG according to the specified parameters 
+     94                    in the RNG_InitTypeDef and create the associated handle
+     95                (+) DeInitialize the RNG peripheral
+     96                (+) Initialize the RNG MSP
+     97                (+) DeInitialize RNG MSP 
+     98           
+     99          @endverbatim
+    100            * @{
+    101            */
+    102          
+    103          /**
+    104            * @brief  Initializes the RNG according to the specified
+    105            *         parameters in the RNG_InitTypeDef and creates the associated handle.
+    106            * @param  hrng: pointer to a RNG_HandleTypeDef structure that contains
+    107            *                the configuration information for RNG.
+    108            * @retval HAL status
+    109            */
+    110          HAL_StatusTypeDef HAL_RNG_Init(RNG_HandleTypeDef *hrng)
+    111          { 
+    112            /* Check the RNG handle allocation */
+    113            if(hrng == NULL)
+    114            {
+    115              return HAL_ERROR;
+    116            }
+    117             
+    118            if(hrng->State == HAL_RNG_STATE_RESET)
+    119            {
+    120              /* Init the low level hardware */
+    121              HAL_RNG_MspInit(hrng);
+    122            }
+    123          
+    124            /* Change RNG peripheral state */
+    125            hrng->State = HAL_RNG_STATE_BUSY;
+    126            
+    127            /* Enable the RNG Peripheral */
+    128            __HAL_RNG_ENABLE(hrng);
+    129            
+    130            /* Initialize the RNG state */
+    131            hrng->State = HAL_RNG_STATE_READY;
+    132            
+    133            /* Return function status */
+    134            return HAL_OK;
+    135          }
+    136          
+    137          /**
+    138            * @brief  DeInitializes the RNG peripheral. 
+    139            * @param  hrng: pointer to a RNG_HandleTypeDef structure that contains
+    140            *                the configuration information for RNG.
+    141            * @retval HAL status
+    142            */
+    143          HAL_StatusTypeDef HAL_RNG_DeInit(RNG_HandleTypeDef *hrng)
+    144          { 
+    145            /* Check the RNG peripheral state */
+    146            if(hrng->State == HAL_RNG_STATE_BUSY)
+    147            {
+    148              return HAL_BUSY;
+    149            }
+    150            
+    151            /* Update the RNG state */  
+    152            hrng->State = HAL_RNG_STATE_BUSY;
+    153            
+    154            /* Disable the RNG Peripheral */
+    155            __HAL_RNG_DISABLE(hrng);
+    156            
+    157            /* Set the RNG registers to their reset values */
+    158            hrng->Instance->CR &= 0xFFFFFFF3;
+    159            hrng->Instance->SR &= 0xFFFFFF98;
+    160            hrng->Instance->DR &= 0x0;
+    161            
+    162            /* DeInit the low level hardware */
+    163            HAL_RNG_MspDeInit(hrng);
+    164            
+    165            /* Update the RNG state */    
+    166            hrng->State = HAL_RNG_STATE_RESET; 
+    167            
+    168            /* Release Lock */
+    169            __HAL_UNLOCK(hrng);
+    170          
+    171            /* Return the function status */  
+    172            return HAL_OK;
+    173          }
+    174          
+    175          /**
+    176            * @brief  Initializes the RNG MSP.
+    177            * @param  hrng: pointer to a RNG_HandleTypeDef structure that contains
+    178            *                the configuration information for RNG.
+    179            * @retval None
+    180            */
+    181          __weak void HAL_RNG_MspInit(RNG_HandleTypeDef *hrng)
+    182          {
+    183            /* NOTE : This function Should not be modified, when the callback is needed,
+    184                      the HAL_RNG_MspInit could be implemented in the user file
+    185             */
+    186          }
+    187          
+    188          /**
+    189            * @brief  DeInitializes the RNG MSP.
+    190            * @param  hrng: pointer to a RNG_HandleTypeDef structure that contains
+    191            *                the configuration information for RNG.
+    192            * @retval None
+    193            */
+    194          __weak void HAL_RNG_MspDeInit(RNG_HandleTypeDef *hrng)
+    195          {
+    196            /* NOTE : This function Should not be modified, when the callback is needed,
+    197                      the HAL_RNG_MspDeInit could be implemented in the user file
+    198             */
+    199          }
+    200          
+    201          /**
+    202            * @}
+    203            */
+    204          
+    205          /** @defgroup RNG_Group2 Peripheral Control functions 
+    206           *  @brief    management functions. 
+    207           *
+    208          @verbatim   
+    209           ===============================================================================
+    210                                ##### Peripheral Control functions #####
+    211           ===============================================================================  
+    212              [..]  This section provides functions allowing to:
+    213                (+) Get the 32 bit Random number
+    214                (+) Get the 32 bit Random number with interrupt enabled
+    215                (+) Handle RNG interrupt request 
+    216          
+    217          
+    218          @endverbatim
+    219            * @{
+    220            */
+    221          
+    222          /**
+    223            * @brief  Returns a 32-bit random number.
+    224            * @note   Each time the random number data is read the RNG_FLAG_DRDY flag 
+    225            *         is automatically cleared.
+    226            * @param  hrng: pointer to a RNG_HandleTypeDef structure that contains
+    227            *                the configuration information for RNG.
+    228            * @retval 32-bit random number
+    229            */
+    230          uint32_t HAL_RNG_GetRandomNumber(RNG_HandleTypeDef *hrng)
+    231          {
+    232            uint32_t random32bit = 0;
+    233            uint32_t tickstart = 0;    
+    234            
+    235            /* Process Locked */
+    236            __HAL_LOCK(hrng); 
+    237            
+    238            /* Get timeout */
+    239            tickstart = HAL_GetTick();
+    240            
+    241            /* Check if data register contains valid random data */
+    242            while(__HAL_RNG_GET_FLAG(hrng, RNG_FLAG_DRDY) == RESET)
+    243            {
+    244              if((HAL_GetTick() - tickstart ) > RNG_TIMEOUT_VALUE)
+    245              {    
+    246                return HAL_TIMEOUT;
+    247              } 
+    248            }
+    249            
+    250            /* Get a 32bit Random number */ 
+    251            random32bit = hrng->Instance->DR;
+    252            
+    253            /* Process Unlocked */
+    254            __HAL_UNLOCK(hrng);
+    255            
+    256            /* Return the 32 bit random number */   
+    257            return random32bit;
+    258          }
+    259          
+    260          /**
+    261            * @brief  Returns a 32-bit random number with interrupt enabled.
+    262            * @param  hrng: pointer to a RNG_HandleTypeDef structure that contains
+    263            *                the configuration information for RNG.
+    264            * @retval 32-bit random number
+    265            */
+    266          uint32_t HAL_RNG_GetRandomNumber_IT(RNG_HandleTypeDef *hrng)
+    267          {
+    268            uint32_t random32bit = 0;
+    269            
+    270            /* Process Locked */
+    271            __HAL_LOCK(hrng);
+    272            
+    273            /* Change RNG peripheral state */  
+    274            hrng->State = HAL_RNG_STATE_BUSY;  
+    275            
+    276            /* Get a 32bit Random number */ 
+    277            random32bit = hrng->Instance->DR;
+    278            
+    279            /* Enable the RNG Interrupts: Data Ready, Clock error, Seed error */ 
+    280            __HAL_RNG_ENABLE_IT(hrng); 
+    281            
+    282            /* Return the 32 bit random number */   
+    283            return random32bit;
+    284          }
+    285          
+    286          /**
+    287            * @brief  Handles RNG interrupt request.
+    288            * @note   In the case of a clock error, the RNG is no more able to generate 
+    289            *         random numbers because the PLL48CLK clock is not correct. User has 
+    290            *         to check that the clock controller is correctly configured to provide
+    291            *         the RNG clock and clear the CEIS bit using __HAL_RNG_CLEAR_FLAG(). 
+    292            *         The clock error has no impact on the previously generated 
+    293            *         random numbers, and the RNG_DR register contents can be used.
+    294            * @note   In the case of a seed error, the generation of random numbers is 
+    295            *         interrupted as long as the SECS bit is '1'. If a number is 
+    296            *         available in the RNG_DR register, it must not be used because it may 
+    297            *         not have enough entropy. In this case, it is recommended to clear the 
+    298            *         SEIS bit using __HAL_RNG_CLEAR_FLAG(), then disable and enable 
+    299            *         the RNG peripheral to reinitialize and restart the RNG.
+    300            * @param  hrng: pointer to a RNG_HandleTypeDef structure that contains
+    301            *                the configuration information for RNG.
+    302            * @retval None
+    303          
+    304            */
+    305          void HAL_RNG_IRQHandler(RNG_HandleTypeDef *hrng)
+    306          {
+    307            /* RNG clock error interrupt occurred */
+    308            if(__HAL_RNG_GET_FLAG(hrng, RNG_IT_CEI) != RESET)
+    309            { 
+    310              HAL_RNG_ErrorCallback(hrng);
+    311              
+    312              /* Clear the clock error flag */
+    313              __HAL_RNG_CLEAR_FLAG(hrng, RNG_IT_CEI);
+    314              
+    315              /* Change RNG peripheral state */
+    316              hrng->State = HAL_RNG_STATE_ERROR;
+    317              
+    318              /* Process Unlocked */
+    319              __HAL_UNLOCK(hrng);
+    320            }
+    321            
+    322            /* RNG seed error interrupt occurred */
+    323            if(__HAL_RNG_GET_FLAG(hrng, RNG_IT_SEI) != RESET)
+    324            { 
+    325              HAL_RNG_ErrorCallback(hrng);
+    326              
+    327              /* Clear the seed error flag */
+    328              __HAL_RNG_CLEAR_FLAG(hrng, RNG_IT_SEI);
+    329              
+    330              /* Change RNG peripheral state */
+    331              hrng->State = HAL_RNG_STATE_ERROR;
+    332          
+    333              /* Process Unlocked */
+    334              __HAL_UNLOCK(hrng);    
+    335            }
+    336            
+    337            /* Check RNG data ready flag */    
+    338            if(__HAL_RNG_GET_FLAG(hrng, RNG_FLAG_DRDY) != RESET)
+    339            {
+    340              /* Data Ready callback */ 
+    341              HAL_RNG_ReadyCallback(hrng);
+    342              
+    343              /* Change RNG peripheral state */
+    344              hrng->State = HAL_RNG_STATE_READY; 
+    345                
+    346              /* Clear the RNG Data Ready flag */
+    347              __HAL_RNG_CLEAR_FLAG(hrng, RNG_FLAG_DRDY);
+    348              
+    349              /* Process Unlocked */
+    350              __HAL_UNLOCK(hrng);
+    351            }
+    352          } 
+    353          
+    354          /**
+    355            * @brief  Data Ready callback in non-blocking mode. 
+    356            * @param  hrng: pointer to a RNG_HandleTypeDef structure that contains
+    357            *                the configuration information for RNG.
+    358            * @retval None
+    359            */
+    360          
+    361          __weak void HAL_RNG_ReadyCallback(RNG_HandleTypeDef* hrng)
+    362          {
+    363            /* NOTE : This function Should not be modified, when the callback is needed,
+    364                      the HAL_RNG_ReadyCallback could be implemented in the user file
+    365             */
+    366          }
+    367          
+    368          /**
+    369            * @brief  RNG error callbacks.
+    370            * @param  hrng: pointer to a RNG_HandleTypeDef structure that contains
+    371            *                the configuration information for RNG.
+    372            * @retval None
+    373            */
+    374          __weak void HAL_RNG_ErrorCallback(RNG_HandleTypeDef *hrng)
+    375          {
+    376            /* NOTE : This function Should not be modified, when the callback is needed,
+    377                      the HAL_RNG_ErrorCallback could be implemented in the user file
+    378             */ 
+    379          }
+    380           
+    381          /**
+    382            * @}
+    383            */
+    384          
+    385          /** @defgroup RNG_Group3 Peripheral State functions 
+    386           *  @brief    Peripheral State functions. 
+    387           *
+    388          @verbatim   
+    389           ===============================================================================
+    390                                ##### Peripheral State functions #####
+    391           ===============================================================================  
+    392              [..]
+    393              This subsection permits to get in run-time the status of the peripheral 
+    394              and the data flow.
+    395          
+    396          @endverbatim
+    397            * @{
+    398            */
+    399          
+    400          /**
+    401            * @brief  Returns the RNG state.
+    402            * @param  hrng: pointer to a RNG_HandleTypeDef structure that contains
+    403            *                the configuration information for RNG.
+    404            * @retval HAL state
+    405            */
+    406          HAL_RNG_StateTypeDef HAL_RNG_GetState(RNG_HandleTypeDef *hrng)
+    407          {
+    408            return hrng->State;
+    409          }
+    410          
+    411          /**
+    412            * @}
+    413            */
+    414          
+    415          /**
+    416            * @}
+    417            */
+    418          #endif /* STM32L051xx && STM32L061xx*/
+    419          #endif /* HAL_RNG_MODULE_ENABLED */
+    420          /**
+    421            * @}
+    422            */
+    423          
+    424          /**
+    425            * @}
+    426            */
+    427          
+    428          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+    429                            
+
+
+ 
+
+ 
+
+
+Errors: none
+Warnings: none

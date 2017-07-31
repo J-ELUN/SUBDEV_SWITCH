@@ -1,0 +1,145 @@
+[Stack]
+FillEnabled=1
+OverflowWarningsEnabled=1
+WarningThreshold=90
+SpWarningsEnabled=1
+WarnLogOnly=0
+UseTrigger=1
+TriggerName=main
+LimitSize=0
+ByteLimit=50
+[stlink]
+stlinkserialNo=2798FD0D
+stlinkfoundProbes=
+[DebugChecksum]
+Checksum=605667615
+[Exceptions]
+StopOnUncaught=_ 0
+StopOnThrow=_ 0
+[CodeCoverage]
+Enabled=_ 0
+[CallStack]
+ShowArgs=0
+[Disassembly]
+MixedMode=1
+[SWOTraceHWSettings]
+OverrideDefaultClocks=0
+CpuClock=2000000
+ClockAutoDetect=1
+ClockWanted=6000000
+JtagSpeed=2000000
+Prescaler=1
+TimeStampPrescIndex=0
+TimeStampPrescData=0
+PcSampCYCTAP=1
+PcSampPOSTCNT=15
+PcSampIndex=0
+DataLogMode=0
+ITMportsEnable=0
+ITMportsTermIO=0
+ITMportsLogFile=0
+ITMlogFile=$PROJ_DIR$\ITM.log
+[JLinkDriver]
+CStepIntDis=_ 0
+[struct_types]
+Fmt0=ZIG_DEV_INFO_TYPEDEF-DstAddr	4	0
+Fmt1=ZIG_DEV_INFO_TYPEDEF-PanID	4	0
+[array_types]
+Fmt0=u8[100]	4	0
+Fmt1=u8[6]	4	0
+Fmt2=u8[8]	4	0
+Fmt3=uint8_t[5]	4	0
+[watch_formats]
+Fmt0={W}42:DstAddr	4	0
+Fmt1={W}42:PanID	4	0
+Fmt2={W}42:USARTx_ROUTER_RX_STA	4	0
+Fmt3={W}42:USARTx_SIM900_RX_STA	4	0
+Fmt4={W}42:USARTx_UM200_RX_STA	4	0
+Fmt5={W}42:dstaddr	4	0
+Fmt6={W}42:panid	4	0
+Fmt7={W}42:test	4	0
+Fmt8={W}42:test1	3	0
+Fmt9={W}42:test15	3	0
+Fmt10={W}42:test4	3	0
+Fmt11={W}42:test5	3	0
+Fmt12={W}42:xx	3	0
+[SWOTraceWindow]
+PcSampling=0
+InterruptLogs=0
+ForcedTimeStamps=0
+EventCPI=0
+EventEXC=0
+EventFOLD=0
+EventLSU=0
+EventSLEEP=0
+[PowerLog]
+LogEnabled=0
+GraphEnabled=0
+ShowTimeLog=1
+ShowTimeSum=0
+Title_0=I0
+Symbol_0=0 4 1
+LiveEnabled=0
+LiveFile=PowerLogLive.log
+[DataLog]
+LogEnabled=0
+SumEnabled=0
+GraphEnabled=0
+ShowTimeLog=1
+ShowTimeSum=1
+[EventLog]
+LogEnabled=0
+SumEnabled=0
+GraphEnabled=0
+ShowTimeLog=1
+ShowTimeSum=1
+SumSortOrder=0
+[InterruptLog]
+LogEnabled=1
+SumEnabled=0
+GraphEnabled=0
+ShowTimeLog=1
+ShowTimeSum=1
+SumSortOrder=0
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[CallStackLog]
+Enabled=0
+[PowerProbe]
+Frequency=10000
+Probe0=I0
+ProbeSetup0=2 1 1 2 0 0
+[DriverProfiling]
+Enabled=0
+Mode=3
+Graph=0
+Symbiont=0
+Exclusions=
+[Disassemble mode]
+mode=0
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\Src\stm32l0xx_it.c}.89.5" 0 0 1 "" 0 "" 0
+Count=1
+[Aliases]
+A0=_ "C:\Program Files\IAR Systems\Embedded Workbench 7.0\arm\inc\c\string.h" ""
+A1=_ "C:\Users\JG\Desktop\FSY_STM32_CODE_150811\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal.c" ""
+A2=_ "C:\Users\JG\Desktop\FSY_STM32_CODE_150811\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_rcc.c" ""
+A3=_ "C:\Users\JG\Desktop\FSY_STM32_CODE_150811\FreeRTOS\Source\portable\IAR\ARM_CM0\port.c" ""
+A4=_ "C:\Users\JG\Desktop\FSY_STM32_CODE_150811\Projects\EWARM\startup_stm32l053xx.s" ""
+A5=_ "C:\Users\JG\Desktop\My Projects\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal.c" ""
+A6=_ "C:\Users\JG\Desktop\My Projects\Projects\STM32L053C8-Discovery\Templates\Src\main.c" ""
+A7=_ "C:\Users\jiangang\Desktop\NEW15.7.2\My Projects\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_dma.c" ""
+A8=_ "C:\Users\jiangang\Desktop\Projects\Projects\STM32L053C8-Discovery\Templates\Src\system_stm32l0xx.c" ""
+A9=_ "C:\Users\jiangang\Desktop\STM32Cube_FW_L0_V1.1.0\Projects\STM32L053C8-Discovery\Templates\EWARM\startup_stm32l053xx.s" ""
+A10=_ "E:\workfile_1234567890\FSY\´úÂë\FSY_STM32_CODE_150910\FreeRTOS\Source\tasks.c" ""
+A11=_ "E:\²Î¿¼\FSY_STM32_CODE_160217\Projects\Src\main.c" ""
+A12=_ "E:\²Î¿¼\FSY_STM32_CODE_170419_no_os\Projects\Src\main.c" ""
+A13=_ "H:\demo\SUBDEV_SWITCH_0426\Projects\EWARM\startup_stm32l053xx.s" ""
+A14=_ "H:\demo\SUBDEV_SWITCH_0512\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_flash.c" ""
+Count=15
+SuppressDialog=1

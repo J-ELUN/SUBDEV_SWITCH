@@ -1,0 +1,355 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:27
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\CMSIS\Device\ST\STM32L0xx\Source\Templates\system_stm32l0xx.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\CMSIS\Device\ST\STM32L0xx\Source\Templates\system_stm32l0xx.c
+#        -D STM32L053xx -D USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\system_stm32l0xx.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\system_stm32l0xx.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Drivers\CMSIS\Device\ST\STM32L0xx\Source\Templates\system_stm32l0xx.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    system_stm32l0xx.c
+      4            * @author  MCD Application Team
+      5            * @version V1.1.0
+      6            * @date    18-June-2014
+      7            * @brief   CMSIS Cortex-M0+ Device Peripheral Access Layer System Source File.
+      8            *
+      9            *   This file provides two functions and one global variable to be called from 
+     10            *   user application:
+     11            *      - SystemInit(): This function is called at startup just after reset and 
+     12            *                      before branch to main program. This call is made inside
+     13            *                      the "startup_stm32l0xx.s" file.
+     14            *
+     15            *      - SystemCoreClock variable: Contains the core clock (HCLK), it can be used
+     16            *                                  by the user application to setup the SysTick 
+     17            *                                  timer or configure other parameters.
+     18            *                                     
+     19            *      - SystemCoreClockUpdate(): Updates the variable SystemCoreClock and must
+     20            *                                 be called whenever the core clock is changed
+     21            *                                 during program execution.
+     22            *
+     23            *
+     24            ******************************************************************************
+     25            * @attention
+     26            *
+     27            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+     28            *
+     29            * Redistribution and use in source and binary forms, with or without modification,
+     30            * are permitted provided that the following conditions are met:
+     31            *   1. Redistributions of source code must retain the above copyright notice,
+     32            *      this list of conditions and the following disclaimer.
+     33            *   2. Redistributions in binary form must reproduce the above copyright notice,
+     34            *      this list of conditions and the following disclaimer in the documentation
+     35            *      and/or other materials provided with the distribution.
+     36            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+     37            *      may be used to endorse or promote products derived from this software
+     38            *      without specific prior written permission.
+     39            *
+     40            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+     41            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     42            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     43            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+     44            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+     45            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+     46            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+     47            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+     48            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     49            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     50            *
+     51            ******************************************************************************
+     52            */
+     53          
+     54          /** @addtogroup CMSIS
+     55            * @{
+     56            */
+     57          
+     58          /** @addtogroup stm32l0xx_system
+     59            * @{
+     60            */  
+     61            
+     62          /** @addtogroup STM32L0xx_System_Private_Includes
+     63            * @{
+     64            */
+     65          
+     66          #include "stm32l0xx.h"
+     67          
+     68          #if !defined  (HSE_VALUE) 
+     69            #define HSE_VALUE    ((uint32_t)12000000) /*!< Value of the External oscillator in Hz */
+     70          #endif /* HSE_VALUE */
+     71          
+     72          #if !defined  (MSI_VALUE)
+     73            #define MSI_VALUE    ((uint32_t)2000000) /*!< Value of the Internal oscillator in Hz*/
+     74          #endif /* MSI_VALUE */
+     75             
+     76          #if !defined  (HSI_VALUE)
+     77            #define HSI_VALUE    ((uint32_t)16000000) /*!< Value of the Internal oscillator in Hz*/
+     78          #endif /* HSI_VALUE */
+     79          
+     80          
+     81          /**
+     82            * @}
+     83            */
+     84          
+     85          /** @addtogroup STM32L0xx_System_Private_TypesDefinitions
+     86            * @{
+     87            */
+     88          
+     89          /**
+     90            * @}
+     91            */
+     92          
+     93          /** @addtogroup STM32L0xx_System_Private_Defines
+     94            * @{
+     95            */
+     96          /************************* Miscellaneous Configuration ************************/
+     97          
+     98          /*!< Uncomment the following line if you need to relocate your vector Table in
+     99               Internal SRAM. */
+    100          /* #define VECT_TAB_SRAM */
+    101          #define VECT_TAB_OFFSET  0x00 /*!< Vector Table base offset field. 
+    102                                             This value must be a multiple of 0x200. */
+    103          /******************************************************************************/
+    104          /**
+    105            * @}
+    106            */
+    107          
+    108          /** @addtogroup STM32L0xx_System_Private_Macros
+    109            * @{
+    110            */
+    111          
+    112          /**
+    113            * @}
+    114            */
+    115          
+    116          /** @addtogroup STM32L0xx_System_Private_Variables
+    117            * @{
+    118            */
+    119            /* This variable is updated in three ways:
+    120                1) by calling CMSIS function SystemCoreClockUpdate()
+    121                2) by calling HAL API function HAL_RCC_GetHCLKFreq()
+    122                3) each time HAL_RCC_ClockConfig() is called to configure the system clock frequency 
+    123                   Note: If you use this function to configure the system clock; then there
+    124                         is no need to call the 2 first functions listed above, since SystemCoreClock
+    125                         variable is updated automatically.
+    126            */
+    127            uint32_t SystemCoreClock = 1000000;
+    128          __IO const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
+    129          __IO const uint8_t PLLMulTable[9] = {3, 4, 6, 8, 12, 16, 24, 32, 48};
+    130          
+    131          /**
+    132            * @}
+    133            */
+    134          
+    135          /** @addtogroup STM32L0xx_System_Private_FunctionPrototypes
+    136            * @{
+    137            */
+    138          
+    139          /**
+    140            * @}
+    141            */
+    142          
+    143          /** @addtogroup STM32L0xx_System_Private_Functions
+    144            * @{
+    145            */
+    146          
+    147          /**
+    148            * @brief  Setup the microcontroller system.
+    149            * @param  None
+    150            * @retval None
+    151            */
+    152          void SystemInit (void)
+    153          {    
+    154          /*!< Set MSION bit */
+    155            RCC->CR |= (uint32_t)0x00000100;
+    156          
+    157            /*!< Reset SW[1:0], HPRE[3:0], PPRE1[2:0], PPRE2[2:0], MCOSEL[2:0] and MCOPRE[2:0] bits */
+    158            RCC->CFGR &= (uint32_t) 0x88FF400C;
+    159           
+    160            /*!< Reset HSION, HSIDIVEN, HSEON, CSSON and PLLON bits */
+    161            RCC->CR &= (uint32_t)0xFEF6FFF6;
+    162            
+    163            /*!< Reset HSI48ON  bit */
+    164            RCC->CRRCR &= (uint32_t)0xFFFFFFFE;
+    165            
+    166            /*!< Reset HSEBYP bit */
+    167            RCC->CR &= (uint32_t)0xFFFBFFFF;
+    168          
+    169            /*!< Reset PLLSRC, PLLMUL[3:0] and PLLDIV[1:0] bits */
+    170            RCC->CFGR &= (uint32_t)0xFF02FFFF;
+    171          
+    172            /*!< Disable all interrupts */
+    173            RCC->CIER = 0x00000000;
+    174            
+    175            /* Configure the Vector Table location add offset address ------------------*/
+    176          #ifdef VECT_TAB_SRAM
+    177            SCB->VTOR = SRAM_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
+    178          #else
+    179            SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
+    180          #endif
+    181          }
+    182          
+    183          /**
+    184            * @brief  Update SystemCoreClock according to Clock Register Values
+    185            *         The SystemCoreClock variable contains the core clock (HCLK), it can
+    186            *         be used by the user application to setup the SysTick timer or configure
+    187            *         other parameters.
+    188            *           
+    189            * @note   Each time the core clock (HCLK) changes, this function must be called
+    190            *         to update SystemCoreClock variable value. Otherwise, any configuration
+    191            *         based on this variable will be incorrect.         
+    192            *     
+    193            * @note   - The system frequency computed by this function is not the real 
+    194            *           frequency in the chip. It is calculated based on the predefined 
+    195            *           constant and the selected clock source:
+    196            *             
+    197            *           - If SYSCLK source is MSI, SystemCoreClock will contain the MSI 
+    198            *             value as defined by the MSI range.
+    199            *                                   
+    200            *           - If SYSCLK source is HSI, SystemCoreClock will contain the HSI_VALUE(*)
+    201            *                                              
+    202            *           - If SYSCLK source is HSE, SystemCoreClock will contain the HSE_VALUE(**)
+    203            *                          
+    204            *           - If SYSCLK source is PLL, SystemCoreClock will contain the HSE_VALUE(**)
+    205            *             or HSI_VALUE(*) multiplied/divided by the PLL factors.
+    206            *         
+    207            *         (*) HSI_VALUE is a constant defined in stm32l0xx_hal.h file (default value
+    208            *             16 MHz) but the real value may vary depending on the variations
+    209            *             in voltage and temperature.   
+    210            *    
+    211            *         (**) HSE_VALUE is a constant defined in stm32l0xx_hal.h file (default value
+    212            *              8 MHz), user has to ensure that HSE_VALUE is same as the real
+    213            *              frequency of the crystal used. Otherwise, this function may
+    214            *              have wrong result.
+    215            *                
+    216            *         - The result of this function could be not correct when using fractional
+    217            *           value for HSE crystal.
+    218            * @param  None
+    219            * @retval None
+    220            */
+    221          void SystemCoreClockUpdate (void)
+    222          {
+    223            uint32_t tmp = 0, pllmul = 0, plldiv = 0, pllsource = 0, msirange = 0;
+    224          
+    225            /* Get SYSCLK source -------------------------------------------------------*/
+    226            tmp = RCC->CFGR & RCC_CFGR_SWS;
+    227            
+    228            switch (tmp)
+    229            {
+    230              case 0x00:  /* MSI used as system clock */
+    231                SystemCoreClock = ((1 <<((RCC->ICSCR & RCC_ICSCR_MSIRANGE)>>13 ))* 64000);
+    232                break;
+    233              case 0x04:  /* HSI used as system clock */
+    234                SystemCoreClock = HSI_VALUE;
+    235                break;
+    236              case 0x08:  /* HSE used as system clock */
+    237                SystemCoreClock = HSE_VALUE;
+    238                break;
+    239              case 0x0C:  /* PLL used as system clock */
+    240                /* Get PLL clock source and multiplication factor ----------------------*/
+    241                pllmul = RCC->CFGR & RCC_CFGR_PLLMUL;
+    242                plldiv = RCC->CFGR & RCC_CFGR_PLLDIV;
+    243                pllmul = PLLMulTable[(pllmul >> 18)];
+    244                plldiv = (plldiv >> 22) + 1;
+    245                
+    246                pllsource = RCC->CFGR & RCC_CFGR_PLLSRC;
+    247          
+    248                if (pllsource == 0x00)
+    249                {
+    250                  /* HSI oscillator clock selected as PLL clock entry */
+    251                  SystemCoreClock = (((HSI_VALUE) * pllmul) / plldiv);
+    252                }
+    253                else
+    254                {
+    255                  /* HSE selected as PLL clock entry */
+    256                  SystemCoreClock = (((HSE_VALUE) * pllmul) / plldiv);
+    257                }
+    258                break;
+    259              default: /* MSI used as system clock */
+    260                msirange = (RCC->ICSCR & RCC_ICSCR_MSIRANGE) >> 13;
+    261                SystemCoreClock = (32768 * (1 << (msirange + 1)));
+    262                break;
+    263            }
+    264            /* Compute HCLK clock frequency --------------------------------------------*/
+    265            /* Get HCLK prescaler */
+    266            tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
+    267            /* HCLK clock frequency */
+    268            SystemCoreClock >>= tmp;
+    269          }
+    270          
+    271          
+    272          
+    273          /**
+    274            * @}
+    275            */
+    276          
+    277          /**
+    278            * @}
+    279            */
+    280          
+    281          /**
+    282            * @}
+    283            */
+    284          
+    285          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+      20   SystemCoreClockUpdate
+        20 __aeabi_uidiv
+       0   SystemInit
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable1
+       4  ??DataTable1_1
+       4  ??DataTable1_2
+       4  ??DataTable1_3
+       4  ??DataTable1_4
+       4  ??DataTable1_5
+       4  ??DataTable1_6
+       4  ??DataTable1_7
+       4  ??DataTable1_8
+       4  ??DataTable1_9
+      32  AHBPrescTable
+          PLLMulTable
+          SystemCoreClock
+     126  SystemCoreClockUpdate
+      64  SystemInit
+
+ 
+  32 bytes in section .data
+ 230 bytes in section .text
+ 
+ 230 bytes of CODE memory
+  32 bytes of DATA memory
+
+Errors: none
+Warnings: none

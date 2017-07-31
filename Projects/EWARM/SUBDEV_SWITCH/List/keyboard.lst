@@ -1,0 +1,128 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        26/Jun/2017  08:40:35
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  F:\demo\SUBDEV_SWITCH\Projects\Src\keyboard.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Projects\Src\keyboard.c -D STM32L053xx -D
+#        USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\keyboard.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\keyboard.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Projects\Src\keyboard.c
+      1          #include "keyboard.h"
+      2          #include "zigbee.h"
+      3          #include "stm32l0xx_hal_msp.h" 
+      4          
+      5          
+      6          void KeyBoard_Init(void) 
+      7          {    
+      8            GPIO_InitTypeDef GPIO_InitStruct;
+      9          
+     10            /* GPIO Ports Clock Enable */
+     11            __GPIOA_CLK_ENABLE();
+     12          
+     13            /*Configure GPIO pins : PA4 PA11 PA12 PA15 */
+     14            GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_15 |GPIO_PIN_9;
+     15            GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+     16            GPIO_InitStruct.Pull = GPIO_NOPULL;
+     17            HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+     18          
+     19            /* EXTI interrupt init*/
+     20            HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 1);
+     21            HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+     22            
+     23            switch_ctrl_cmd.head='H';
+     24            switch_ctrl_cmd.dev_type=DEV_SWITCH;
+     25            memcopy(switch_ctrl_cmd.dev_id,zig_dev_info.MyIEEE,8);        
+     26            switch_ctrl_cmd.tail='T';
+     27           
+     28          }
+     29          
+     30          
+     31          
+     32          /**
+     33            * @brief GPIO EXTI callback
+     34            * @param None
+     35            * @retval None
+     36            */
+     37          volatile SWITCH_EVENT_TypeDef switch_event=SWITCH_NONE;
+     38          void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) 
+     39          {  
+     40            if(GPIO_Pin==GPIO_PIN_4)
+     41            {
+     42              switch_event=SWITCH1_PRESSED;
+     43            }
+     44            else if(GPIO_Pin==GPIO_PIN_11)
+     45            {
+     46              switch_event=SWITCH2_PRESSED;  
+     47            }
+     48            else if(GPIO_Pin==GPIO_PIN_12)
+     49            {
+     50              switch_event=SWITCH3_PRESSED; 
+     51            }
+     52            else if(GPIO_Pin==GPIO_PIN_15)
+     53            {
+     54              switch_event=SWITCH4_PRESSED;
+     55            } 
+     56            else if(GPIO_Pin==GPIO_PIN_9)
+     57            {
+     58             switch_event=SET_PRESSED;
+     59            }   
+     60            
+     61          }
+     62          
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+       0   HAL_GPIO_EXTI_Callback
+      32   KeyBoard_Init
+        32   -> HAL_GPIO_Init
+        32   -> HAL_NVIC_EnableIRQ
+        32   -> HAL_NVIC_SetPriority
+        32   -> memcopy
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable1
+       4  ??DataTable1_1
+       4  ??DataTable1_2
+       4  ??DataTable1_3
+       4  ??DataTable1_4
+       4  ??DataTable1_5
+      54  HAL_GPIO_EXTI_Callback
+      80  KeyBoard_Init
+       1  switch_event
+
+ 
+   1 byte  in section .bss
+ 158 bytes in section .text
+ 
+ 158 bytes of CODE memory
+   1 byte  of DATA memory
+
+Errors: none
+Warnings: none

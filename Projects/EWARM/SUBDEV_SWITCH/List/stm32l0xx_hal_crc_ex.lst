@@ -1,0 +1,289 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:11
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_crc_ex.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_crc_ex.c
+#        -D STM32L053xx -D USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\stm32l0xx_hal_crc_ex.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\stm32l0xx_hal_crc_ex.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_crc_ex.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    stm32l0xx_hal_crc_ex.c
+      4            * @author  MCD Application Team
+      5            * @version V1.1.0
+      6            * @date    18-June-2014
+      7            * @brief   Extended CRC HAL module driver.
+      8            *    
+      9            *          This file provides firmware functions to manage the following 
+     10            *          functionalities of the CRC peripheral:
+     11            *           + Initialization/de-initialization functions
+     12            *         
+     13            @verbatim
+     14            ==============================================================================
+     15                              ##### CRC specific features #####
+     16            ==============================================================================
+     17            [..] 
+     18            (#) Polynomial configuration.
+     19          
+     20          
+     21                               ##### How to use this driver #####
+     22            ==============================================================================
+     23              [..]
+     24          
+     25              (#) Enable CRC AHB clock using __CRC_CLK_ENABLE();
+     26          
+     27              (#) Initialize CRC calculator
+     28                   (++) specify generating polynomial (IP default or non-default one)
+     29                   (++) specify initialization value (IP default or non-default one)
+     30                   (++) specify input data format
+     31                   (++) specify input or output data inversion mode if any
+     32          
+     33              (#) Use HAL_CRC_Accumulate() function to compute the CRC value of the 
+     34                  input data buffer starting with the previously computed CRC as 
+     35                  initialization value
+     36          
+     37              (#) Use HAL_CRC_Calculate() function to compute the CRC value of the 
+     38                  input data buffer starting with the defined initialization value 
+     39                  (default or non-default) to initiate CRC calculation
+     40          
+     41            @endverbatim
+     42            ******************************************************************************
+     43            * @attention
+     44            *
+     45            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+     46            *
+     47            * Redistribution and use in source and binary forms, with or without modification,
+     48            * are permitted provided that the following conditions are met:
+     49            *   1. Redistributions of source code must retain the above copyright notice,
+     50            *      this list of conditions and the following disclaimer.
+     51            *   2. Redistributions in binary form must reproduce the above copyright notice,
+     52            *      this list of conditions and the following disclaimer in the documentation
+     53            *      and/or other materials provided with the distribution.
+     54            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+     55            *      may be used to endorse or promote products derived from this software
+     56            *      without specific prior written permission.
+     57            *
+     58            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+     59            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     60            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     61            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+     62            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+     63            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+     64            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+     65            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+     66            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     67            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     68            *
+     69            ******************************************************************************  
+     70            */
+     71          
+     72          /* Includes ------------------------------------------------------------------*/
+     73          #include "stm32l0xx_hal.h"
+     74          
+     75          /** @addtogroup STM32L0xx_HAL_Driver
+     76            * @{
+     77            */
+     78          
+     79          /** @addtogroup CRCEx 
+     80            * @brief CRC driver modules
+     81            * @{
+     82            */ 
+     83          
+     84          #ifdef HAL_CRC_MODULE_ENABLED
+     85          
+     86          /* Private typedef -----------------------------------------------------------*/
+     87          /* Private define ------------------------------------------------------------*/
+     88          /* Private macro -------------------------------------------------------------*/
+     89          /* Private variables ---------------------------------------------------------*/
+     90          /* Private function prototypes -----------------------------------------------*/
+     91          /* Private functions ---------------------------------------------------------*/
+     92          
+     93          
+     94          /** @defgroup CRCEx_Group CRC Extended features functions
+     95           *  @brief    CRC Extended features functions 
+     96           *
+     97          @verbatim   
+     98           ===============================================================================
+     99                      ##### CRC Extended features functions #####
+    100           ===============================================================================  
+    101              [..]
+    102          This subsection provides function allowing to:
+    103                (+) Set CRC polynomial if different from default one.
+    104           
+    105          @endverbatim
+    106            * @{
+    107            */
+    108          
+    109          
+    110          /**
+    111            * @brief  Initializes the CRC polynomial if different from default one.
+    112            * @param  hcrc: CRC handle
+    113            * @param  Pol: CRC generating polynomial (7, 8, 16 or 32-bit long)
+    114            *         This parameter is written in normal representation, e.g.
+    115            *         for a polynomial of degree 7, X^7 + X^6 + X^5 + X^2 + 1 is written 0x65 
+    116            *         for a polynomial of degree 16, X^16 + X^12 + X^5 + 1 is written 0x1021     
+    117            * @param  PolyLength: CRC polynomial length 
+    118            *         This parameter can be one of the following values:
+    119            *          @arg CRC_POLYLENGTH_7B: 7-bit long CRC (generating polynomial of degree 7)
+    120            *          @arg CRC_POLYLENGTH_8B: 8-bit long CRC (generating polynomial of degree 8)
+    121            *          @arg CRC_POLYLENGTH_16B: 16-bit long CRC (generating polynomial of degree 16)
+    122            *          @arg CRC_POLYLENGTH_32B: 32-bit long CRC (generating polynomial of degree 32)                
+    123            * @retval HAL status
+    124            */                                   
+    125          HAL_StatusTypeDef HAL_CRCEx_Polynomial_Set(CRC_HandleTypeDef *hcrc, uint32_t Pol, uint32_t PolyLength)
+    126          {
+    127            uint32_t msb = 31; /* polynomial degree is 32 at most, so msb is initialized to max value */
+    128          
+    129            /* Check the parameters */
+    130            assert_param(IS_CRC_POL_LENGTH(PolyLength));
+    131            
+    132            /* check polynomial definition vs polynomial size:
+    133             * polynomial length must be aligned with polynomial
+    134             * definition. HAL_ERROR is reported if Pol degree is 
+    135             * larger than that indicated by PolyLength.
+    136             * Look for MSB position: msb will contain the degree of
+    137             *  the second to the largest polynomial member. E.g., for
+    138             *  X^7 + X^6 + X^5 + X^2 + 1, msb = 6. */
+    139            while (((Pol & ((uint32_t)(0x1) << msb)) == 0) && (msb-- > 0))
+    140            {
+    141            }
+    142          
+    143            switch (PolyLength)
+    144            {
+    145              case CRC_POLYLENGTH_7B:
+    146                if (msb >= HAL_CRC_LENGTH_7B) 
+    147                {
+    148                  return  HAL_ERROR;
+    149                }
+    150                break;
+    151              case CRC_POLYLENGTH_8B:
+    152                if (msb >= HAL_CRC_LENGTH_8B) 
+    153                {
+    154                  return  HAL_ERROR;
+    155                }
+    156                break;
+    157              case CRC_POLYLENGTH_16B:
+    158                if (msb >= HAL_CRC_LENGTH_16B) 
+    159                {
+    160                  return  HAL_ERROR;
+    161                }
+    162                break;
+    163              case CRC_POLYLENGTH_32B:
+    164                /* no polynomial definition vs. polynomial length issue possible */
+    165                break;
+    166            default:
+    167                break;
+    168            }
+    169          
+    170            /* set generating polynomial */
+    171            WRITE_REG(hcrc->Instance->POL, Pol);
+    172            
+    173            /* set generating polynomial size */
+    174            MODIFY_REG(hcrc->Instance->CR, CRC_CR_POLYSIZE, PolyLength);  
+    175            
+    176            /* Return function status */
+    177            return HAL_OK;
+    178          }
+    179          
+    180          /**
+    181            * @brief  Set the Reverse Input data mode.
+    182            * @param  hcrc: CRC handle
+    183            * @param  InputReverseMode: Input Data inversion mode
+    184            *         This parameter can be one of the following values:
+    185            *          @arg CRC_INPUTDATA_INVERSION_NONE: no change in bit order (default value)
+    186            *          @arg CRC_INPUTDATA_INVERSION_BYTE: Byte-wise bit reversal
+    187            *          @arg CRC_INPUTDATA_INVERSION_HALFWORD: HalfWord-wise bit reversal
+    188            *          @arg CRC_INPUTDATA_INVERSION_WORD: Word-wise bit reversal              
+    189            * @retval HAL status
+    190            */                                   
+    191          HAL_StatusTypeDef HAL_CRC_Input_Data_Reverse(CRC_HandleTypeDef *hcrc, uint32_t InputReverseMode)
+    192          {  
+    193            /* Check the parameters */
+    194            assert_param(IS_CRC_INPUTDATA_INVERSION_MODE(InputReverseMode));
+    195            
+    196            /* Change CRC peripheral state */
+    197            hcrc->State = HAL_CRC_STATE_BUSY;
+    198          
+    199            /* set input data inversion mode */
+    200            MODIFY_REG(hcrc->Instance->CR, CRC_CR_REV_IN, InputReverseMode);    
+    201            /* Change CRC peripheral state */
+    202            hcrc->State = HAL_CRC_STATE_READY;
+    203            
+    204            /* Return function status */
+    205            return HAL_OK;
+    206          }
+    207          
+    208          /**
+    209            * @brief  Set the Reverse Output data mode.
+    210            * @param  hcrc: CRC handle
+    211            * @param  OutputReverseMode: Output Data inversion mode
+    212            *         This parameter can be one of the following values:
+    213            *          @arg CRC_OUTPUTDATA_INVERSION_DISABLED: no CRC inversion (default value)
+    214            *          @arg CRC_OUTPUTDATA_INVERSION_ENABLED: bit-level inversion (e.g for a 8-bit CRC: 0xB5 becomes 0xAD)            
+    215            * @retval HAL status
+    216            */                                   
+    217          HAL_StatusTypeDef HAL_CRC_Output_Data_Reverse(CRC_HandleTypeDef *hcrc, uint32_t OutputReverseMode)
+    218          {
+    219            /* Check the parameters */
+    220            assert_param(IS_CRC_OUTPUTDATA_INVERSION_MODE(OutputReverseMode));
+    221            
+    222            /* Change CRC peripheral state */
+    223            hcrc->State = HAL_CRC_STATE_BUSY;
+    224          
+    225            /* set output data inversion mode */
+    226            MODIFY_REG(hcrc->Instance->CR, CRC_CR_REV_OUT, OutputReverseMode); 
+    227                
+    228            /* Change CRC peripheral state */
+    229            hcrc->State = HAL_CRC_STATE_READY;
+    230            
+    231            /* Return function status */
+    232            return HAL_OK;
+    233          }
+    234          
+    235          /**
+    236            * @}
+    237            */
+    238          
+    239          
+    240          #endif /* HAL_CRC_MODULE_ENABLED */
+    241          /**
+    242            * @}
+    243            */
+    244          
+    245          /**
+    246            * @}
+    247            */
+    248          
+    249          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+
+ 
+
+ 
+
+
+Errors: none
+Warnings: none

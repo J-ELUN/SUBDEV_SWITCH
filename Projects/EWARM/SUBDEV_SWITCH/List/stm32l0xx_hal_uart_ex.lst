@@ -1,0 +1,517 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:24
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_uart_ex.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_uart_ex.c
+#        -D STM32L053xx -D USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\stm32l0xx_hal_uart_ex.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\stm32l0xx_hal_uart_ex.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_uart_ex.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    stm32l0xx_hal_uart_ex.c
+      4            * @author  MCD Application Team
+      5            * @version V1.1.0
+      6            * @date    18-June-2014
+      7            * @brief   Extended UART HAL module driver.
+      8            *    
+      9            *          This file provides firmware functions to manage the following 
+     10            *          functionalities of the Inter Integrated Circuit (UART) peripheral:
+     11            *           + Extended Control methods
+     12            *         
+     13            @verbatim
+     14            ==============================================================================
+     15                         ##### UART peripheral extended features  #####
+     16            ==============================================================================
+     17                     
+     18            [..] Comparing to other previous devices, the UART interface for STM32L0XX
+     19                 devices contains the following additional features
+     20                 
+     21                 (+) Possibility to disable or enable Analog Noise Filter
+     22                 (+) Use of a configured Digital Noise Filter
+     23                 (+) Disable or enable wakeup from Stop mode
+     24             
+     25                               ##### How to use this driver #####
+     26            ==============================================================================
+     27            [..] This driver provides functions to configure Noise Filter
+     28            
+     29            @endverbatim
+     30            ******************************************************************************
+     31            * @attention
+     32            *
+     33            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+     34            *
+     35            * Redistribution and use in source and binary forms, with or without modification,
+     36            * are permitted provided that the following conditions are met:
+     37            *   1. Redistributions of source code must retain the above copyright notice,
+     38            *      this list of conditions and the following disclaimer.
+     39            *   2. Redistributions in binary form must reproduce the above copyright notice,
+     40            *      this list of conditions and the following disclaimer in the documentation
+     41            *      and/or other materials provided with the distribution.
+     42            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+     43            *      may be used to endorse or promote products derived from this software
+     44            *      without specific prior written permission.
+     45            *
+     46            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+     47            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     48            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     49            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+     50            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+     51            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+     52            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+     53            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+     54            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     55            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     56            *
+     57            ******************************************************************************  
+     58            */ 
+     59          
+     60          /* Includes ------------------------------------------------------------------*/
+     61          #include "stm32l0xx_hal.h"
+     62          
+     63          /** @addtogroup STM32L0xx_HAL_Driver
+     64            * @{
+     65            */
+     66          
+     67          /** @defgroup UARTEx
+     68            * @brief UARTEx module driver
+     69            * @{
+     70            */
+     71          
+     72          #ifdef HAL_UART_MODULE_ENABLED
+     73          
+     74          /* Private typedef -----------------------------------------------------------*/
+     75          /* Private define ------------------------------------------------------------*/
+     76          #define UART_REACK_TIMEOUT       ((uint32_t) 1000)
+     77          /* Private macro -------------------------------------------------------------*/
+     78          /* Private variables ---------------------------------------------------------*/
+     79          /* Private function prototypes -----------------------------------------------*/
+     80          static void UART_Wakeup_AddressConfig(UART_HandleTypeDef *huart, UART_WakeUpTypeDef WakeUpSelection);
+     81          /* Private functions ---------------------------------------------------------*/
+     82          
+     83          /** @defgroup UARTEX_Private_Functions
+     84            * @{
+     85            */
+     86          
+     87          /** @defgroup UARTEx_Group1 Extended Initialization/de-initialization functions
+     88            * @brief    Extended Initialization and Configuration Functions
+     89          
+     90            *
+     91          @verbatim    
+     92          ===============================================================================
+     93                      ##### Initialization and Configuration functions #####
+     94           ===============================================================================  
+     95              [..]
+     96              The HAL_RS485Ex_Init() API follows respectively the UART RS485 mode 
+     97              configuration procedures (details for the procedures are available in reference manual).
+     98          
+     99          @endverbatim
+    100            * @{
+    101            */
+    102          
+    103          /**
+    104            * @brief Initializes the RS485 Driver enable feature according to the specified
+    105            *         parameters in the UART_InitTypeDef and creates the associated handle .
+    106            * @param huart: uart handle
+    107            * @param Polarity: select the driver enable polarity
+    108            *        This parameter can be one of the following values:
+    109            *          @arg UART_DE_POLARITY_HIGH: DE signal is active high
+    110            *          @arg UART_DE_POLARITY_LOW: DE signal is active low
+    111            * @param AssertionTime: Driver Enable assertion time
+    112            *                         5-bit value defining the time between the activation of the DE (Driver Enable)
+    113            *                         signal and the beginning of the start bit. It is expressed in sample time
+    114            *                         units (1/8 or 1/16 bit time, depending on the oversampling rate)         
+    115            * @param DeassertionTime: Driver Enable deassertion time          
+    116            *                         5-bit value defining the time between the end of the last stop bit, in a
+    117            *                         transmitted message, and the de-activation of the DE (Driver Enable) signal.
+    118            *                         It is expressed in sample time units (1/8 or 1/16 bit time, depending on the
+    119            *                         oversampling rate).
+    120            * @retval HAL status
+    121            */
+    122          HAL_StatusTypeDef HAL_RS485Ex_Init(UART_HandleTypeDef *huart, uint32_t Polarity, uint32_t AssertionTime, uint32_t DeassertionTime)
+    123          {
+    124            uint32_t temp = 0x0;
+    125            
+    126            /* Check the UART handle allocation */
+    127            if(huart == NULL)
+    128            {
+    129              return HAL_ERROR;
+    130            }
+    131          
+    132            /* Check the Driver Enable polarity */
+    133            assert_param(IS_UART_DE_POLARITY(Polarity));
+    134            
+    135            /* Check the Driver Enable assertion time */
+    136            assert_param(IS_UART_ASSERTIONTIME(AssertionTime));
+    137            
+    138            /* Check the Driver Enable deassertion time */
+    139            assert_param(IS_UART_DEASSERTIONTIME(DeassertionTime));
+    140            
+    141            if(huart->State == HAL_UART_STATE_RESET)
+    142            {   
+    143              /* Init the low level hardware : GPIO, CLOCK, CORTEX */
+    144              HAL_UART_MspInit(huart);
+    145            }
+    146          
+    147            huart->State = HAL_UART_STATE_BUSY;
+    148          
+    149            /* Disable the Peripheral */
+    150            __HAL_UART_DISABLE(huart);
+    151            
+    152            /* Set the UART Communication parameters */
+    153            UART_SetConfig(huart);
+    154            
+    155            if(huart->AdvancedInit.AdvFeatureInit != UART_ADVFEATURE_NO_INIT)
+    156            {
+    157              UART_AdvFeatureConfig(huart);
+    158            }
+    159            
+    160            /* Enable the Driver Enable mode by setting the DEM bit in the CR3 register */
+    161            huart->Instance->CR3 |= USART_CR3_DEM;
+    162            
+    163            /* Set the Driver Enable polarity */
+    164            MODIFY_REG(huart->Instance->CR3, USART_CR3_DEP, Polarity);
+    165            
+    166            /* Set the Driver Enable assertion and deassertion times */
+    167            temp = (AssertionTime << UART_CR1_DEAT_ADDRESS_LSB_POS);
+    168            temp |= (DeassertionTime << UART_CR1_DEDT_ADDRESS_LSB_POS);
+    169            MODIFY_REG(huart->Instance->CR1, (USART_CR1_DEDT|USART_CR1_DEAT), temp);
+    170            
+    171            /* Enable the Peripheral */
+    172            __HAL_UART_ENABLE(huart);
+    173            
+    174            /* TEACK and/or REACK to check before moving huart->State to Ready */
+    175            return (UART_CheckIdleState(huart));
+    176          }
+    177          
+    178          /**
+    179            * @brief UART wakeup from Stop mode callback
+    180            * @param huart: uart handle
+    181            * @retval None
+    182            */
+    183           __weak void HAL_UARTEx_WakeupCallback(UART_HandleTypeDef *huart)
+    184          {
+    185            /* NOTE : This function should not be modified, when the callback is needed,
+    186                      the HAL_UART_WakeupCallback can be implemented in the user file
+    187             */ 
+    188          }
+    189          
+    190          /**
+    191            * @}
+    192            */
+    193            
+    194          /** @defgroup UARTEX_Group2 Peripheral Control functions 
+    195           *  @brief   management functions 
+    196           *
+    197          @verbatim   
+    198           ===============================================================================
+    199                                ##### Peripheral Control funtions #####
+    200           ===============================================================================  
+    201              [..] This section provides functions allowing to:
+    202               (+) UART_AdvFeatureConfig() API optionally configures the UART advanced features 
+    203               (+) HAL_MultiProcessorEx_AddressLength_Set() API optionally sets the UART node address
+    204                   detection length to more than 4 bits for multiprocessor address mark wake up.
+    205               (+) HAL_UARTEx_EnableStopMode() API enables the UART to wake up the MCU from stop mode   
+    206               (+) HAL_UARTEx_DisableStopMode() API disables the above functionality
+    207               (+) HAL_UARTEx_EnableClockStopMode() API enables the UART HSI clock during stop mode   
+    208               (+) HAL_UARTEx_DisableClockStopMode() API disables the above functionality   
+    209               (+) UART_Wakeup_AddressConfig() API configures the wake-up from stop mode parameters
+    210          
+    211          @endverbatim
+    212            * @{
+    213            */
+    214            
+    215          /**
+    216            * @brief Enable UART Stop Mode
+    217            * The UART is able to wake up the MCU from Stop mode as long as UART clock is HSI or LSE
+    218            * @param huart: uart handle
+    219            * @retval HAL status
+    220            */
+    221          HAL_StatusTypeDef HAL_UARTEx_EnableStopMode(UART_HandleTypeDef *huart)
+    222          {
+    223            /* Process Locked */
+    224            __HAL_LOCK(huart);
+    225            
+    226            huart->State = HAL_UART_STATE_BUSY;
+    227            
+    228            /* Set the USART UESM bit */
+    229            huart->Instance->CR1 |= USART_CR1_UESM;
+    230            
+    231            huart->State = HAL_UART_STATE_READY;
+    232            
+    233            /* Process Unlocked */
+    234            __HAL_UNLOCK(huart);
+    235            
+    236            return HAL_OK; 
+    237          }
+    238          
+    239          /**
+    240            * @brief Enable UART Clock in Stop Mode
+    241            * The UART keeps the Clock ON during Stop mode
+    242            * @param huart: uart handle
+    243            * @retval HAL status
+    244            */
+    245          HAL_StatusTypeDef HAL_UARTEx_EnableClockStopMode(UART_HandleTypeDef *huart)
+    246          {
+    247            /* Process Locked */
+    248            __HAL_LOCK(huart);
+    249            
+    250            huart->State = HAL_UART_STATE_BUSY;
+    251            
+    252            /* Set the USART UESM bit */
+    253            huart->Instance->CR3 |= USART_CR3_UCESM;
+    254            
+    255            huart->State = HAL_UART_STATE_READY;
+    256            
+    257            /* Process Unlocked */
+    258            __HAL_UNLOCK(huart);
+    259            
+    260            return HAL_OK; 
+    261          }
+    262          
+    263          /**
+    264            * @brief Disable UART Stop Mode 
+    265            * @param huart: uart handle
+    266            * @retval HAL status
+    267            */
+    268          HAL_StatusTypeDef HAL_UARTEx_DisableStopMode(UART_HandleTypeDef *huart)
+    269          {
+    270            /* Process Locked */
+    271            __HAL_LOCK(huart);
+    272          
+    273            huart->State = HAL_UART_STATE_BUSY; 
+    274          
+    275            /* Clear USART UESM bit */
+    276            huart->Instance->CR1 &= ~(USART_CR1_UESM);
+    277            
+    278            huart->State = HAL_UART_STATE_READY;
+    279          
+    280            /* Process Unlocked */
+    281            __HAL_UNLOCK(huart);
+    282          
+    283            return HAL_OK;
+    284          }
+    285          
+    286          /**
+    287            * @brief Disable UART Clock in Stop Mode 
+    288            * @param huart: uart handle
+    289            * @retval HAL status
+    290            */
+    291          HAL_StatusTypeDef HAL_UARTEx_DisableClockStopMode(UART_HandleTypeDef *huart)
+    292          {
+    293            /* Process Locked */
+    294            __HAL_LOCK(huart);
+    295          
+    296            huart->State = HAL_UART_STATE_BUSY;
+    297          
+    298            /* Clear USART UESM bit */
+    299            huart->Instance->CR3 &= ~(USART_CR3_UCESM);
+    300          
+    301            huart->State = HAL_UART_STATE_READY;
+    302          
+    303            /* Process Unlocked */
+    304            __HAL_UNLOCK(huart);
+    305          
+    306            return HAL_OK;
+    307          }
+    308          
+    309          /**
+    310            * @brief Set Wakeup from Stop mode interrupt flag selection
+    311            * @param huart: uart handle, 
+    312            * @param WakeUpSelection: address match, Start Bit detection or RXNE bit status.
+    313            * This parameter can be one of the following values:
+    314            *      @arg UART_WAKEUP_ON_ADDRESS
+    315            *      @arg UART_WAKEUP_ON_STARTBIT
+    316            *      @arg UART_WAKEUP_ON_READDATA_NONEMPTY
+    317            * @retval HAL status
+    318            */
+    319          HAL_StatusTypeDef HAL_UARTEx_StopModeWakeUpSourceConfig(UART_HandleTypeDef *huart, UART_WakeUpTypeDef WakeUpSelection)
+    320          {
+    321            /* Check the wake-up selection parameter */
+    322            assert_param(IS_UART_WAKEUP_SELECTION(WakeUpSelection.WakeUpEvent));
+    323          
+    324            /* Process Locked */
+    325            __HAL_LOCK(huart);
+    326          
+    327            huart->State = HAL_UART_STATE_BUSY;
+    328          
+    329            /* Disable the Peripheral */
+    330            __HAL_UART_DISABLE(huart);
+    331          
+    332            /* Set the wake-up selection scheme */
+    333            MODIFY_REG(huart->Instance->CR3, USART_CR3_WUS, WakeUpSelection.WakeUpEvent);
+    334          
+    335            if(WakeUpSelection.WakeUpEvent == UART_WAKEUP_ON_ADDRESS)
+    336            {
+    337              UART_Wakeup_AddressConfig(huart, WakeUpSelection);
+    338            }
+    339          
+    340            /* Enable the Peripheral */
+    341            __HAL_UART_ENABLE(huart);
+    342          
+    343            /* Wait until REACK flag is set before moving huart->State to Ready */
+    344            if(UART_WaitOnFlagUntilTimeout(huart, USART_ISR_REACK, RESET, UART_REACK_TIMEOUT) != HAL_OK)
+    345            {
+    346              return HAL_TIMEOUT;
+    347            }
+    348          
+    349            /* Process Unlocked */
+    350            __HAL_UNLOCK(huart);
+    351          
+    352            /* Initialize the UART state*/
+    353            huart->ErrorCode = HAL_UART_ERROR_NONE;
+    354            huart->State= HAL_UART_STATE_READY;
+    355          
+    356            return HAL_OK;
+    357          }
+    358          /**
+    359            * @brief By default in multiprocessor mode, when the wake up method is set 
+    360            *        to address mark, the UART handles only 4-bit long addresses detection. 
+    361            *        This API allows to enable longer addresses detection (6-, 7- or 8-bit
+    362            *        long):
+    363            *        - 6-bit address detection in 7-bit data mode
+    364            *        - 7-bit address detection in 8-bit data mode
+    365            *        - 8-bit address detection in 9-bit data mode
+    366            * @param huart: UART handle
+    367            * @param AddressLength: this parameter can be one of the following values:
+    368            *          @arg UART_ADDRESS_DETECT_4B: 4-bit long address
+    369            *          @arg UART_ADDRESS_DETECT_7B: 6-, 7- or 8-bit long address
+    370            * @retval HAL status
+    371            */
+    372          HAL_StatusTypeDef HAL_MultiProcessorEx_AddressLength_Set(UART_HandleTypeDef *huart, uint32_t AddressLength)
+    373          {
+    374            /* Check the UART handle allocation */
+    375            if(huart == NULL)
+    376            {
+    377              return HAL_ERROR;
+    378            }
+    379          
+    380            /* Check the address length parameter */
+    381            assert_param(IS_UART_ADDRESSLENGTH_DETECT(AddressLength));
+    382            
+    383            huart->State = HAL_UART_STATE_BUSY;
+    384            
+    385            /* Disable the Peripheral */
+    386            __HAL_UART_DISABLE(huart);
+    387            
+    388            /* Set the address length */
+    389            MODIFY_REG(huart->Instance->CR2, USART_CR2_ADDM7, AddressLength);
+    390            
+    391            /* Enable the Peripheral */
+    392            __HAL_UART_ENABLE(huart); 
+    393            
+    394            /* TEACK and/or REACK to check before moving huart->State to Ready */
+    395            return (UART_CheckIdleState(huart));
+    396          }
+    397          
+    398          /**
+    399            * @}
+    400            */  
+    401          
+    402          /**
+    403            * @brief Initializes the UART wake-up from stop mode parameters when triggered by address detection.
+    404            * @param huart: uart handle
+    405            * @param WakeUpSelection: UART wake up from stop mode parameters
+    406            * @retval HAL status
+    407            */                        
+    408          static void UART_Wakeup_AddressConfig(UART_HandleTypeDef *huart, UART_WakeUpTypeDef WakeUpSelection)
+    409          {
+    410            assert_param(IS_UART_ADDRESSLENGTH_DETECT(WakeUpSelection.AddressLength));
+    411            if(WakeUpSelection.AddressLength == UART_ADDRESS_DETECT_4B)
+    412            {
+    413              assert_param(IS_UART_4B_ADDRESS(WakeUpSelection.Address));
+    414            }
+    415            else
+    416            {
+    417              assert_param(IS_UART_7B_ADDRESS(WakeUpSelection.Address));
+    418            }
+    419          
+    420            /* Set the USART address length */
+    421            MODIFY_REG(huart->Instance->CR2, USART_CR2_ADDM7, WakeUpSelection.AddressLength);
+    422          
+    423            /* Set the USART address node */
+    424            MODIFY_REG(huart->Instance->CR2, USART_CR2_ADD, ((uint32_t)WakeUpSelection.Address << UART_CR2_ADDRESS_LSB_POS));
+    425          }
+    426          
+    427          /**
+    428            * @}
+    429            */
+    430          
+    431          #endif /* HAL_UART_MODULE_ENABLED */
+    432          /**
+    433            * @}
+    434            */
+    435          
+    436          /**
+    437            * @}
+    438            */
+    439          
+    440          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+       8   HAL_MultiProcessorEx_AddressLength_Set
+         8   -> UART_CheckIdleState
+      24   HAL_RS485Ex_Init
+        24   -> HAL_UART_MspInit
+        24   -> UART_AdvFeatureConfig
+        24   -> UART_CheckIdleState
+        24   -> UART_SetConfig
+       8   HAL_UARTEx_DisableClockStopMode
+       8   HAL_UARTEx_DisableStopMode
+       8   HAL_UARTEx_EnableClockStopMode
+       8   HAL_UARTEx_EnableStopMode
+      24   HAL_UARTEx_StopModeWakeUpSourceConfig
+        24   -> UART_WaitOnFlagUntilTimeout
+       0   HAL_UARTEx_WakeupCallback
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable1
+       4  ??DataTable1_1
+       4  ??DataTable1_2
+       4  ??DataTable1_3
+      16  ?Subroutine0
+      54  HAL_MultiProcessorEx_AddressLength_Set
+     126  HAL_RS485Ex_Init
+      34  HAL_UARTEx_DisableClockStopMode
+      38  HAL_UARTEx_DisableStopMode
+      36  HAL_UARTEx_EnableClockStopMode
+      36  HAL_UARTEx_EnableStopMode
+     134  HAL_UARTEx_StopModeWakeUpSourceConfig
+       2  HAL_UARTEx_WakeupCallback
+
+ 
+ 492 bytes in section .text
+ 
+ 492 bytes of CODE memory
+
+Errors: none
+Warnings: none

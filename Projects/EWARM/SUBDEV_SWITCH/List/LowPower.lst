@@ -1,0 +1,197 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        21/Jul/2017  13:30:31
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  F:\demo\SUBDEV_SWITCH\Projects\Src\LowPower.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Projects\Src\LowPower.c -D STM32L053xx -D
+#        USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\LowPower.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\LowPower.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Projects\Src\LowPower.c
+      1          #include "LowPower.h"
+      2          #include "stm32l0xx_hal_msp.h"    
+      3          
+      4          
+      5          /**
+      6            * @brief  System Power Configuration
+      7            *         The system Power is configured as follow : 
+      8            *            + Regulator in LP mode
+      9            *            + VREFINT OFF, with fast wakeup enabled
+     10            *            + MSI as SysClk after Wake Up
+     11            *            + No IWDG
+     12            *            + Wakeup using EXTI Line (PA.12 (Arduino D2))
+     13            * @param  None
+     14            * @retval None
+     15            */
+     16          static void SystemPower_Config(void)
+     17          {
+     18            GPIO_InitTypeDef GPIO_InitStructure;
+     19          
+     20            /* Enable Ultra low power mode */
+     21            HAL_PWREx_EnableUltraLowPower();
+     22            
+     23            /* Enable the fast wake up from Ultra low power mode */
+     24            HAL_PWREx_EnableFastWakeUp();
+     25          
+     26            /* Select HSI as system clock source after Wake Up from Stop mode */
+     27            //__HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_StopWakeUpClock_HSI);  //有此语句系统唤醒后会restart
+     28            
+     29            /* Enable GPIOs clock */
+     30            __GPIOA_CLK_ENABLE();
+     31            __GPIOB_CLK_ENABLE();
+     32            __GPIOC_CLK_ENABLE();
+     33            __GPIOD_CLK_ENABLE();
+     34            __GPIOH_CLK_ENABLE();
+     35          
+     36            /* Configure all GPIO port pins in Analog Input mode (floating input trigger OFF) */
+     37            GPIO_InitStructure.Pin = GPIO_PIN_All;
+     38            GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+     39            GPIO_InitStructure.Pull = GPIO_NOPULL;
+     40            HAL_GPIO_Init(GPIOA, &GPIO_InitStructure); 
+     41            HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+     42            HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+     43            HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
+     44            HAL_GPIO_Init(GPIOH, &GPIO_InitStructure);
+     45          
+     46            /* Disable GPIOs clock */
+     47            __GPIOA_CLK_DISABLE();
+     48            __GPIOB_CLK_DISABLE();
+     49            __GPIOC_CLK_DISABLE();
+     50            __GPIOD_CLK_DISABLE();
+     51            __GPIOH_CLK_DISABLE();
+     52          
+     53          }
+     54          
+     55          /**
+     56            * @brief LowPower_Init
+     57            * @param None
+     58            * @retval None
+     59            */
+     60          void LowPower_Init(void)
+     61          {
+     62            /* Configure the system Power */
+     63            SystemPower_Config();
+     64          }
+     65          
+     66          /**
+     67            * @brief Enter_LowPower_Mode
+     68            * @param None
+     69            * @retval None
+     70            */
+     71          void Enter_LowPower_Mode(void)
+     72          {
+     73            /* Enter Stop Mode */
+     74            HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+     75          }
+     76          
+     77          
+     78          /**
+     79            * @brief  Configures system clock after wake-up from STOP: enable HSI, PLL
+     80            *         and select PLL as system clock source.
+     81            * @param  None
+     82            * @retval None
+     83            */
+     84          void SystemClockConfig_STOP(void)
+     85          {  
+     86            RCC_ClkInitTypeDef RCC_ClkInitStruct;
+     87            RCC_OscInitTypeDef RCC_OscInitStruct;
+     88            
+     89            /* Enable Power Control clock */
+     90            __PWR_CLK_ENABLE();
+     91          
+     92            /* The voltage scaling allows optimizing the power consumption when the device is 
+     93               clocked below the maximum system frequency, to update the voltage scaling value 
+     94               regarding system frequency refer to product datasheet.  */
+     95            __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+     96          
+     97            /* Get the Oscillators configuration according to the internal RCC registers */
+     98            HAL_RCC_GetOscConfig(&RCC_OscInitStruct);
+     99          
+    100            /* After wake-up from STOP reconfigure the system clock: Enable HSI and PLL */
+    101            RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+    102            RCC_OscInitStruct.HSEState = RCC_HSE_OFF;
+    103            RCC_OscInitStruct.HSIState = RCC_HSI_DIV4;
+    104            RCC_OscInitStruct.PLL.PLLState = RCC_PLL_OFF;
+    105            RCC_OscInitStruct.HSICalibrationValue = 0x10;
+    106            if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+    107            {
+    108              Error_Handler();
+    109            }
+    110          
+    111            /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
+    112               clocks dividers */
+    113            RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_SYSCLK;
+    114            RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+    115            if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+    116            {
+    117              Error_Handler();
+    118            }
+    119            
+    120          }
+    121          
+    122          
+    123          
+    124          
+    125          
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+       8   Enter_LowPower_Mode
+         8   -> HAL_PWR_EnterSTOPMode
+      32   LowPower_Init
+        32   -> HAL_GPIO_Init
+        32   -> HAL_PWREx_EnableFastWakeUp
+        32   -> HAL_PWREx_EnableUltraLowPower
+      88   SystemClockConfig_STOP
+        88   -> Error_Handler
+        88   -> HAL_RCC_ClockConfig
+        88   -> HAL_RCC_GetOscConfig
+        88   -> HAL_RCC_OscConfig
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable1
+       4  ??DataTable1_1
+       4  ??DataTable1_2
+       4  ??DataTable1_3
+       4  ??DataTable1_4
+       4  ??DataTable1_5
+       4  ??DataTable1_6
+       4  ??DataTable1_7
+       4  ??DataTable1_8
+      12  Enter_LowPower_Mode
+     152  LowPower_Init
+      94  SystemClockConfig_STOP
+
+ 
+ 294 bytes in section .text
+ 
+ 294 bytes of CODE memory
+
+Errors: none
+Warnings: none

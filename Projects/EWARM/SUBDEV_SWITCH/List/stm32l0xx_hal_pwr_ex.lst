@@ -1,0 +1,240 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:16
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_pwr_ex.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_pwr_ex.c
+#        -D STM32L053xx -D USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\stm32l0xx_hal_pwr_ex.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\stm32l0xx_hal_pwr_ex.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_pwr_ex.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    stm32l0xx_hal_pwr_ex.c
+      4            * @author  MCD Application Team
+      5            * @version V1.1.0
+      6            * @date    18-June-2014
+      7            * @brief   Extended PWR HAL module driver.
+      8            *          This file provides firmware functions to manage the following
+      9            *          functionalities of the Power Controller (PWR) peripheral:
+     10            *           + Extended Initialization and de-initialization functions
+     11            *           + Extended Peripheral Control functions
+     12            *         
+     13            ******************************************************************************
+     14            * @attention
+     15            *
+     16            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+     17            *
+     18            * Redistribution and use in source and binary forms, with or without modification,
+     19            * are permitted provided that the following conditions are met:
+     20            *   1. Redistributions of source code must retain the above copyright notice,
+     21            *      this list of conditions and the following disclaimer.
+     22            *   2. Redistributions in binary form must reproduce the above copyright notice,
+     23            *      this list of conditions and the following disclaimer in the documentation
+     24            *      and/or other materials provided with the distribution.
+     25            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+     26            *      may be used to endorse or promote products derived from this software
+     27            *      without specific prior written permission.
+     28            *
+     29            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+     30            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     31            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     32            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+     33            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+     34            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+     35            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+     36            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+     37            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     38            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     39            *
+     40            ******************************************************************************
+     41            */
+     42          
+     43          /* Includes ------------------------------------------------------------------*/
+     44          #include "stm32l0xx_hal.h"
+     45          
+     46          /** @addtogroup STM32L0xx_HAL_Driver
+     47            * @{
+     48            */
+     49          
+     50          /** @defgroup PWREx 
+     51            * @brief PWR HAL module driver
+     52            * @{
+     53            */
+     54          
+     55          #ifdef HAL_PWR_MODULE_ENABLED
+     56          
+     57          /* Private typedef -----------------------------------------------------------*/
+     58          /* Private define ------------------------------------------------------------*/
+     59          /* Private macro -------------------------------------------------------------*/
+     60          /* Private variables ---------------------------------------------------------*/
+     61          /* Private function prototypes -----------------------------------------------*/
+     62          /* Private functions ---------------------------------------------------------*/
+     63          
+     64          /** @defgroup PWREx_Private_Functions
+     65            * @{
+     66            */
+     67          
+     68          /** @defgroup PWREx_Group1 Peripheral Extended features functions
+     69            *  @brief Low Power modes configuration functions 
+     70            *
+     71          @verbatim
+     72          
+     73           ===============================================================================
+     74                           ##### Peripheral extended features functions #####
+     75           ===============================================================================
+     76          @endverbatim
+     77            * @{
+     78            */
+     79          
+     80          /**
+     81            * @brief  Enables the Fast WakeUp from Ultra Low Power mode.
+     82            * @note This bit works in conjunction with ULP bit. 
+     83            *        Means, when ULP = 1 and FWU = 1 :VREFINT startup time is ignored when 
+     84            *        exiting from low power mode.
+     85            * @param  None
+     86            * @retval None
+     87            */
+     88          void HAL_PWREx_EnableFastWakeUp(void)
+     89          {
+     90            /* Enable the fast wake up */
+     91            PWR->CR |= PWR_CR_FWU;
+     92          }
+     93          
+     94          /**
+     95            * @brief  Disables the Fast WakeUp from Ultra Low Power mode.
+     96            * @param  None
+     97            * @retval None
+     98            */
+     99          void HAL_PWREx_DisableFastWakeUp(void)
+    100          {
+    101            /* Disable the fast wake up */
+    102            PWR->CR &= (uint32_t)~((uint32_t)PWR_CR_FWU);
+    103          }
+    104          
+    105          /**
+    106            * @brief  Enables the Ultra Low Power mode
+    107            * @param  None
+    108            * @retval None
+    109            */
+    110          void HAL_PWREx_EnableUltraLowPower(void)
+    111          {
+    112            /* Enable the Ultra Low Power mode */
+    113            PWR->CR |= PWR_CR_ULP;
+    114          }
+    115          
+    116          /**
+    117            * @brief  Disables the Ultra Low Power mode
+    118            * @param  None
+    119            * @retval None
+    120            */
+    121          void HAL_PWREx_DisableUltraLowPower(void)
+    122          {
+    123            /* Disable the Ultra Low Power mode */
+    124            PWR->CR &= (uint32_t)~((uint32_t)PWR_CR_ULP);
+    125          }
+    126          
+    127          /**
+    128            * @brief  Enters the Low Power Run mode.
+    129            * @note   Low power run mode can only be entered when VCORE is in range 2.
+    130            *         In addition, the dynamic voltage scaling must not be used when Low
+    131            *         power run mode is selected. Only Stop and Sleep modes with regulator
+    132            *         configured in Low power mode is allowed when Low power run mode is 
+    133            *         selected.
+    134            * @note   In Low power run mode, all I/O pins keep the same state as in Run mode.
+    135            * @param  None
+    136            * @retval None
+    137            */
+    138          void HAL_PWREx_EnableLowPowerRunMode(void)
+    139          {
+    140            /* Enters the Low Power Run mode */
+    141            PWR->CR |= PWR_CR_LPSDSR;
+    142            PWR->CR |= PWR_CR_LPRUN;
+    143          }
+    144          
+    145          /**
+    146            * @brief  Exits the Low Power Run mode.
+    147            * @param  None
+    148            * @retval None
+    149            */
+    150          void HAL_PWREx_DisableLowPowerRunMode(void)
+    151          {
+    152            /* Exits the Low Power Run mode */
+    153            PWR->CR &= (uint32_t)~((uint32_t)PWR_CR_LPRUN);
+    154            PWR->CR &= (uint32_t)~((uint32_t)PWR_CR_LPSDSR);
+    155          }
+    156          
+    157          /**
+    158            * @}
+    159            */
+    160          
+    161          /**
+    162            * @}
+    163            */
+    164          
+    165          #endif /* HAL_PWR_MODULE_ENABLED */
+    166          /**
+    167            * @}
+    168            */
+    169          
+    170          /**
+    171            * @}
+    172            */
+    173          
+    174          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+       0   HAL_PWREx_DisableFastWakeUp
+       0   HAL_PWREx_DisableLowPowerRunMode
+       0   HAL_PWREx_DisableUltraLowPower
+       0   HAL_PWREx_EnableFastWakeUp
+       0   HAL_PWREx_EnableLowPowerRunMode
+       0   HAL_PWREx_EnableUltraLowPower
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable5
+       4  ??DataTable5_1
+       4  ??DataTable5_2
+       4  ??DataTable5_3
+      12  HAL_PWREx_DisableFastWakeUp
+      20  HAL_PWREx_DisableLowPowerRunMode
+      12  HAL_PWREx_DisableUltraLowPower
+      12  HAL_PWREx_EnableFastWakeUp
+      20  HAL_PWREx_EnableLowPowerRunMode
+      12  HAL_PWREx_EnableUltraLowPower
+
+ 
+ 104 bytes in section .text
+ 
+ 104 bytes of CODE memory
+
+Errors: none
+Warnings: none

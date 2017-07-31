@@ -1,0 +1,330 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:09
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_adc_ex.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_adc_ex.c
+#        -D STM32L053xx -D USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\stm32l0xx_hal_adc_ex.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\stm32l0xx_hal_adc_ex.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_adc_ex.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    stm32l0xx_hal_adc_ex.c
+      4            * @author  MCD Application Team
+      5            * @version V1.1.0
+      6            * @date    18-June-2014
+      7            * @brief   This file provides firmware functions to manage the following 
+      8            *          functionalities of the Analog to Digital Convertor (ADC)
+      9            *          peripheral:
+     10            *           + Start calibration.
+     11            *           + Read the calibration factor.
+     12            *           + Set a calibration factor.
+     13            *          
+     14            @verbatim
+     15            ==============================================================================
+     16                              ##### ADC specific features #####
+     17            ==============================================================================
+     18            [..] 
+     19            (#) Self calibration.
+     20          
+     21          
+     22                               ##### How to use this driver #####
+     23            ==============================================================================
+     24              [..]
+     25          
+     26              (#) Call HAL_ADCEx_Calibration_Start() to start calibration
+     27              
+     28              (#) Read the calibration factor using HAL_ADCEx_Calibration_GetValue()
+     29            
+     30              (#) User can set a his calibration factor using HAL_ADCEx_Calibration_SetValue()
+     31            
+     32              @endverbatim
+     33            ******************************************************************************
+     34            * @attention
+     35            *
+     36            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+     37            *
+     38            * Redistribution and use in source and binary forms, with or without modification,
+     39            * are permitted provided that the following conditions are met:
+     40            *   1. Redistributions of source code must retain the above copyright notice,
+     41            *      this list of conditions and the following disclaimer.
+     42            *   2. Redistributions in binary form must reproduce the above copyright notice,
+     43            *      this list of conditions and the following disclaimer in the documentation
+     44            *      and/or other materials provided with the distribution.
+     45            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+     46            *      may be used to endorse or promote products derived from this software
+     47            *      without specific prior written permission.
+     48            *
+     49            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+     50            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     51            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     52            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+     53            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+     54            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+     55            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+     56            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+     57            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     58            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     59            *
+     60            ******************************************************************************  
+     61            */
+     62          
+     63          /* Includes ------------------------------------------------------------------*/
+     64          #include "stm32l0xx_hal.h"
+     65          
+     66          /** @addtogroup STM32L0xx_HAL_Driver
+     67            * @{
+     68            */
+     69          
+     70          /** @addtogroup ADCEx 
+     71            * @brief ADC driver modules
+     72            * @{
+     73            */ 
+     74          
+     75          #ifdef HAL_ADC_MODULE_ENABLED
+     76              
+     77          /* Private typedef -----------------------------------------------------------*/
+     78          /* Private define ------------------------------------------------------------*/
+     79          /* Private macro -------------------------------------------------------------*/
+     80          /* Private variables ---------------------------------------------------------*/
+     81          /* Private function prototypes -----------------------------------------------*/
+     82          /* Private functions ---------------------------------------------------------*/
+     83          
+     84          
+     85          /** @defgroup ADCEx_Group ADC Extended features functions
+     86           *  @brief    ADC Extended features functions 
+     87           *
+     88          @verbatim   
+     89           ===============================================================================
+     90                      ##### ADC Extended features functions #####
+     91           ===============================================================================  
+     92              [..]
+     93          This subsection provides functions allowing to:
+     94                (+) Start calibration.
+     95                (+) Get calibration factor.
+     96                (+) Set calibration factor.
+     97          
+     98          @endverbatim
+     99            * @{
+    100            */
+    101          
+    102          
+    103          /**
+    104            * @brief  Start an automatic calibration
+    105            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+    106            *         the configuration information for the specified ADC.
+    107            * @param  SingleDiff: Selection of single-ended or differential input
+    108            *          This parameter can be only of the following values:
+    109            *            @arg ADC_SINGLE_ENDED: Channel in mode input single ended
+    110            * @retval HAL status
+    111            */
+    112          HAL_StatusTypeDef HAL_ADCEx_Calibration_Start(ADC_HandleTypeDef* hadc, uint32_t SingleDiff)
+    113          {
+    114            uint32_t tickstart = 0;
+    115            
+    116            /* Check the parameters */
+    117            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+    118            assert_param(IS_ADC_SINGLE_DIFFERENTIAL(SingleDiff));
+    119          
+    120            /* Process locked */
+    121            __HAL_LOCK(hadc);
+    122             
+    123            /* Disable the ADC (if not already disabled) */
+    124            if (__HAL_ADC_IS_ENABLED(hadc) != RESET )
+    125            {
+    126              /* Check if conditions to disable the ADC are fulfilled */
+    127              if (__HAL_ADC_DISABLING_CONDITIONS(hadc) != RESET)
+    128              {
+    129                __HAL_ADC_DISABLE(hadc);    
+    130              }
+    131              else  
+    132              {
+    133                hadc->State= HAL_ADC_STATE_ERROR;
+    134                
+    135                /* Process unlocked */
+    136                __HAL_UNLOCK(hadc);
+    137                
+    138                return HAL_ERROR;
+    139              }   
+    140              
+    141              /* Wait for ADC effectively disabled */
+    142              /* Get timeout */
+    143              tickstart = HAL_GetTick();  
+    144          
+    145              /* Wait for disabling completion */
+    146              while(HAL_IS_BIT_SET(hadc->Instance->CR, ADC_CR_ADEN))
+    147              {
+    148                /* Check for the Timeout */
+    149                if(ADC_DISABLE_TIMEOUT != HAL_MAX_DELAY)
+    150                {
+    151                  if((HAL_GetTick() - tickstart ) > ADC_DISABLE_TIMEOUT)
+    152                  {
+    153                    hadc->State= HAL_ADC_STATE_TIMEOUT;
+    154                    
+    155                    /* Process unlocked */
+    156                    __HAL_UNLOCK(hadc);
+    157                    
+    158                    return HAL_TIMEOUT;
+    159                  }
+    160                }
+    161              }  
+    162            }
+    163          
+    164            /* Start ADC calibration */
+    165            hadc->Instance->CR |= ADC_CR_ADCAL;
+    166          
+    167            /* Get timeout */
+    168            tickstart = HAL_GetTick(); 
+    169          
+    170            /* Wait for calibration completion */
+    171            while(HAL_IS_BIT_SET(hadc->Instance->CR, ADC_CR_ADCAL))
+    172            {
+    173              /* Check for the Timeout */
+    174              if(ADC_CALIBRATION_TIMEOUT != HAL_MAX_DELAY)
+    175              {
+    176                if((HAL_GetTick() - tickstart ) > ADC_CALIBRATION_TIMEOUT)
+    177                {
+    178                  hadc->State= HAL_ADC_STATE_TIMEOUT;
+    179                  
+    180                  /* Process unlocked */
+    181                  __HAL_UNLOCK(hadc);
+    182                  
+    183                  return HAL_TIMEOUT;
+    184                }
+    185              }
+    186            }  
+    187            
+    188            /* Process unlocked */
+    189            __HAL_UNLOCK(hadc);
+    190            
+    191            /* Return function status */
+    192            return HAL_OK;
+    193            
+    194          }
+    195          
+    196          /**
+    197            * @brief  Get the calibration factor.
+    198            * @param  hadc: ADC handle.
+    199            * @param  SingleDiff: This parameter can be only:
+    200            *           @arg ADC_SINGLE_ENDED: Channel in mode input single ended.
+    201            * @retval Calibration value.
+    202            */
+    203          uint32_t HAL_ADCEx_Calibration_GetValue(ADC_HandleTypeDef* hadc, uint32_t SingleDiff)
+    204          {
+    205            /* Check the parameters */
+    206            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+    207            assert_param(IS_ADC_SINGLE_DIFFERENTIAL(SingleDiff)); 
+    208            
+    209            /* Return the ADC calibration value */ 
+    210            return ((hadc->Instance->CALFACT) & 0x0000007F);
+    211          }
+    212          
+    213          /**
+    214            * @brief  Set the calibration factor to overwrite automatic conversion result.
+    215            *         ADC must be enabled and no conversion is ongoing.
+    216            * @param  hadc: ADC handle
+    217            * @param  SingleDiff: This parameter can be only:
+    218            *           @arg ADC_SINGLE_ENDED: Channel in mode input single ended.
+    219            * @param  CalibrationFactor: Calibration factor (coded on 7 bits maximum)
+    220            * @retval HAL state
+    221            */
+    222          HAL_StatusTypeDef HAL_ADCEx_Calibration_SetValue(ADC_HandleTypeDef* hadc, uint32_t SingleDiff, uint32_t CalibrationFactor)
+    223          {
+    224            HAL_StatusTypeDef tmpHALStatus = HAL_OK;
+    225            
+    226            /* Check the parameters */
+    227            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+    228            assert_param(IS_ADC_SINGLE_DIFFERENTIAL(SingleDiff)); 
+    229            assert_param(IS_ADC_CALFACT(CalibrationFactor)); 
+    230            
+    231            /* Process locked */
+    232            __HAL_LOCK(hadc);
+    233            
+    234            /* Verification of hardware constraints before modifying the calibration    */
+    235            /* factors register: ADC must be enabled, no conversion on going.           */
+    236            if ( (__HAL_ADC_IS_ENABLED(hadc) != RESET)                            &&
+    237                 (__HAL_ADC_IS_CONVERSION_ONGOING(hadc) == RESET)  )
+    238            {
+    239              /* Set the selected ADC calibration value */ 
+    240              hadc->Instance->CALFACT &= ~ADC_CALFACT_CALFACT;
+    241              hadc->Instance->CALFACT |= CalibrationFactor;
+    242            }
+    243            else
+    244            {
+    245              /* Update ADC state machine to error */
+    246              hadc->State = HAL_ADC_STATE_ERROR;
+    247              
+    248              /* Update ADC state machine to error */
+    249              tmpHALStatus = HAL_ERROR;
+    250            }
+    251            
+    252            /* Process unlocked */
+    253            __HAL_UNLOCK(hadc);
+    254            
+    255            /* Return function status */
+    256            return tmpHALStatus;
+    257          }
+    258          
+    259          /**
+    260            * @}
+    261            */
+    262          
+    263          
+    264          #endif /* HAL_ADC_MODULE_ENABLED */
+    265          /**
+    266            * @}
+    267            */
+    268          
+    269          /**
+    270            * @}
+    271            */ 
+    272          
+    273          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+       0   HAL_ADCEx_Calibration_GetValue
+      20   HAL_ADCEx_Calibration_SetValue
+      24   HAL_ADCEx_Calibration_Start
+        24   -> HAL_GetTick
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      12  HAL_ADCEx_Calibration_GetValue
+      86  HAL_ADCEx_Calibration_SetValue
+     160  HAL_ADCEx_Calibration_Start
+
+ 
+ 258 bytes in section .text
+ 
+ 258 bytes of CODE memory
+
+Errors: none
+Warnings: none

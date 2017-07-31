@@ -1,0 +1,189 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        21/Jul/2017  09:11:44
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  F:\demo\SUBDEV_SWITCH\Projects\Src\switch.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Projects\Src\switch.c -D STM32L053xx -D
+#        USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\switch.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\switch.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Projects\Src\switch.c
+      1          #include "main.h"
+      2          #include "switch.h"
+      3          #include "zigbee.h"
+      4          #include "stm32l0xx_hal_msp.h" 
+      5          #include <string.h>
+      6          
+      7          SWITCH_CHK_INFO_TYPEDEF   switch_chk_info;
+      8          SWITCH_CTRL_CMD_TYPEDEF   switch_ctrl_cmd;
+      9          
+     10          volatile  SWITCH_EVENT_TypeDef switch_event=SWITCH_NONE;
+     11          /**
+     12            * @brief Switch_Init
+     13            * @param None
+     14            * @retval None
+     15            */
+     16          void Switch_Init(void) 
+     17          {    
+     18            GPIO_InitTypeDef GPIO_InitStruct;
+     19          
+     20            /* GPIO Ports Clock Enable */
+     21            SWITCH_CLK_ENABLE();
+     22          
+     23            /*Configure GPIO pins : PA4 PA11 PA12 PA15 */
+     24            GPIO_InitStruct.Pin = SWITCH_1_PIN | SWITCH_2_PIN | SWITCH_3_PIN | SWITCH_4_PIN | SWITCH_SET_PIN;
+     25            GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+     26            GPIO_InitStruct.Pull = GPIO_NOPULL;
+     27            HAL_GPIO_Init(SWITCH_PORT, &GPIO_InitStruct);
+     28          
+     29            /* EXTI interrupt init*/
+     30            HAL_NVIC_SetPriority(SWITCH_IRQn, 0, 0);
+     31            HAL_NVIC_EnableIRQ(SWITCH_IRQn);
+     32            
+     33            switch_ctrl_cmd.head='H';
+     34            switch_ctrl_cmd.dev_type=DEV_SWITCH;
+     35            memcpy(switch_ctrl_cmd.dev_id,zig_dev_info.MyIEEE,8);        
+     36            switch_ctrl_cmd.tail='T';
+     37           
+     38          }
+     39          
+     40          /**
+     41            * @brief GPIO EXTI callback
+     42            * @param None
+     43            * @retval None
+     44            */
+     45          void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) 
+     46          {    
+     47            switch (GPIO_Pin)
+     48            {
+     49              case SWITCH_1_PIN:  
+     50                switch_event=SWITCH_1_PRESSED;
+     51                break;
+     52              case SWITCH_2_PIN:  
+     53                switch_event=SWITCH_2_PRESSED;
+     54                break;
+     55              case SWITCH_3_PIN:  
+     56                switch_event=SWITCH_3_PRESSED;
+     57                break;
+     58              case SWITCH_4_PIN:  
+     59                switch_event=SWITCH_4_PRESSED;
+     60                break;
+     61              case SWITCH_SET_PIN:  
+     62                switch_event=SWITCH_SET_PRESSED;
+     63                break;
+     64              default:
+     65                break;
+     66            } 
+     67          }
+     68          
+     69          /**
+     70            * @brief Switch_Event_Handle
+     71            * @param None
+     72            * @retval None
+     73            */
+     74          SWITCH_EVENT_TypeDef Switch_Event_Handle(void)
+     75          { 
+     76            SWITCH_EVENT_TypeDef  switch_event_ret=SWITCH_NONE;
+     77            switch (switch_event)
+     78            {
+     79              case SWITCH_1_PRESSED:  
+     80                switch_ctrl_cmd.switch_id=S0_ID;
+     81                Zig_Send_Data((u8*)&switch_ctrl_cmd,sizeof(SWITCH_CTRL_CMD_TYPEDEF)); 
+     82                switch_event_ret=SWITCH_1_PRESSED;
+     83                break;
+     84                
+     85              case SWITCH_2_PRESSED:  
+     86                switch_ctrl_cmd.switch_id=S1_ID;
+     87                Zig_Send_Data((u8*)&switch_ctrl_cmd,sizeof(SWITCH_CTRL_CMD_TYPEDEF)); 
+     88                switch_event_ret=SWITCH_2_PRESSED;
+     89                break;
+     90                
+     91              case SWITCH_3_PRESSED:  
+     92                switch_ctrl_cmd.switch_id=S2_ID;
+     93                Zig_Send_Data((u8*)&switch_ctrl_cmd,sizeof(SWITCH_CTRL_CMD_TYPEDEF)); 
+     94                switch_event_ret=SWITCH_3_PRESSED;
+     95                break;
+     96                
+     97              case SWITCH_4_PRESSED:  
+     98                switch_ctrl_cmd.switch_id=S3_ID;
+     99                Zig_Send_Data((u8*)&switch_ctrl_cmd,sizeof(SWITCH_CTRL_CMD_TYPEDEF));
+    100                switch_event_ret=SWITCH_4_PRESSED;
+    101                break;
+    102                
+    103              case SWITCH_SET_PRESSED:  
+    104                Led_Run_Blink(3,500);  //间隔500ms闪烁3次提示进入绑定状态。      
+    105                if(Zigbee_Bind_Handle()!=STEP_BIND_OK)
+    106                   Zigbee_Set_BackUpInfo(); 
+    107                break;
+    108                
+    109              default:
+    110                break;  
+    111            } 
+    112            switch_event=SWITCH_NONE;
+    113            return switch_event_ret;
+    114          }
+    115          
+    116          
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+       0   HAL_GPIO_EXTI_Callback
+      24   Switch_Event_Handle
+        24   -> Led_Run_Blink
+        24   -> Zig_Send_Data
+        24   -> Zigbee_Bind_Handle
+        24   -> Zigbee_Set_BackUpInfo
+      32   Switch_Init
+        32   -> HAL_GPIO_Init
+        32   -> HAL_NVIC_EnableIRQ
+        32   -> HAL_NVIC_SetPriority
+        32   -> __aeabi_memcpy
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable2
+       4  ??DataTable2_1
+       4  ??DataTable2_2
+       4  ??DataTable2_3
+       4  ??DataTable2_4
+      56  HAL_GPIO_EXTI_Callback
+     120  Switch_Event_Handle
+      80  Switch_Init
+      16  switch_chk_info
+      13  switch_ctrl_cmd
+          switch_event
+
+ 
+  29 bytes in section .bss
+ 276 bytes in section .text
+ 
+ 276 bytes of CODE memory
+  29 bytes of DATA memory
+
+Errors: none
+Warnings: none

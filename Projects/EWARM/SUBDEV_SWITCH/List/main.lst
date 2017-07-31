@@ -1,0 +1,233 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        21/Jul/2017  13:56:34
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  F:\demo\SUBDEV_SWITCH\Projects\Src\main.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Projects\Src\main.c -D STM32L053xx -D
+#        USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\main.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\main.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Projects\Src\main.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    Templates/Src/main.c 
+      4            * @author  MCD Application Team
+      5            * @version V1.0.0
+      6            * @date    18-June-2014
+      7            * @brief   Main program body
+      8            ******************************************************************************
+      9            * @attention
+     10            *
+     11            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+     12            *
+     13            * Redistribution and use in source and binary forms, with or without modification,
+     14            * are permitted provided that the following conditions are met:
+     15            *   1. Redistributions of source code must retain the above copyright notice,
+     16            *      this list of conditions and the following disclaimer.
+     17            *   2. Redistributions in binary form must reproduce the above copyright notice,
+     18            *      this list of conditions and the following disclaimer in the documentation
+     19            *      and/or other materials provided with the distribution.
+     20            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+     21            *      may be used to endorse or promote products derived from this software
+     22            *      without specific prior written permission.
+     23            *
+     24            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+     25            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     26            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     27            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+     28            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+     29            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+     30            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+     31            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+     32            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     33            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     34            *
+     35            ******************************************************************************
+     36            */
+     37          
+     38          /* Includes ------------------------------------------------------------------*/
+     39          #include "main.h"
+     40          #include "stm32l0xx_hal_msp.h"
+     41          #include "switch.h"
+     42          #include "usart.h"
+     43          #include "zigbee.h"
+     44          #include "adc.h"
+     45          #include "LowPower.h"
+     46          
+     47          /** @addtogroup STM32L0xx_HAL_Examples
+     48            * @{
+     49            */
+     50          
+     51          /** @addtogroup Templates
+     52            * @{
+     53            */
+     54          
+     55          /* Private typedef -----------------------------------------------------------*/
+     56          /* Private define ------------------------------------------------------------*/
+     57          /* Private macro -------------------------------------------------------------*/
+     58          /* Private variables ---------------------------------------------------------*/
+     59          /* Private function prototypes -----------------------------------------------*/ 
+     60          volatile u16 TimeOut;
+     61          /* Private functions ---------------------------------------------------------*/
+     62          void PWR_PVD_Handle(void);
+     63          
+     64          /**
+     65            * @brief  Main program
+     66            * @param  None
+     67            * @retval None
+     68            */
+     69          int main(void)  
+     70          {
+     71          
+     72            /* STM32L0xx HAL library initialization:
+     73                 - Configure the Flash prefetch, Flash preread and Buffer caches
+     74                 - Systick timer is configured by default as source of time base, but user 
+     75                       can eventually implement his proper time base source (a general purpose 
+     76                       timer for example or other time source), keeping in mind that Time base 
+     77                       duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and 
+     78                       handled in milliseconds basis.
+     79                 - Low Level Initialization
+     80               */
+     81            HAL_Init();
+     82          
+     83            /* Configure the System clock to have a frequency of 1 MHz (Up to 32MHZ possible) */
+     84            SystemClock_Config();
+     85            
+     86            Led_Init();
+     87            
+     88            Zigbee_Init();
+     89            Zigbee_Sleep(); 
+     90            Zigbee_DeInit();
+     91               
+     92            /*ADC_Init();*/
+     93            
+     94            while(1)
+     95            {    
+     96              LowPower_Init();
+     97              Switch_Init();
+     98              /* Enter Stop Mode */
+     99              Enter_LowPower_Mode();
+    100              
+    101              /* Configures system clock after wake-up from STOP: enable HSE, PLL and select
+    102              PLL as system clock source (HSE and PLL are disabled in STOP mode) */
+    103              SystemClockConfig_STOP();
+    104              PVD_Config();
+    105              
+    106              Zigbee_Uart_Init();
+    107              TimeOut=300;
+    108              while(TimeOut)
+    109              {
+    110                if(Switch_Event_Handle()!=SWITCH_NONE)
+    111                  TimeOut=300; 
+    112                HAL_Delay(10);
+    113                TimeOut--;
+    114              }
+    115              
+    116              //PWR_PVD_Handle();
+    117             
+    118              Zigbee_Sleep(); 
+    119              Zigbee_DeInit();    
+    120            }
+    121          }
+    122          
+    123          void PWR_PVD_Handle(void)
+    124          {
+    125            if(Pvd_Flag)
+    126            {
+    127              Pvd_Flag=0;
+    128              Zig_Send_Data("low power\r\n",sizeof("low power\r\n")); 
+    129            }
+    130          }
+    131          
+    132          #ifdef  USE_FULL_ASSERT
+    133          /**
+    134            * @brief  Reports the name of the source file and the source line number
+    135            *         where the assert_param error has occurred.
+    136            * @param  file: pointer to the source file name
+    137            * @param  line: assert_param error line source number
+    138            * @retval None
+    139            */
+    140          void assert_failed(uint8_t* file, uint32_t line)
+    141          { 
+    142            /* User can add his own implementation to report the file name and line number,
+    143               ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+    144          
+    145            /* Infinite loop */
+    146            while (1)
+    147            {
+    148            }
+    149          }
+    150          #endif
+    151          
+    152          /**
+    153            * @}
+    154            */ 
+    155          
+    156          /**
+    157            * @}
+    158            */ 
+    159          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+       8   PWR_PVD_Handle
+         8   -> Zig_Send_Data
+      16   main
+        16   -> Enter_LowPower_Mode
+        16   -> HAL_Delay
+        16   -> HAL_Init
+        16   -> Led_Init
+        16   -> LowPower_Init
+        16   -> PVD_Config
+        16   -> Switch_Event_Handle
+        16   -> Switch_Init
+        16   -> SystemClockConfig_STOP
+        16   -> SystemClock_Config
+        16   -> Zigbee_DeInit
+        16   -> Zigbee_Init
+        16   -> Zigbee_Sleep
+        16   -> Zigbee_Uart_Init
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable2
+       4  ??DataTable2_1
+      12  ?_0
+      28  PWR_PVD_Handle
+       2  TimeOut
+      98  main
+
+ 
+   2 bytes in section .bss
+ 146 bytes in section .text
+ 
+ 146 bytes of CODE memory
+   2 bytes of DATA memory
+
+Errors: none
+Warnings: none

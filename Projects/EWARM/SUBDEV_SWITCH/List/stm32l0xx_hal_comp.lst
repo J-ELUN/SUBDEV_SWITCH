@@ -1,0 +1,654 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:10
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_comp.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_comp.c
+#        -D STM32L053xx -D USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\stm32l0xx_hal_comp.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\stm32l0xx_hal_comp.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_comp.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    stm32l0xx_hal_comp.c
+      4            * @author  MCD Application Team
+      5            * @version V1.1.0
+      6            * @date    18-June-2014
+      7            * @brief   COMP HAL module driver.
+      8            *    
+      9            *          This file provides firmware functions to manage the following 
+     10            *          functionalities of the COMP peripheral:
+     11            *           + Initialization/de-initialization functions
+     12            *           + I/O operation functions
+     13            *           + Peripheral Control functions 
+     14            *           + Peripheral State functions
+     15            *         
+     16            @verbatim
+     17          ================================================================================
+     18                    ##### COMP Peripheral features #####
+     19          ================================================================================
+     20                     
+     21            [..]       
+     22                The STM32L0xx device family integrates  2 analog comparators COMP1 and COMP2:
+     23                (#) The non inverting input and inverting input can be set to GPIO pins
+     24                    as shown in table1. COMP Inputs below.
+     25            
+     26                (#) The COMP output is available using HAL_COMP_GetOutputLevel()
+     27                    and can be set on GPIO pins. Refer to table 2. COMP Outputs below.
+     28            
+     29                (#) The COMP output can be redirected to embedded timers (TIM2, TIM21, TIM22...) and LPTIM
+     30                    Refer to TIM and LPTIM drivers.
+     31            
+     32                (#) The comparators COMP1 and COMP2 can be combined in window mode and only COMP2 non inverting input can be used as non-inverting input.
+     33            
+     34                (#) The 2 comparators have interrupt capability with wake-up
+     35                    from Sleep and Stop modes (through the EXTI controller):
+     36                    (++) COMP1 is internally connected to EXTI Line 21
+     37                    (++) COMP2 is internally connected to EXTI Line 22
+     38          
+     39                    From the corresponding IRQ handler, the right interrupt source can be retrieved with the 
+     40                    macro __HAL_COMP_EXTI_GET_FLAG(). Possible values are:
+     41                    (++) COMP_EXTI_LINE_COMP1_EVENT
+     42                    (++) COMP_EXTI_LINE_COMP2_EVENT
+     43          
+     44          
+     45          [..] Table 1. COMP Inputs for the STM32L0xx devices
+     46           +--------------------------------------------------+     
+     47           |                 |                | COMP1 | COMP2 | 
+     48           |-----------------|----------------|---------------|
+     49           |                 | 1/4 VREFINT    |  --   |  OK   |  
+     50           |                 | 1/2 VREFINT    |  --   |  OK   |
+     51           |                 | 3/4 VREFINT    |  --   |  OK   |
+     52           | Inverting Input | VREFINT        |  OK   |  OK   | 
+     53           |                 | DAC OUT (PA4)  |  OK   |  OK   |  
+     54           |                 | IO1            |  PA0  |  PA2  |  
+     55           |                 | IO2            |  PA5  |  PA5  |  
+     56           |                 | IO3            |  ---  |  PB3  |  
+     57           |-----------------|----------------|-------|-------|
+     58           |  Non Inverting  | IO1            |  PA1  |  PA3  |  
+     59           |    Input        | IO2            |  ---  |  PB4  |
+     60           |                 | IO3            |  ---  |  PB5  |  
+     61           |                 | IO4            |  ---  |  PB6  |  
+     62           |                 | IO5            |  ---  |  PB7  |  
+     63           +--------------------------------------------------+  
+     64            
+     65           [..] Table 2. COMP Outputs for the STM32L0xx devices
+     66           +---------------+     
+     67           | COMP1 | COMP2 | 
+     68           |-------|-------|
+     69           |  PA0  |  PA2  | 
+     70           |  PA6  |  PA7  |  
+     71           |  PA11 |  PA12 | 
+     72           +---------------+
+     73          
+     74              
+     75                      ##### How to use this driver #####
+     76          ================================================================================
+     77            [..]
+     78                This driver provides functions to configure and program the Comparators of all STM32L0xx devices.
+     79          
+     80                To use the comparator, perform the following steps:
+     81            
+     82                (#)  Initialize the COMP low level resources by implementing the HAL_COMP_MspInit().
+     83                (++) Configure the comparator input in analog mode using HAL_GPIO_Init().
+     84                (++) Configure the comparator output in alternate function mode using HAL_GPIO_Init() to map the comparator 
+     85                     output to the GPIO pin.
+     86                (++) If required enable the VREFINT reference using HAL_VREFINT_Cmd() and HAL_COMP_EnableBuffer_Cmd().
+     87                (++) If required enable the COMP interrupt by configuring and enabling EXTI line in Interrupt mode and 
+     88                     selecting the desired sensitivity level using HAL_GPIO_Init() function. After that enable the comparator
+     89                     interrupt vector using HAL_NVIC_EnableIRQ() function.
+     90            
+     91                (#) Configure the comparator using HAL_COMP_Init() function:
+     92                (++) Select the inverting input
+     93                (++) Select the non-inverting input
+     94                (++) Select the output polarity  
+     95                (++) Select the power mode
+     96                (++) Select the window mode
+     97            
+     98                (#) Enable the comparator using HAL_COMP_Start() function
+     99              
+    100            @endverbatim
+    101            ******************************************************************************
+    102            * @attention
+    103            *
+    104            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+    105            *
+    106            * Redistribution and use in source and binary forms, with or without modification,
+    107            * are permitted provided that the following conditions are met:
+    108            *   1. Redistributions of source code must retain the above copyright notice,
+    109            *      this list of conditions and the following disclaimer.
+    110            *   2. Redistributions in binary form must reproduce the above copyright notice,
+    111            *      this list of conditions and the following disclaimer in the documentation
+    112            *      and/or other materials provided with the distribution.
+    113            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+    114            *      may be used to endorse or promote products derived from this software
+    115            *      without specific prior written permission.
+    116            *
+    117            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    118            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    119            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    120            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    121            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    122            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    123            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    124            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    125            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    126            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    127            *
+    128            ******************************************************************************  
+    129            */
+    130          
+    131          /* Includes ------------------------------------------------------------------*/
+    132          #include "stm32l0xx_hal.h"
+    133          
+    134          /** @addtogroup STM32L0xx_HAL_Driver
+    135            * @{
+    136            */
+    137          
+    138          /** @defgroup COMP 
+    139            * @brief COMP HAL module driver
+    140            * @{
+    141            */
+    142          
+    143          #ifdef HAL_COMP_MODULE_ENABLED
+    144          
+    145          /* Private typedef -----------------------------------------------------------*/
+    146          /* Private define ------------------------------------------------------------*/
+    147          /* CSR register reset value */ 
+    148          #define COMP_CSR_RESET_VALUE             ((uint32_t)0x00000000)
+    149          
+    150          /* Private macro -------------------------------------------------------------*/
+    151          /* Private variables ---------------------------------------------------------*/
+    152          /* Private function prototypes -----------------------------------------------*/
+    153          /* Private functions ---------------------------------------------------------*/
+    154          
+    155          /** @defgroup COMP_Private_Functions
+    156            * @{
+    157            */
+    158          
+    159          /** @defgroup HAL_COMP_Group1 Initialization/de-initialization functions 
+    160           *  @brief    Initialization and Configuration functions 
+    161           *
+    162          @verbatim    
+    163           ===============================================================================
+    164                        ##### Initialization/de-initialization functions #####
+    165           ===============================================================================
+    166              [..]  This section provides functions to initialize and de-initialize comparators 
+    167          
+    168          @endverbatim
+    169            * @{
+    170            */
+    171          
+    172          /**
+    173            * @brief  Initializes the COMP according to the specified
+    174            *         parameters in the COMP_InitTypeDef and create the associated handle.
+    175            * @note   If the selected comparator is locked, initialization can't be performed.
+    176            *         To unlock the configuration, perform a system reset.
+    177            * @note   When the LPTIM connection is enabled, the following pins LPTIM_IN1(PB5, PC0)
+    178                      and LPTIM_IN2(PB7, PC2) should not be configured in AF. 
+    179            * @param  hcomp: COMP handle
+    180            * @retval HAL status
+    181            */
+    182          HAL_StatusTypeDef HAL_COMP_Init(COMP_HandleTypeDef *hcomp)
+    183          {
+    184           HAL_StatusTypeDef status = HAL_OK;
+    185            
+    186            /* Check the COMP handle allocation and lock status */
+    187            if((hcomp == NULL) || ((hcomp->State & COMP_STATE_BIT_LOCK) != 0x00))
+    188            {
+    189              status = HAL_ERROR;
+    190            }
+    191            else
+    192            {
+    193              /* Check the parameter */
+    194              assert_param(IS_COMP_ALL_INSTANCE(hcomp->Instance));
+    195              assert_param(IS_COMP_INVERTINGINPUT(hcomp->Init.InvertingInput));
+    196              assert_param(IS_COMP_NONINVERTINGINPUT(hcomp->Init.NonInvertingInput));
+    197              assert_param(IS_COMP_LPTIMCONNECTION(hcomp->Init.LPTIMConnection));
+    198              assert_param(IS_COMP_OUTPUTPOL(hcomp->Init.OutputPol));
+    199              assert_param(IS_COMP_MODE(hcomp->Init.Mode));
+    200              
+    201              if(hcomp->Init.WindowMode != COMP_WINDOWMODE_DISABLED)
+    202              {
+    203                assert_param(IS_COMP_WINDOWMODE_INSTANCE(hcomp->Instance));
+    204                assert_param(IS_COMP_WINDOWMODE(hcomp->Init.WindowMode));
+    205              }
+    206              
+    207              if(hcomp->State == HAL_COMP_STATE_RESET)
+    208              {
+    209                /* Init SYSCFG and the low level hardware to access comparators */
+    210               __SYSCFG_CLK_ENABLE();
+    211                /* Init the low level hardware : SYSCFG to access comparators */
+    212                HAL_COMP_MspInit(hcomp);
+    213              }
+    214              
+    215              /* Change COMP peripheral state */
+    216              hcomp->State = HAL_COMP_STATE_BUSY;
+    217            
+    218              /* Set COMP parameters */
+    219                /*     Set COMPxINSEL bits according to hcomp->Init.InvertingInput value        */
+    220                /*     Set COMPxNONINSEL bits according to hcomp->Init.NonInvertingInput value  */
+    221                /*     Set COMPxPOL bit according to hcomp->Init.OutputPol value                */
+    222                /*     Set COMPxMODE bits according to hcomp->Init.Mode value                   */
+    223                /*     Set COMP1WM bit according to hcomp->Init.WindowMode value                */
+    224              MODIFY_REG(hcomp->Instance->CSR, COMP_CSR_UPDATE_PARAMETERS_MASK, \
+    225                                               hcomp->Init.InvertingInput    |  \
+    226                                               hcomp->Init.NonInvertingInput |  \
+    227                                               hcomp->Init.LPTIMConnection   |  \
+    228                                               hcomp->Init.OutputPol         |  \
+    229                                               hcomp->Init.Mode              |  \
+    230                                               hcomp->Init.WindowMode);
+    231          
+    232          
+    233              /* Initialize the COMP state*/
+    234              hcomp->State = HAL_COMP_STATE_READY;
+    235          
+    236            }
+    237            
+    238            return status;
+    239          }
+    240          
+    241          /**
+    242            * @brief  DeInitializes the COMP peripheral 
+    243            * @note   Deinitialization can't be performed if the COMP configuration is locked.
+    244            *         To unlock the configuration, perform a system reset.
+    245            * @param  hcomp: COMP handle
+    246            * @retval HAL status
+    247            */
+    248          HAL_StatusTypeDef HAL_COMP_DeInit(COMP_HandleTypeDef *hcomp)
+    249          {
+    250            HAL_StatusTypeDef status = HAL_OK;
+    251          
+    252            /* Check the COMP handle allocation and lock status */
+    253            if((hcomp == NULL) || ((hcomp->State & COMP_STATE_BIT_LOCK) != 0x00))
+    254            {
+    255              status = HAL_ERROR;
+    256            }
+    257            else
+    258            {
+    259              /* Check the parameter */
+    260              assert_param(IS_COMP_ALL_INSTANCE(hcomp->Instance));
+    261          
+    262              /* Set COMP_CSR register to reset value */
+    263              WRITE_REG(hcomp->Instance->CSR, COMP_CSR_RESET_VALUE);
+    264          
+    265              /* DeInit the low level hardware: SYSCFG, GPIO, CLOCK and NVIC */
+    266              HAL_COMP_MspDeInit(hcomp);
+    267          
+    268              hcomp->State = HAL_COMP_STATE_RESET;
+    269              
+    270              /* Release Lock */
+    271              __HAL_UNLOCK(hcomp);
+    272            }
+    273            
+    274            return status;
+    275          }
+    276          
+    277          /**
+    278            * @brief  Initializes the COMP MSP.
+    279            * @param  hcomp: COMP handle
+    280            * @retval None
+    281            */
+    282          __weak void HAL_COMP_MspInit(COMP_HandleTypeDef *hcomp)
+    283          {
+    284            /* NOTE : This function Should not be modified, when the callback is needed,
+    285                      the HAL_COMP_MspInit could be implenetd in the user file
+    286             */
+    287          }
+    288          
+    289          /**
+    290            * @brief  DeInitializes COMP MSP.
+    291            * @param  hcomp: COMP handle
+    292            * @retval None
+    293            */
+    294          __weak void HAL_COMP_MspDeInit(COMP_HandleTypeDef *hcomp)
+    295          {
+    296            /* NOTE : This function Should not be modified, when the callback is needed,
+    297                      the HAL_COMP_MspDeInit could be implenetd in the user file
+    298             */
+    299          }
+    300          
+    301          /**
+    302            * @}
+    303            */
+    304          
+    305          /** @defgroup HAL_COMP_Group2 I/O operation functions 
+    306           *  @brief   Data transfers functions 
+    307           *
+    308          @verbatim   
+    309           ===============================================================================
+    310                                ##### IO operation functions #####
+    311           ===============================================================================  
+    312              [..]
+    313              This subsection provides a set of functions allowing to manage the COMP data 
+    314              transfers.
+    315          
+    316          @endverbatim
+    317            * @{
+    318            */
+    319          
+    320          /**
+    321            * @brief  Start the comparator 
+    322            * @param  hcomp: COMP handle
+    323            * @retval HAL status
+    324            */
+    325          HAL_StatusTypeDef HAL_COMP_Start(COMP_HandleTypeDef *hcomp)
+    326          { 
+    327            HAL_StatusTypeDef status = HAL_OK;
+    328            
+    329            /* Check the COMP handle allocation and lock status */
+    330            if((hcomp == NULL) || ((hcomp->State & COMP_STATE_BIT_LOCK) != 0x00))
+    331            {
+    332              status = HAL_ERROR;
+    333            }
+    334            else
+    335            {
+    336              /* Check the parameter */
+    337              assert_param(IS_COMP_ALL_INSTANCE(hcomp->Instance));
+    338          
+    339              if(hcomp->State == HAL_COMP_STATE_READY)
+    340              {
+    341                /* Enable the selected comparator */
+    342                __HAL_COMP_ENABLE(hcomp);
+    343          
+    344                hcomp->State = HAL_COMP_STATE_BUSY;      
+    345              }
+    346              else
+    347              {
+    348                status = HAL_ERROR;
+    349              }
+    350            }
+    351          
+    352            return status;
+    353          }
+    354          
+    355          /**
+    356            * @brief  Stop the comparator 
+    357            * @param  hcomp: COMP handle
+    358            * @retval HAL status
+    359            */
+    360          HAL_StatusTypeDef HAL_COMP_Stop(COMP_HandleTypeDef *hcomp)
+    361          { 
+    362            HAL_StatusTypeDef status = HAL_OK;
+    363            
+    364            /* Check the COMP handle allocation and lock status */
+    365            if((hcomp == NULL) || ((hcomp->State & COMP_STATE_BIT_LOCK) != 0x00))
+    366            {
+    367              status = HAL_ERROR;
+    368            }
+    369            else
+    370            {
+    371              /* Check the parameter */
+    372              assert_param(IS_COMP_ALL_INSTANCE(hcomp->Instance));
+    373          
+    374              if(hcomp->State == HAL_COMP_STATE_BUSY)
+    375              {
+    376                /* Disable the selected comparator */
+    377                __HAL_COMP_DISABLE(hcomp);
+    378          
+    379                hcomp->State = HAL_COMP_STATE_READY;
+    380              }
+    381              else
+    382              {
+    383                status = HAL_ERROR;
+    384              }
+    385            }
+    386            
+    387            return status;
+    388          }
+    389          
+    390          /**
+    391            * @brief  Enables the interrupt and starts the comparator
+    392            * @param  hcomp: COMP handle
+    393            * @param  mode: IT trigger mode: a value of @ref COMP_TriggerMode
+    394            * @retval HAL status.
+    395            */
+    396          HAL_StatusTypeDef HAL_COMP_Start_IT(COMP_HandleTypeDef *hcomp)
+    397          { 
+    398            HAL_StatusTypeDef status = HAL_OK;
+    399            uint32_t extiline = 0;
+    400            
+    401            status = HAL_COMP_Start(hcomp);
+    402            if(status == HAL_OK)
+    403            {
+    404              /* Check the Exti Line output configuration */
+    405              extiline = __HAL_COMP_GET_EXTI_LINE(hcomp->Instance);
+    406          
+    407              /* Configure the rising edge */
+    408              if((hcomp->Init.TriggerMode & COMP_TRIGGERMODE_IT_RISING) != 0x00)
+    409              {
+    410                __HAL_COMP_EXTI_RISING_IT_ENABLE(extiline);
+    411              }
+    412              else
+    413              {
+    414                __HAL_COMP_EXTI_RISING_IT_DISABLE(extiline);
+    415              }
+    416              
+    417              /* Configure the falling edge */
+    418              if((hcomp->Init.TriggerMode & COMP_TRIGGERMODE_IT_FALLING) != 0x00)
+    419              {
+    420                __HAL_COMP_EXTI_FALLING_IT_ENABLE(extiline);
+    421              }
+    422              else
+    423              {
+    424                __HAL_COMP_EXTI_FALLING_IT_DISABLE(extiline);
+    425              }
+    426              
+    427              /* Enable Exti interrupt mode */
+    428              __HAL_COMP_EXTI_ENABLE_IT(extiline);
+    429              
+    430              /* Clear COMP Exti pending bit */
+    431              __HAL_COMP_EXTI_CLEAR_FLAG(extiline);  
+    432            }
+    433          
+    434            return status;
+    435          }
+    436          
+    437          /**
+    438            * @brief  Disable the interrupt and Stop the comparator 
+    439            * @param  hcomp: COMP handle
+    440            * @retval HAL status
+    441            */
+    442          HAL_StatusTypeDef HAL_COMP_Stop_IT(COMP_HandleTypeDef *hcomp)
+    443          {  
+    444            HAL_StatusTypeDef status = HAL_OK;
+    445            
+    446            /* Disable the Exti Line interrupt mode */
+    447            __HAL_COMP_EXTI_DISABLE_IT(__HAL_COMP_GET_EXTI_LINE(hcomp->Instance));
+    448            
+    449            status = HAL_COMP_Stop(hcomp);
+    450            
+    451            return status;
+    452          }
+    453          
+    454          /**
+    455            * @brief  Comparator IRQ Handler 
+    456            * @param  hcomp: COMP handle
+    457            * @retval HAL status
+    458            */
+    459          void HAL_COMP_IRQHandler(COMP_HandleTypeDef *hcomp)
+    460          {
+    461            uint32_t extiline = __HAL_COMP_GET_EXTI_LINE(hcomp->Instance);
+    462            
+    463            /* Check COMP Exti flag */
+    464            if(__HAL_COMP_EXTI_GET_FLAG(extiline) != RESET)
+    465            {    
+    466              /* Clear COMP Exti pending bit */
+    467              __HAL_COMP_EXTI_CLEAR_FLAG(extiline);
+    468            }  
+    469            
+    470            /* COMP trigger user callback */
+    471            HAL_COMP_TriggerCallback(hcomp);
+    472          }
+    473          
+    474          /**
+    475            * @}
+    476            */
+    477          
+    478          /** @defgroup HAL_COMP_Group3 Peripheral Control functions 
+    479           *  @brief   management functions 
+    480           *
+    481          @verbatim   
+    482           ===============================================================================
+    483                                ##### Peripheral Control functions #####
+    484           ===============================================================================  
+    485              [..]
+    486              This subsection provides a set of functions allowing to control the COMP data 
+    487              transfers.
+    488          
+    489          @endverbatim
+    490            * @{
+    491            */
+    492          
+    493          /**
+    494            * @brief  Lock the selected comparator configuration. 
+    495            * @param  hcomp: COMP handle
+    496            * @retval HAL status
+    497            */
+    498          HAL_StatusTypeDef HAL_COMP_Lock(COMP_HandleTypeDef *hcomp)
+    499          {
+    500            HAL_StatusTypeDef status = HAL_OK;
+    501          
+    502            /* Check the COMP handle allocation and lock status */
+    503            if((hcomp == NULL) || ((hcomp->State & COMP_STATE_BIT_LOCK) != 0x00))
+    504            {
+    505              status = HAL_ERROR;
+    506            }
+    507            else
+    508            {
+    509              /* Check the parameter */
+    510              assert_param(IS_COMP_ALL_INSTANCE(hcomp->Instance));
+    511          
+    512              /* Set lock flag */
+    513              hcomp->State |= COMP_STATE_BIT_LOCK;
+    514          
+    515              /* Set the lock bit corresponding to selected comparator */
+    516              __HAL_COMP_LOCK(hcomp);
+    517            }
+    518            
+    519            return status; 
+    520          }
+    521          
+    522          /**
+    523            * @brief  Return the output level (high or low) of the selected comparator. 
+    524            *         The output level depends on the selected polarity.
+    525            *         If the polarity is not inverted:
+    526            *           - Comparator output is low when the non-inverting input is at a lower
+    527            *             voltage than the inverting input
+    528            *           - Comparator output is high when the non-inverting input is at a higher
+    529            *             voltage than the inverting input
+    530            *         If the polarity is inverted:
+    531            *           - Comparator output is high when the non-inverting input is at a lower
+    532            *             voltage than the inverting input
+    533            *           - Comparator output is low when the non-inverting input is at a higher
+    534            *             voltage than the inverting input
+    535            * @param  hcomp: COMP handle
+    536            * @retval Returns the selected comparator output level: COMP_OUTPUTLEVEL_LOW or COMP_OUTPUTLEVEL_HIGH.
+    537            *       
+    538            */
+    539          uint32_t HAL_COMP_GetOutputLevel(COMP_HandleTypeDef *hcomp)
+    540          {
+    541            /* Check the parameter */
+    542            assert_param(IS_COMP_ALL_INSTANCE(hcomp->Instance));
+    543            
+    544            return((uint32_t)(hcomp->Instance->CSR & COMP_OUTPUTLEVEL_HIGH));
+    545          }
+    546          
+    547          /**
+    548            * @brief  Comparator callback.
+    549            * @param  hcomp: COMP handle
+    550            * @retval None
+    551            */
+    552          __weak void HAL_COMP_TriggerCallback(COMP_HandleTypeDef *hcomp)
+    553          {
+    554            /* NOTE : This function should not be modified, when the callback is needed,
+    555                      the HAL_COMP_TriggerCallback should be implemented in the user file
+    556             */
+    557          }
+    558          
+    559          
+    560          /**
+    561            * @}
+    562            */
+    563          
+    564          /** @defgroup HAL_COMP_Group4 Peripheral State functions 
+    565           *  @brief   Peripheral State functions 
+    566           *
+    567          @verbatim   
+    568           ===============================================================================
+    569                                ##### Peripheral State functions #####
+    570           ===============================================================================  
+    571              [..]
+    572              This subsection permit to get in run-time the status of the peripheral 
+    573              and the data flow.
+    574          
+    575          @endverbatim
+    576            * @{
+    577            */
+    578          
+    579          /**
+    580            * @brief  Return the COMP state
+    581            * @param  hcomp : COMP handle
+    582            * @retval HAL state
+    583            */
+    584          HAL_COMP_StateTypeDef HAL_COMP_GetState(COMP_HandleTypeDef *hcomp)
+    585          {
+    586            /* Check the COMP handle allocation */
+    587            if(hcomp == NULL)
+    588            {
+    589              return HAL_COMP_STATE_RESET;
+    590            }
+    591          
+    592            /* Check the parameter */
+    593            assert_param(IS_COMP_ALL_INSTANCE(hcomp->Instance));
+    594          
+    595            return hcomp->State;
+    596          }
+    597          /**
+    598            * @}
+    599            */
+    600          
+    601          /**
+    602            * @}
+    603            */
+    604          
+    605          #endif /* HAL_COMP_MODULE_ENABLED */
+    606          /**
+    607            * @}
+    608            */
+    609          
+    610          /**
+    611            * @}
+    612            */
+    613          
+    614          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+
+ 
+
+ 
+
+
+Errors: none
+Warnings: none

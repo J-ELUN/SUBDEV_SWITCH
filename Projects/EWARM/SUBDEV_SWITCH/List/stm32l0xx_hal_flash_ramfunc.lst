@@ -1,0 +1,277 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:13
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_flash_ramfunc.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_flash_ramfunc.c
+#        -D STM32L053xx -D USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\stm32l0xx_hal_flash_ramfunc.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\stm32l0xx_hal_flash_ramfunc.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_flash_ramfunc.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    stm32l0xx_hal_flash_ramfunc.c
+      4            * @author  MCD Application Team
+      5            * @version V1.1.0
+      6            * @date    18-June-2014
+      7            * @brief   FLASH RAMFUNC driver.
+      8            *          This file provides a Flash firmware functions which should be 
+      9            *          executed from internal SRAM
+     10            *            + FLASH HalfPage Programming
+     11            *            + FLASH Power Down in Run mode
+     12            *
+     13            *  @verbatim
+     14          
+     15              *** ARM Compiler ***
+     16              --------------------
+     17              [..] RAM functions are defined using the toolchain options. 
+     18                   Functions that are be executed in RAM should reside in a separate
+     19                   source module. Using the 'Options for File' dialog you can simply change
+     20                   the 'Code / Const' area of a module to a memory space in physical RAM.
+     21                   Available memory areas are declared in the 'Target' tab of the 
+     22                   Options for Target' dialog.
+     23          
+     24              *** ICCARM Compiler ***
+     25              -----------------------
+     26              [..] RAM functions are defined using a specific toolchain keyword "__ramfunc".
+     27          
+     28              *** GNU Compiler ***
+     29              --------------------
+     30              [..] RAM functions are defined using a specific toolchain attribute
+     31                   "__attribute__((section(".RamFunc")))".
+     32            
+     33            @endverbatim
+     34            ******************************************************************************
+     35            * @attention
+     36            *
+     37            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+     38            *
+     39            * Redistribution and use in source and binary forms, with or without modification,
+     40            * are permitted provided that the following conditions are met:
+     41            *   1. Redistributions of source code must retain the above copyright notice,
+     42            *      this list of conditions and the following disclaimer.
+     43            *   2. Redistributions in binary form must reproduce the above copyright notice,
+     44            *      this list of conditions and the following disclaimer in the documentation
+     45            *      and/or other materials provided with the distribution.
+     46            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+     47            *      may be used to endorse or promote products derived from this software
+     48            *      without specific prior written permission.
+     49            *
+     50            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+     51            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     52            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     53            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+     54            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+     55            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+     56            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+     57            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+     58            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     59            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     60            *
+     61            ******************************************************************************
+     62            */ 
+     63          
+     64          /* Includes ------------------------------------------------------------------*/
+     65          #include "stm32l0xx_hal.h"
+     66          /** @addtogroup STM32L0XX_HAL_Driver
+     67            * @{
+     68            */
+     69          
+     70          /** @defgroup FLASHRamfunc Driver
+     71            * @brief FLASH functions executed from RAM
+     72            * @{
+     73            */
+     74          
+     75          #ifdef HAL_FLASH_MODULE_ENABLED
+     76          
+     77          /* Private typedef -----------------------------------------------------------*/
+     78          /* Private define ------------------------------------------------------------*/
+     79          /* Private macro -------------------------------------------------------------*/
+     80          /* Private variables ---------------------------------------------------------*/
+     81          /* Private function prototypes -----------------------------------------------*/
+     82          static __RAM_FUNC  FLASH_Program_HalfPage(uint32_t Address, uint32_t *Data);
+     83          
+     84          /* Private functions ---------------------------------------------------------*/
+     85          
+     86          /** @defgroup FLASHRamfunc_Private_Functions
+     87            * @{
+     88            */
+     89          
+     90          /** @defgroup FLASHRamfunc_Group1 Peripheral  features functions 
+     91           *  @brief   Data transfers functions 
+     92           *
+     93          @verbatim   
+     94           ===============================================================================
+     95                                ##### ramfunc functions #####
+     96           ===============================================================================  
+     97              [..]
+     98              This subsection provides a set of functions that should be executed from RAM 
+     99              transfers.
+    100          
+    101          @endverbatim
+    102            * @{
+    103            */
+    104          
+    105          /**
+    106            * @brief  Program a half page word at a specified address, 
+    107            * @note   This function should be executed from RAM        
+    108            * @param  Address:  specifies the address to be programmed, 
+    109            *         the address should be half page aligned.
+    110            * @param  *Data: specifies the buffer of data to be programmed,
+    111            *                the size of the buffer is 16 words.
+    112            * 
+    113            * @retval HAL_StatusTypeDef HAL Status
+    114            */
+    115          __RAM_FUNC  HAL_FLASHEx_HalfPageProgram(uint32_t Address, uint32_t *Data)
+    116          {
+    117            HAL_StatusTypeDef status = HAL_OK;
+    118            uint32_t timeout = 0xFFFFFFFF;
+    119            /*Program word (32-bit) at a specified address.*/
+    120            FLASH_Program_HalfPage(Address, Data);
+    121            
+    122            /* Wait for a FLASH operation to complete or a TIMEOUT to occur */
+    123            while(((FLASH->SR & FLASH_FLAG_BSY) != 0x00) && (timeout != 0x00))
+    124            {
+    125              timeout--;
+    126            }
+    127            
+    128            if(timeout == 0x00 )
+    129              {
+    130                return HAL_TIMEOUT;
+    131              }
+    132            
+    133            /* Reset PROG bit */
+    134            FLASH->PECR &= ~FLASH_PECR_PROG;
+    135            FLASH->PECR &= ~FLASH_PECR_FPRG;
+    136            return status;
+    137          }
+    138          
+    139          /**
+    140            * @brief   Enable the Power down in Run Mode
+    141            * @note    This function should be called and executed from SRAM memory
+    142            * @param  None
+    143            * @retval None
+    144            */
+    145          __RAM_FUNC  HAL_FLASHEx_EnableRunPowerDown(void)
+    146          {
+    147            /* Enable the Power Down in Run mode*/
+    148            __HAL_FLASH_POWER_DOWN_ENABLE();
+    149            
+    150            return HAL_OK;
+    151            
+    152          }
+    153          
+    154          /**
+    155            * @brief   Disable the Power down in Run Mode
+    156            * @note    This function should be called and executed from SRAM memory
+    157            * @param  None
+    158            * @retval None
+    159            */
+    160          __RAM_FUNC  HAL_FLASHEx_DisableRunPowerDown(void)
+    161          {
+    162            /* Disable the Power Down in Run mode*/
+    163            __HAL_FLASH_POWER_DOWN_DISABLE();
+    164          
+    165            return HAL_OK;  
+    166          }
+    167          
+    168          /**
+    169            * @}
+    170            */
+    171          
+    172          /**
+    173            * @brief  Program a half page in program memory.
+    174            * @param  Address: The Half page address in program memory to be written.
+    175            * @param  Data:
+    176            * @retval None
+    177            */
+    178          static __RAM_FUNC  FLASH_Program_HalfPage(uint32_t Address, uint32_t *Data)
+    179          {
+    180            HAL_StatusTypeDef status = HAL_OK;
+    181            uint32_t i =0;
+    182            
+    183            /* Set PROG bit */
+    184            FLASH->PECR |= FLASH_PECR_PROG;
+    185            
+    186            /* Set FPRG bit */
+    187            FLASH->PECR |= FLASH_PECR_FPRG;
+    188          
+    189            *(__IO uint32_t*)Address = Data[0];
+    190            
+    191            for(i = 1; i <= 15; i++)
+    192            {  
+    193              *(__IO uint32_t*)(Address + 4) = Data[i];
+    194            } 
+    195            return status;
+    196          }
+    197          
+    198          /**
+    199            * @}
+    200            */   
+    201          #endif /* HAL_FLASH_MODULE_ENABLED */
+    202          
+    203          
+    204            
+    205          /**
+    206            * @}
+    207            */
+    208          
+    209          /**
+    210            * @}
+    211            */
+    212          
+    213               
+    214          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+    215          
+    216          
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+       0   HAL_FLASHEx_DisableRunPowerDown
+       0   HAL_FLASHEx_EnableRunPowerDown
+      16   HAL_FLASHEx_HalfPageProgram
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable2
+       4  ??DataTable2_1
+       4  ??DataTable2_2
+       4  ??DataTable2_3
+       4  ??DataTable2_4
+      22  HAL_FLASHEx_DisableRunPowerDown
+      22  HAL_FLASHEx_EnableRunPowerDown
+      86  HAL_FLASHEx_HalfPageProgram
+
+ 
+ 150 bytes in section .textrw
+ 
+ 150 bytes of CODE memory
+
+Errors: none
+Warnings: none

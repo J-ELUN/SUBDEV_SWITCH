@@ -1,0 +1,404 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:27
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  F:\demo\SUBDEV_SWITCH\Projects\Src\usart.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Projects\Src\usart.c -D STM32L053xx -D
+#        USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\usart.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\usart.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Projects\Src\usart.c
+      1          ///**************************************************************************************************
+      2          // *                                            INCLUDES
+      3          // **************************************************************************************************/
+      4          #include "usart.h"
+      5          #include "stm32l0xx_hal_msp.h"
+      6          
+      7          UART_HandleTypeDef huartx_zigbee;                       /* zigbee´®¿Ú */
+      8          UART_HandleTypeDef huartx_debug;                       /* debug´®¿Ú */
+      9          
+     10          u8 Zig_DMA_RxBuf[UART_MAX_RX_LEN];
+     11          /**************************************************************************************************
+     12           *                                           FUNCTION
+     13           **************************************************************************************************/
+     14          
+     15          /**
+     16            * @brief  USART2 for UM200 init function 
+     17            * @param  None
+     18            * @retval None
+     19            */
+     20          void HAL_UARTx_Init(UART_HandleTypeDef *huartx)
+     21          {
+     22            if(huartx==&huartx_debug)
+     23            {
+     24              huartx->Instance = USARTx_DEBUG;
+     25              huartx->Init.BaudRate = BAUND_DEBUG;
+     26              huartx->Init.WordLength = UART_WORDLENGTH_8B;
+     27              huartx->Init.StopBits = UART_STOPBITS_1;
+     28              huartx->Init.Parity = UART_PARITY_NONE;
+     29              huartx->Init.HwFlowCtl = UART_HWCONTROL_NONE; 
+     30              huartx->Init.Mode = UART_MODE_TX_RX;
+     31          
+     32              if(HAL_UART_Init(huartx) != HAL_OK)
+     33              {
+     34                Error_Handler(); 
+     35              }
+     36              /* 
+     37              if(HAL_UART_Receive_DMA(huartx, Debug_DMA_Rx_Buf.Rx_Buf, UART_MAX_RX_LEN) != HAL_OK) //debug
+     38              {
+     39                Error_Handler();
+     40              }*/
+     41            }
+     42            else
+     43            {
+     44              huartx->Instance = USARTx_ZIGBEE;
+     45              huartx->Init.BaudRate   = BAUND_ZIGBEE;
+     46              huartx->Init.WordLength = UART_WORDLENGTH_8B;
+     47              huartx->Init.StopBits   = UART_STOPBITS_1;
+     48              huartx->Init.Parity     = UART_PARITY_NONE;
+     49              huartx->Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+     50              huartx->Init.Mode       = UART_MODE_TX_RX;   
+     51              huartx->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+     52              
+     53              if(HAL_UART_Init(huartx) != HAL_OK)
+     54              {
+     55                Error_Handler();
+     56              }
+     57              
+     58              if(HAL_UART_Receive_DMA(huartx, Zig_DMA_RxBuf, UART_MAX_RX_LEN) != HAL_OK) 
+     59              {
+     60                Error_Handler();
+     61              }
+     62            }
+     63          }
+     64          
+     65          /**
+     66            * @brief  Initializes the Global MSP.
+     67            * @param  None
+     68            * @retval None
+     69            */
+     70          void HAL_UART_MspInit(UART_HandleTypeDef* huart)   
+     71          {
+     72            static DMA_HandleTypeDef hdma_debug_rx;
+     73            static DMA_HandleTypeDef hdma_debug_tx;
+     74            static DMA_HandleTypeDef hdma_zigbee_rx;
+     75            static DMA_HandleTypeDef hdma_zigbee_tx;
+     76            
+     77            GPIO_InitTypeDef  GPIO_InitStruct;
+     78            if(huart->Instance==USARTx_DEBUG)
+     79            {
+     80              
+     81              /*##-1- Enable peripherals and GPIO Clocks #################################*/
+     82              /* Enable GPIO TX/RX clock */
+     83              USARTx_DEBUG_RX_GPIO_CLK_ENABLE();
+     84              USARTx_DEBUG_TX_GPIO_CLK_ENABLE();
+     85          
+     86              /* Enable USART2 clock */
+     87              USARTx_DEBUG_CLK_ENABLE();  
+     88          
+     89              /* Enable DMA1 clock */
+     90              DMAx_DEBUG_CLK_ENABLE();   
+     91          
+     92              /*##-2- Configure peripheral GPIO ##########################################*/  
+     93          
+     94              /* UART TX GPIO pin configuration  */
+     95              GPIO_InitStruct.Pin       = USARTx_DEBUG_TX_PIN;
+     96              GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+     97              GPIO_InitStruct.Pull      = GPIO_NOPULL;
+     98              GPIO_InitStruct.Speed     = GPIO_SPEED_FAST;
+     99              GPIO_InitStruct.Alternate = USARTx_DEBUG_TX_AF;
+    100          
+    101              HAL_GPIO_Init(USARTx_DEBUG_TX_GPIO_PORT, &GPIO_InitStruct);
+    102          
+    103              /* UART RX GPIO pin configuration  */
+    104              GPIO_InitStruct.Pin = USARTx_DEBUG_RX_PIN;
+    105              GPIO_InitStruct.Alternate = USARTx_DEBUG_RX_AF;
+    106          
+    107              HAL_GPIO_Init(USARTx_DEBUG_RX_GPIO_PORT, &GPIO_InitStruct);
+    108          
+    109              /*##-3- Configure the DMA streams ##########################################*/
+    110              /* Configure the DMA handler for Transmission process */
+    111              hdma_debug_tx.Instance                 = USARTx_DEBUG_TX_DMA_CHANNEL;
+    112              hdma_debug_tx.Init.Request             = USARTx_DEBUG_TX_DMA_REQUEST;
+    113              hdma_debug_tx.Init.Direction           = DMA_MEMORY_TO_PERIPH;
+    114              hdma_debug_tx.Init.PeriphInc           = DMA_PINC_DISABLE;
+    115              hdma_debug_tx.Init.MemInc              = DMA_MINC_ENABLE;
+    116              hdma_debug_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    117              hdma_debug_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+    118              hdma_debug_tx.Init.Mode                = DMA_NORMAL;
+    119              hdma_debug_tx.Init.Priority            = DMA_PRIORITY_LOW;
+    120              HAL_DMA_Init(&hdma_debug_tx); 
+    121          
+    122              /* Associate the initialized DMA handle to the the UART handle */   
+    123              __HAL_LINKDMA(huart, hdmatx, hdma_debug_tx);
+    124          
+    125              /* Configure the DMA handler for Transmission process */
+    126              hdma_debug_rx.Instance                 = USARTx_DEBUG_RX_DMA_CHANNEL;
+    127              hdma_debug_rx.Init.Request             = USARTx_DEBUG_RX_DMA_REQUEST;
+    128              hdma_debug_rx.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+    129              hdma_debug_rx.Init.PeriphInc           = DMA_PINC_DISABLE;
+    130              hdma_debug_rx.Init.MemInc              = DMA_MINC_ENABLE;
+    131              hdma_debug_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+    132              hdma_debug_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    133              hdma_debug_rx.Init.Mode                = DMA_NORMAL;
+    134              hdma_debug_rx.Init.Priority            = DMA_PRIORITY_HIGH;  
+    135              HAL_DMA_Init(&hdma_debug_rx);
+    136          
+    137              /* Associate the initialized DMA handle to the the UART handle */
+    138              __HAL_LINKDMA(huart, hdmarx, hdma_debug_rx);
+    139              /*##-4- Configure the NVIC for DMA #########################################*/
+    140              /* NVIC configuration for DMA transfer complete interrupt (USART1_TX) */
+    141              HAL_NVIC_SetPriority(USARTx_DEBUG_DMA_TX_IRQn, 0, 2);
+    142              HAL_NVIC_EnableIRQ(USARTx_DEBUG_DMA_TX_IRQn);
+    143          
+    144              /* NVIC configuration for DMA transfer complete interrupt (USART1_RX) */
+    145              HAL_NVIC_SetPriority(USARTx_DEBUG_DMA_RX_IRQn, 0, 2);   
+    146              HAL_NVIC_EnableIRQ(USARTx_DEBUG_DMA_RX_IRQn); 
+    147          
+    148                  /*##-3- Configure the NVIC for UART ########################################*/
+    149              /* NVIC for USART2 */
+    150              HAL_NVIC_SetPriority(USARTx_DEBUG_IRQn, 0, 2);
+    151              HAL_NVIC_EnableIRQ(USARTx_DEBUG_IRQn);
+    152              
+    153            }
+    154            else if(huart->Instance==USARTx_ZIGBEE)
+    155            { 
+    156              /*##-1- Enable peripherals and GPIO Clocks #################################*/
+    157              /* Enable GPIO TX/RX clock */
+    158              USARTx_ZIGBEE_TX_GPIO_CLK_ENABLE();
+    159              USARTx_ZIGBEE_RX_GPIO_CLK_ENABLE();
+    160              /* Enable LPUART1 clock */
+    161              USARTx_ZIGBEE_CLK_ENABLE(); 
+    162              DMAx_ZIGBEE_CLK_ENABLE();
+    163              
+    164              /*##-2- Configure peripheral GPIO ##########################################*/  
+    165              /* UART TX GPIO pin configuration  */
+    166              GPIO_InitStruct.Pin       = USARTx_ZIGBEE_TX_PIN;
+    167              GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+    168              GPIO_InitStruct.Pull      = GPIO_NOPULL;
+    169              GPIO_InitStruct.Speed     = GPIO_SPEED_FAST;
+    170              GPIO_InitStruct.Alternate = USARTx_ZIGBEE_TX_AF;
+    171              
+    172              HAL_GPIO_Init(USARTx_ZIGBEE_TX_GPIO_PORT, &GPIO_InitStruct);
+    173                
+    174              /* UART RX GPIO pin configuration  */
+    175              GPIO_InitStruct.Pin = USARTx_ZIGBEE_RX_PIN;
+    176              GPIO_InitStruct.Alternate = USARTx_ZIGBEE_RX_AF;
+    177                
+    178              HAL_GPIO_Init(USARTx_ZIGBEE_RX_GPIO_PORT, &GPIO_InitStruct);
+    179              
+    180              /*##-3- Configure the DMA streams ##########################################*/
+    181              /* Configure the DMA handler for Transmission process */
+    182              hdma_zigbee_tx.Instance                 = USARTx_ZIGBEE_DMA_TX_CHANNEL;
+    183              hdma_zigbee_tx.Init.Request             = USARTx_ZIGBEE_DMA_TX_REQUEST;
+    184              hdma_zigbee_tx.Init.Direction           = DMA_MEMORY_TO_PERIPH;
+    185              hdma_zigbee_tx.Init.PeriphInc           = DMA_PINC_DISABLE;
+    186              hdma_zigbee_tx.Init.MemInc              = DMA_MINC_ENABLE;
+    187              hdma_zigbee_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    188              hdma_zigbee_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+    189              hdma_zigbee_tx.Init.Mode                = DMA_NORMAL;
+    190              hdma_zigbee_tx.Init.Priority            = DMA_PRIORITY_LOW;
+    191              HAL_DMA_Init(&hdma_zigbee_tx); 
+    192          
+    193              /* Associate the initialized DMA handle to the the UART handle */   
+    194              __HAL_LINKDMA(huart,hdmatx,hdma_zigbee_tx);
+    195          
+    196              /* Configure the DMA handler for Transmission process */
+    197              hdma_zigbee_rx.Instance                 = USARTx_ZIGBEE_DMA_RX_CHANNEL;
+    198              hdma_zigbee_rx.Init.Request             = USARTx_ZIGBEE_DMA_RX_REQUEST;
+    199              hdma_zigbee_rx.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+    200              hdma_zigbee_rx.Init.PeriphInc           = DMA_PINC_DISABLE;
+    201              hdma_zigbee_rx.Init.MemInc              = DMA_MINC_ENABLE;
+    202              hdma_zigbee_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+    203              hdma_zigbee_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    204              hdma_zigbee_rx.Init.Mode                = DMA_NORMAL;
+    205              hdma_zigbee_rx.Init.Priority            = DMA_PRIORITY_HIGH;  
+    206              HAL_DMA_Init(&hdma_zigbee_rx);
+    207          
+    208              /* Associate the initialized DMA handle to the the UART handle */
+    209              __HAL_LINKDMA(huart, hdmarx, hdma_zigbee_rx);
+    210              
+    211              /*##-4- Configure the NVIC for DMA #########################################*/
+    212              /* NVIC configuration for DMA transfer complete interrupt (USART1_TX) */
+    213              HAL_NVIC_SetPriority(USARTx_ZIGBEE_DMA_TX_IRQn, 0, 1); 
+    214              HAL_NVIC_EnableIRQ(USARTx_ZIGBEE_DMA_TX_IRQn);
+    215          
+    216              /* NVIC configuration for DMA transfer complete interrupt (USART1_RX) */
+    217              HAL_NVIC_SetPriority(USARTx_ZIGBEE_DMA_RX_IRQn, 0, 1);   
+    218              HAL_NVIC_EnableIRQ(USARTx_ZIGBEE_DMA_RX_IRQn); 
+    219              
+    220              HAL_NVIC_SetPriority(USARTx_ZIGBEE_IRQn, 0, 1); 
+    221              HAL_NVIC_EnableIRQ(USARTx_ZIGBEE_IRQn);
+    222            }  
+    223          }
+    224          
+    225          void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)   
+    226          {  
+    227            GPIO_InitTypeDef  GPIO_InitStruct;
+    228            if(huart->Instance==USARTx_DEBUG)
+    229            { 
+    230               /*##-1- Enable peripherals and GPIO Clocks #################################*/
+    231              /* Disable LPUART1 clock */
+    232              USARTx_DEBUG_CLK_DISABLE(); 
+    233              DMAx_DEBUG_CLK_DISABLE();
+    234              
+    235              /*##-2- Configure peripheral GPIO ##########################################*/  
+    236              /* UART TX GPIO pin configuration  */
+    237              GPIO_InitStruct.Pin       = USARTx_DEBUG_TX_PIN | USARTx_DEBUG_RX_PIN;
+    238              GPIO_InitStruct.Mode      = GPIO_MODE_ANALOG;
+    239              GPIO_InitStruct.Pull      = GPIO_NOPULL;   
+    240              HAL_GPIO_Init(USARTx_DEBUG_TX_GPIO_PORT, &GPIO_InitStruct);      
+    241              HAL_GPIO_Init(USARTx_DEBUG_RX_GPIO_PORT, &GPIO_InitStruct);
+    242              
+    243              /*##-4- Disable the NVIC for DMA ###########################################*/
+    244              HAL_NVIC_DisableIRQ(USARTx_DEBUG_DMA_TX_IRQn);
+    245              HAL_NVIC_DisableIRQ(USARTx_DEBUG_DMA_RX_IRQn);
+    246              HAL_NVIC_DisableIRQ(USARTx_DEBUG_IRQn);
+    247            }
+    248            else if(huart->Instance==USARTx_ZIGBEE)
+    249            { 
+    250              /*##-1- Enable peripherals and GPIO Clocks #################################*/
+    251              /* Disable LPUART1 clock */
+    252              USARTx_ZIGBEE_CLK_DISABLE(); 
+    253              DMAx_ZIGBEE_CLK_DISABLE();
+    254              
+    255              /*##-2- Configure peripheral GPIO ##########################################*/  
+    256              /* UART TX GPIO pin configuration  */
+    257              GPIO_InitStruct.Pin       = USARTx_ZIGBEE_TX_PIN | USARTx_ZIGBEE_RX_PIN;
+    258              GPIO_InitStruct.Mode      = GPIO_MODE_ANALOG;
+    259              GPIO_InitStruct.Pull      = GPIO_NOPULL;   
+    260              HAL_GPIO_Init(USARTx_ZIGBEE_TX_GPIO_PORT, &GPIO_InitStruct);      
+    261              HAL_GPIO_Init(USARTx_ZIGBEE_RX_GPIO_PORT, &GPIO_InitStruct);
+    262              
+    263              /*##-4- Disable the NVIC for DMA ###########################################*/
+    264              HAL_NVIC_DisableIRQ(USARTx_ZIGBEE_DMA_TX_IRQn);
+    265              HAL_NVIC_DisableIRQ(USARTx_ZIGBEE_DMA_RX_IRQn);
+    266              HAL_NVIC_DisableIRQ(USARTx_ZIGBEE_IRQn);
+    267            }  
+    268          }
+    269          
+    270          ///**
+    271          //  * @brief  DeInitializes the Global MSP.
+    272          //  * @param  None  
+    273          //  * @retval None
+    274          //  */
+    275          //void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
+    276          //{
+    277          //  static DMA_HandleTypeDef hdma_debug_rx;
+    278          //  static DMA_HandleTypeDef hdma_debug_tx;
+    279          //  
+    280          //   if(huart->Instance==USARTx_DEBUG)
+    281          //  {
+    282          //    /**USART2 GPIO Configuration   
+    283          //    PA2     ------> USART2_TX
+    284          //    PA3     ------> USART3_RX
+    285          //    */   
+    286          //    
+    287          //    /*##-1- Reset peripherals ##################################################*/
+    288          //    USARTx_DEBUG_FORCE_RESET();
+    289          //    USARTx_DEBUG_RELEASE_RESET();
+    290          //
+    291          //    /*##-2- Disable peripherals and GPIO Clocks #################################*/
+    292          //    /* Configure UART Tx as alternate function  */
+    293          //    HAL_GPIO_DeInit(USARTx_DEBUG_TX_GPIO_PORT, USARTx_DEBUG_TX_PIN);
+    294          //    /* Configure UART Rx as alternate function  */
+    295          //    HAL_GPIO_DeInit(USARTx_DEBUG_RX_GPIO_PORT, USARTx_DEBUG_RX_PIN);
+    296          //
+    297          //    /*##-3- Disable the DMA Streams ############################################*/
+    298          //    /* De-Initialize the DMA Stream associate to transmission process */
+    299          //    HAL_DMA_DeInit(&hdma_debug_tx); 
+    300          //    /* De-Initialize the DMA Stream associate to reception process */
+    301          //    HAL_DMA_DeInit(&hdma_debug_rx);
+    302          //
+    303          //    /*##-4- Disable the NVIC for DMA ###########################################*/
+    304          //    HAL_NVIC_DisableIRQ(USARTx_DEBUG_DMA_TX_IRQn);
+    305          //    HAL_NVIC_DisableIRQ(USARTx_DEBUG_DMA_RX_IRQn);
+    306          //  }
+    307          //}
+    308          
+    309          void dbg_print(u8*buf,u16 len)
+    310          {
+    311            HAL_UART_Transmit_DMA(&huartx_debug, buf, len);   
+    312            while(__HAL_UART_GET_FLAG(&huartx_debug,UART_FLAG_TC)== RESET);  
+    313          }
+    314          
+    315          
+    316          
+    317          
+    318          
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+      32   HAL_UART_MspDeInit
+        32   -> HAL_GPIO_Init
+        32   -> HAL_NVIC_DisableIRQ
+      48   HAL_UART_MspInit
+        48   -> HAL_DMA_Init
+        48   -> HAL_GPIO_Init
+        48   -> HAL_NVIC_EnableIRQ
+        48   -> HAL_NVIC_SetPriority
+      16   HAL_UARTx_Init
+        16   -> Error_Handler
+        16   -> HAL_UART_Init
+        16   -> HAL_UART_Receive_DMA
+       8   dbg_print
+         8   -> HAL_UART_Transmit_DMA
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable3
+       4  ??DataTable3_1
+       4  ??DataTable3_2
+       4  ??DataTable3_3
+       4  ??DataTable3_4
+       4  ??DataTable3_5
+       4  ??DataTable3_6
+       4  ??DataTable3_7
+       4  ??DataTable3_8
+       4  ??DataTable3_9
+     148  HAL_UART_MspDeInit
+     466  HAL_UART_MspInit
+      96  HAL_UARTx_Init
+      24  dbg_print
+     240  hdma_debug_rx
+          hdma_debug_tx
+          hdma_zigbee_rx
+          hdma_zigbee_tx
+     208  huartx_debug
+          Zig_DMA_RxBuf
+     108  huartx_zigbee
+
+ 
+ 556 bytes in section .bss
+ 774 bytes in section .text
+ 
+ 774 bytes of CODE memory
+ 556 bytes of DATA memory
+
+Errors: none
+Warnings: none

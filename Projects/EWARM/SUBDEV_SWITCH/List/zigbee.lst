@@ -1,0 +1,691 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        21/Jul/2017  13:56:03
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  F:\demo\SUBDEV_SWITCH\Projects\Src\zigbee.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Projects\Src\zigbee.c -D STM32L053xx -D
+#        USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\zigbee.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\zigbee.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Projects\Src\zigbee.c
+      1          #include "main.h"
+      2          #include "zigbee.h"
+      3          #include "stm32l0xx_hal_msp.h"
+      4          #include "switch.h"
+      5          #include <string.h>
+      6          #include <stdio.h>
+      7          
+      8          
+      9          ZIG_DEV_INFO_TYPEDEF   zig_dev_info={0};
+     10          ZIG_BACKUP_DEV_INFO_TYPEDEF		zig_backup_dev_info={0};
+     11          ZIG_RX_WORKPANID_DSTADDR_TYPEDEF 	zig_rx_workpanid_dstaddr={0};
+     12          
+     13          ZIG_UART_BUF_TYPEDEF  Zig_Uart_Buf;
+     14          EEPROM_BACKUP_INFO_TYPEDEF eeprom_backup_info;
+     15          
+     16          
+     17          void Zigbee_Uart_Init(void)
+     18          {
+     19            GPIO_InitTypeDef  GPIO_InitStruct;
+     20          
+     21            /* Enable the GPIO Clock */  
+     22            ZIG_WAKE_GPIO_CLK_ENABLE();
+     23          
+     24            /* Configure the GPIO pin */
+     25            GPIO_InitStruct.Pin = ZIG_WAKE_PIN ;
+     26            GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+     27            GPIO_InitStruct.Pull = GPIO_PULLUP;
+     28            GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+     29            HAL_GPIO_Init(ZIG_WAKE_GPIO, &GPIO_InitStruct);   
+     30            Zigbee_WakeUp(); 
+     31            
+     32            /* Configure the Uart */
+     33            HAL_UARTx_Init(&huartx_zigbee);
+     34          }
+     35          /**
+     36            * @brief  Zigbee_Init.
+     37            * @param  None
+     38            * @retval None
+     39            */
+     40          void Zigbee_Init(void)
+     41          {
+     42            Zigbee_Uart_Init();
+     43            
+     44            if(Zigbee_Get_Set_Info()!=RET_OK)
+     45              Led_Run_Error();
+     46          }
+     47          
+     48          void Zigbee_DeInit(void)
+     49          {
+     50            GPIO_InitTypeDef  GPIO_InitStruct;
+     51          
+     52            /* Configure the GPIO pin */
+     53            GPIO_InitStruct.Pin = ZIG_WAKE_PIN ;
+     54            GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+     55            GPIO_InitStruct.Pull = GPIO_NOPULL;
+     56            HAL_GPIO_Init(ZIG_WAKE_GPIO, &GPIO_InitStruct);   
+     57            
+     58            /* Configure the Uart */
+     59            HAL_UART_DeInit(&huartx_zigbee);
+     60          }
+     61          
+     62          /**
+     63            * @brief  Zigbee_Sleep.SLEEP引脚下降沿有效(>1ms)
+     64            * @param  None
+     65            * @retval None
+     66            */
+     67          void Zigbee_Sleep(void)
+     68          {  
+     69            HAL_Delay(5);  //发送完数据不能立即进入sleep
+     70            Zig_Send_Cmd(Zig_Uart_Buf.Tx_Buf,CMD_ENTER_SLEEP);  
+     71          }
+     72          
+     73          /**
+     74            * @brief  Zigbee_WakeUp.WAKE引脚下降沿有效(>1ms)
+     75            * @param  None
+     76            * @retval None
+     77            */
+     78          void Zigbee_WakeUp(void)
+     79          {
+     80            GPIOx_PINx_SET(ZIG_WAKE_GPIO, ZIG_WAKE_PIN);
+     81            HAL_Delay(2);
+     82            GPIOx_PINx_RESET(ZIG_WAKE_GPIO, ZIG_WAKE_PIN);
+     83            HAL_Delay(2);
+     84          }
+     85          
+     86          
+     87          void Eeprom_Read_DEV_INFO(EEPROM_BACKUP_INFO_TYPEDEF *p_eeprom_backup_info)
+     88          {
+     89            Eeprom_Read(USER_DATA_EEPROM_BASE,(u8*)p_eeprom_backup_info,sizeof(EEPROM_BACKUP_INFO_TYPEDEF));
+     90            
+     91            switch_chk_info.switch_num=(u8)p_eeprom_backup_info->eeprom_switch_num;
+     92            if(switch_chk_info.switch_num==0 || switch_chk_info.switch_num > MAX_SWITCH_NUM)
+     93            {
+     94              switch_chk_info.switch_num=MAX_SWITCH_NUM;
+     95              p_eeprom_backup_info->eeprom_switch_num=switch_chk_info.switch_num;
+     96              Eeprom_Write(USER_DATA_EEPROM_BASE,(u8*)p_eeprom_backup_info,sizeof(EEPROM_BACKUP_INFO_TYPEDEF));
+     97            }
+     98          }
+     99          
+    100          
+    101          /**
+    102            * @brief  求和校验
+    103            * @param  p_buf：point to buf
+    104            * @param  len 
+    105            * @retval None
+    106            */
+    107          u8 Sum_Check(u8 *p_buf,u16 len)
+    108          {
+    109            u16 i;
+    110            u16 sum_chk=0;
+    111            
+    112            for(i=0;i<len;i++)
+    113              sum_chk+=p_buf[i];
+    114            return ((u8)sum_chk);	
+    115          }
+    116          
+    117          
+    118          void Zig_Send_Data(u8* pbuf,u16 len)
+    119          { 	
+    120            HAL_UART_Transmit_DMA(&huartx_zigbee, pbuf, len);   
+    121            while(__HAL_UART_GET_FLAG(&huartx_zigbee,UART_FLAG_TC)== RESET); 
+    122          }
+    123          
+    124          
+    125          static ACK_TYPEDEF  Zig_RxCmd_Analysis(u8 *pbuf,u16 len)
+    126          {
+    127            ZIG_GET_MYINFO_ACK_TYPEDEF *p_zig_get_myinfo_ack=NULL;
+    128            ZIG_CFG_DEV_INFO_ACK_TYPEDEF 	*p_zig_cfg_dev_info_ack=NULL;
+    129            ZIG_MODIFY_DEV_DSTADDR_ACK_TYPEDEF 	 *p_zig_modify_dev_dstaddr_ack=NULL;	 
+    130            ZIG_RX_WORKPANID_DSTADDR_TYPEDEF     *p_zig_rx_workpanid_dstaddr=NULL;
+    131            ZIG_CHK_SUBDEVONLINE_STATE_ACK_TYPEDEF  *p_zig_chk_subdevonline_state_ack=NULL;
+    132            u8 function_code;
+    133            ACK_TYPEDEF ack_ret=CMD_NONE_ACK;
+    134            function_code=pbuf[3];
+    135            
+    136            switch (function_code)
+    137            {
+    138              case CMD_GET_DEV_INFO_ACK:		//获取本地配置响应
+    139                if(len==sizeof(ZIG_GET_MYINFO_ACK_TYPEDEF))
+    140                {
+    141                  p_zig_get_myinfo_ack=(ZIG_GET_MYINFO_ACK_TYPEDEF *)pbuf;			
+    142                  memcpy((u8*)&zig_dev_info,(u8 const*)&(p_zig_get_myinfo_ack->zig_dev_info) ,sizeof(ZIG_DEV_INFO_TYPEDEF));
+    143                  zig_backup_dev_info.DstAddr=zig_dev_info.DstAddr;
+    144                  zig_backup_dev_info.PanID=zig_dev_info.PanID;
+    145                  ack_ret=CMD_GET_DEV_INFO_ACK;
+    146                }					
+    147              break;
+    148          
+    149              case CMD_CFG_DEV_INFO_ACK:	 //修改配置响应
+    150                p_zig_cfg_dev_info_ack=(ZIG_CFG_DEV_INFO_ACK_TYPEDEF*)pbuf;
+    151                if(p_zig_cfg_dev_info_ack->respond_state==OK)
+    152                {
+    153                  Zig_Send_Cmd(Zig_Uart_Buf.Tx_Buf,CMD_RESET_DEV_INFO);			//配置成功后发送复位命令
+    154                  ack_ret=CMD_CFG_DEV_INFO_ACK;
+    155                }													
+    156              break;
+    157          
+    158              case CMD_MODIFY_DEV_DSTADDR_ACK:		//修改目的地址响应
+    159                p_zig_modify_dev_dstaddr_ack=(ZIG_MODIFY_DEV_DSTADDR_ACK_TYPEDEF *)pbuf;
+    160                if(p_zig_modify_dev_dstaddr_ack->respond_state==OK)	//respond_state=0成功,其他失败					
+    161                  ack_ret=CMD_MODIFY_DEV_DSTADDR_ACK;																			
+    162              break;
+    163          
+    164              case DATA_RX_WORKPANID_DSTADDR_ACK:		//收到网关发来的work_panid和dstaddr			
+    165                p_zig_rx_workpanid_dstaddr=(ZIG_RX_WORKPANID_DSTADDR_TYPEDEF *)pbuf;
+    166                if(p_zig_rx_workpanid_dstaddr->sum_chk==Sum_Check(pbuf,len-1))	
+    167                {				
+    168                  //保存workid和dstadd
+    169                  zig_rx_workpanid_dstaddr.work_panid=p_zig_rx_workpanid_dstaddr->work_panid;
+    170                  zig_rx_workpanid_dstaddr.dst_addr=p_zig_rx_workpanid_dstaddr->dst_addr;				
+    171                  ack_ret=DATA_RX_WORKPANID_DSTADDR_ACK;
+    172                }																			
+    173              break;
+    174          
+    175              case SUBCMD_CHK_SUBDEVONLINE_STATE_ACK:			//检查设备是否在线
+    176                p_zig_chk_subdevonline_state_ack=(ZIG_CHK_SUBDEVONLINE_STATE_ACK_TYPEDEF *)pbuf;
+    177                if(p_zig_chk_subdevonline_state_ack->sum_chk==Sum_Check(pbuf,len-1))
+    178                {
+    179                  Zig_Send_Cmd(Zig_Uart_Buf.Tx_Buf,SUBCMD_CHK_SUBDEVONLINE_STATE_ACK);	//发送ACK
+                                                          ^
+Warning[Pe188]: enumerated type mixed with another type
+    180                  ack_ret=SUBCMD_CHK_SUBDEVONLINE_STATE_ACK;		
+    181                }					
+    182              break;
+    183          
+    184              default:
+    185              break;
+    186            }
+    187            return ack_ret;
+    188          }
+    189          
+    190          
+    191          ACK_TYPEDEF Zig_Send_Cmd(u8* pbuf,CMD_TYPEDEF cmd_type)
+    192          {	
+    193            u16  index=0;
+    194            u8 over_time=0;
+    195            
+    196            ACK_TYPEDEF ack_ret=CMD_NONE_ACK;
+    197            switch (cmd_type)
+    198            {
+    199              //获取本地设备信息
+    200              case CMD_GET_DEV_INFO:
+    201                index=0;
+    202                pbuf[index]=0xAB;index++;
+    203                pbuf[index]=0xBC;index++;
+    204                pbuf[index]=0xCD;index++;
+    205                pbuf[index]=CMD_GET_DEV_INFO;index++;	
+    206                pbuf[index]=0x05;index++;	
+    207                Zig_Send_Data(pbuf,index);
+    208              break;
+    209          
+    210              //配置设备MYADDR
+    211              case SUBCMD_CFG_DEV_MYADDR:
+    212                index=0;
+    213                pbuf[index]=0xAB;index++;
+    214                pbuf[index]=0xBC;index++;
+    215                pbuf[index]=0xCD;index++;
+    216                pbuf[index]=CMD_CFG_DEV_INFO;index++;
+    217                pbuf[index]=(u8)zig_dev_info.MyAddr;index++;	
+    218                pbuf[index]=(u8)(zig_dev_info.MyAddr>>8);	index++;		
+    219                
+    220                zig_dev_info.MyAddr=(u16)(zig_dev_info.MyIEEE[1]<<8)+zig_dev_info.MyIEEE[3];	
+    221                
+    222                memcpy(pbuf+index,(u8 const*)&zig_dev_info,sizeof(ZIG_DEV_INFO_TYPEDEF));index+=	sizeof(ZIG_DEV_INFO_TYPEDEF);					
+    223                pbuf[index]=Sum_Check(pbuf,index);index++;
+    224                Zig_Send_Data(pbuf,index);
+    225              break;
+    226          
+    227              //配置设备PANID为Search_PanID
+    228              case SUBCMD_CFG_DEV_PANID_SEARCH:
+    229                index=0;
+    230                pbuf[index]=0xAB;index++;
+    231                pbuf[index]=0xBC;index++;
+    232                pbuf[index]=0xCD;index++;
+    233                pbuf[index]=CMD_CFG_DEV_INFO;index++;
+    234                pbuf[index]=(u8)zig_dev_info.MyAddr;index++;		
+    235                pbuf[index]=(u8)(zig_dev_info.MyAddr>>8);index++;
+    236                
+    237                zig_dev_info.PanID=SEARCH_PANID;
+    238                
+    239                memcpy(pbuf+index,(u8 const*)&zig_dev_info,sizeof(ZIG_DEV_INFO_TYPEDEF));index+=sizeof(ZIG_DEV_INFO_TYPEDEF);			
+    240                pbuf[index]=Sum_Check(pbuf,index);index++;
+    241                Zig_Send_Data(pbuf,index);
+    242              break;
+    243          
+    244              //修改DSTADDR
+    245              case CMD_MODIFY_DEV_DSTADDR:
+    246                index=0;
+    247                pbuf[index]=0xDE;index++;
+    248                pbuf[index]=0xDF;index++;
+    249                pbuf[index]=0xEF;index++;
+    250                pbuf[index]=CMD_MODIFY_DEV_DSTADDR;	index++;			
+    251                pbuf[index]=(u8)zig_rx_workpanid_dstaddr.dst_addr;index++;
+    252                pbuf[index]=(u8)(zig_rx_workpanid_dstaddr.dst_addr>>8);	index++;	//目的地址
+    253                Zig_Send_Data(pbuf,index);
+    254              break;
+    255          
+    256              //发送my Devinfo给网关
+    257              case DATA_TX_MY_DEVINFO:
+    258                index=0;
+    259                pbuf[index]=0xFE;index++;
+    260                pbuf[index]=0xED;index++;
+    261                pbuf[index]=0xDF;index++;
+    262                pbuf[index]=DATA_TX_MY_DEVINFO;index++;							
+    263                pbuf[index]=DEV_TYPE;index++;		//设备类型			
+    264                pbuf[index]=(u8)zig_dev_info.MyAddr;index++;
+    265                pbuf[index]=(u8)(zig_dev_info.MyAddr>>8);index++;
+    266                    
+    267                memcpy(pbuf+index,(u8 const*)&zig_dev_info.MyIEEE,sizeof(zig_dev_info.MyIEEE));index+=sizeof(zig_dev_info.MyIEEE);
+    268                pbuf[index]=switch_chk_info.switch_num;index++;
+    269                pbuf[index]=Sum_Check(pbuf,index);index++;		
+    270                Zig_Send_Data(pbuf,index);
+    271              break;
+    272          
+    273              //配置设备WORKPANID和DSTADDR
+    274              case SUBCMD_CFG_DEV_WORKPANID_DSTADDR:
+    275                index=0;
+    276                pbuf[index]=0xAB;index++;
+    277                pbuf[index]=0xBC;index++;
+    278                pbuf[index]=0xCD;index++;
+    279                pbuf[index]=CMD_CFG_DEV_INFO;index++;
+    280                pbuf[index]=(u8)zig_dev_info.MyAddr;index++;		
+    281                pbuf[index]=(u8)(zig_dev_info.MyAddr>>8);index++;
+    282          
+    283                zig_dev_info.PanID=zig_rx_workpanid_dstaddr.work_panid;
+    284                zig_dev_info.DstAddr=zig_rx_workpanid_dstaddr.dst_addr;
+    285                
+    286                memcpy(pbuf+index,(u8 const*)&zig_dev_info,sizeof(ZIG_DEV_INFO_TYPEDEF));index+=sizeof(ZIG_DEV_INFO_TYPEDEF);	
+    287                pbuf[index]=Sum_Check(pbuf,index);index++;
+    288                Zig_Send_Data(pbuf,index);
+    289              break;
+    290              
+    291            //配置设备PANID和DSTADD为备份值
+    292              case SUBCMD_CFG_DEV_BACKUP_PANID_DSTADDR:
+    293                index=0;
+    294                pbuf[index]=0xAB;index++;
+    295                pbuf[index]=0xBC;index++;
+    296                pbuf[index]=0xCD;index++;
+    297                pbuf[index]=CMD_CFG_DEV_INFO;index++;
+    298                pbuf[index]=(u8)zig_dev_info.MyAddr;index++;		
+    299                pbuf[index]=(u8)(zig_dev_info.MyAddr>>8);index++;
+    300               
+    301                Eeprom_Read_DEV_INFO(&eeprom_backup_info);   
+    302                zig_dev_info.PanID=eeprom_backup_info.eeprom_zigbee_panid_dstaddr>>16;
+    303                zig_dev_info.DstAddr=eeprom_backup_info.eeprom_zigbee_panid_dstaddr&0x0000ffff;	
+    304                
+    305                memcpy(pbuf+index,(u8 const*)&zig_dev_info,sizeof(ZIG_DEV_INFO_TYPEDEF));index+=sizeof(ZIG_DEV_INFO_TYPEDEF);	
+    306                pbuf[index]=Sum_Check(pbuf,index);index++;
+    307                Zig_Send_Data(pbuf,index);
+    308              break;
+    309          
+    310              case SUBCMD_CHK_SUBDEVONLINE_STATE_ACK:
+    311                index=0;
+    312                pbuf[index]=0xFE;index++;
+    313                pbuf[index]=0xED;index++;
+    314                pbuf[index]=0xDF;index++;
+    315                pbuf[index]=SUBCMD_CHK_SUBDEVONLINE_STATE_ACK;index++;
+    316                pbuf[index]=Sum_Check(pbuf,index);index++;		
+    317                Zig_Send_Data(pbuf,index);
+    318              break;
+    319          
+    320              //复位
+    321              case CMD_RESET_DEV_INFO:
+    322                index=0;
+    323                pbuf[index]=0xAB;index++;
+    324                pbuf[index]=0xBC;index++;
+    325                pbuf[index]=0xCD;index++;
+    326                pbuf[index]=0xd9;index++;				
+    327                pbuf[index]=pbuf[index];index++;//(u8)zig_dev_info.MyAddr;
+    328                pbuf[index]=pbuf[index];index++;//(u8)(zig_dev_info.MyAddr>>8);
+    329                pbuf[index]=0x00;index++;
+    330                pbuf[index]=0x01;index++;
+    331                pbuf[index]=Sum_Check(pbuf,index);index++;
+    332                Zig_Send_Data(pbuf,index);
+    333              break;
+    334              
+    335              //进入休眠
+    336              case CMD_ENTER_SLEEP:
+    337                index=0;
+    338                pbuf[index]=0xDE;index++;
+    339                pbuf[index]=0xDF;index++;
+    340                pbuf[index]=0xEF;index++;
+    341                pbuf[index]=CMD_ENTER_SLEEP;index++;				
+    342                pbuf[index]=0x01;index++;
+    343                Zig_Send_Data(pbuf,index);
+    344              break;    
+    345          
+    346              default:
+    347              break;
+    348            }
+    349          
+    350            if(cmd_type!=CMD_RESET_DEV_INFO && cmd_type!=DATA_TX_MY_DEVINFO && cmd_type!=SUBCMD_CHK_SUBDEVONLINE_STATE_ACK && cmd_type!=CMD_ENTER_SLEEP) //发送复位命令,进入休眠模式和发送DEVINFO信息给网关没有ACK
+                                                                                              ^
+Warning[Pa089]: enumerated type mixed with another enumerated type
+    351            {
+    352              while(over_time<250)
+    353              {
+    354                if(Zig_Uart_Buf.Rx_Len>0)
+    355                {
+    356                  ack_ret=Zig_RxCmd_Analysis(Zig_Uart_Buf.Rx_Buf,Zig_Uart_Buf.Rx_Len);
+    357                  Zig_Uart_Buf.Rx_Len=0;
+    358                  break;
+    359                }
+    360                else
+    361                {        
+    362                  over_time++;
+    363                  HAL_Delay(2);
+    364                }
+    365              }
+    366            }
+    367            return ack_ret;	
+    368          }
+    369          
+    370          
+    371          ZIG_BIND_STEP_TYPEDEF Zigbee_Bind_Handle(void)
+    372          {
+    373            ZIG_BIND_STEP_TYPEDEF  zig_bind_step=STEP_CFG_DEV_PANID_SEARCH;
+    374            u16 bind_over_time=0;
+    375            
+    376            Led_Init();
+    377            while(zig_bind_step!=STEP_BIND_OK && zig_bind_step!=OVERTIME_FAUSE)
+    378            {
+    379              switch (zig_bind_step)
+    380              {
+    381                case STEP_CFG_DEV_PANID_SEARCH:
+    382                  if(Zig_Send_Cmd(Zig_Uart_Buf.Tx_Buf,SUBCMD_CFG_DEV_PANID_SEARCH)==CMD_CFG_DEV_INFO_ACK)//设置网络号为Search PanID(广播搜索)
+    383                  {
+    384                    zig_bind_step=STEP_RX_WORKPANID_DSTADDR;	
+    385                  }                      
+    386                  else
+    387                  {
+    388                    zig_bind_step=STEP_CFG_DEV_PANID_SEARCH;	
+    389                    bind_over_time++;
+    390                  }
+    391                break;
+    392          
+    393                case STEP_RX_WORKPANID_DSTADDR:		//等待接收Work_PanID和网关的MyAddr
+    394                  bind_over_time=0;        
+    395                  while(bind_over_time<BIND_OVER_TIME*10)
+    396                  {
+    397                    if(Zig_Uart_Buf.Rx_Len>0)
+    398                    {
+    399                      if(Zig_RxCmd_Analysis(Zig_Uart_Buf.Rx_Buf,Zig_Uart_Buf.Rx_Len)==	DATA_RX_WORKPANID_DSTADDR_ACK)
+    400                      {
+    401                        zig_bind_step=STEP_CFG_DEV_DSTADDR;
+    402                        Zig_Uart_Buf.Rx_Len=0;
+    403                        break;
+    404                      }
+    405                      Zig_Uart_Buf.Rx_Len=0;
+    406                    }
+    407                    bind_over_time++;
+    408                    HAL_Delay(100);
+    409                    Led_Run_Toggle();  //100ms闪烁
+    410                  }
+    411                  
+    412                  if(bind_over_time==BIND_OVER_TIME*10)  //超时        
+    413                    zig_bind_step=OVERTIME_FAUSE;	       
+    414                  bind_over_time=0;
+    415                break;
+    416          
+    417                case STEP_CFG_DEV_DSTADDR:				
+    418                  if(Zig_Send_Cmd(Zig_Uart_Buf.Tx_Buf,CMD_MODIFY_DEV_DSTADDR)==CMD_MODIFY_DEV_DSTADDR_ACK) 		//修改DstAddr,发送my devinfo
+    419                    zig_bind_step=STEP_SEND_DEV_INFO;
+    420                  else
+    421                  {
+    422                    zig_bind_step=STEP_CFG_DEV_DSTADDR;	
+    423                    bind_over_time++;	
+    424                  }
+    425                break;
+    426          
+    427                case STEP_SEND_DEV_INFO:
+    428                  Zig_Send_Cmd(Zig_Uart_Buf.Tx_Buf,DATA_TX_MY_DEVINFO);		//成功修改目的地址后发送my devinfo 无ACK
+    429                  zig_bind_step=STEP_CFG_DEV_WORKPANID_DSTADDR;
+    430                break;			
+    431          
+    432                case STEP_CFG_DEV_WORKPANID_DSTADDR:
+    433                  if(Zig_Send_Cmd(Zig_Uart_Buf.Tx_Buf,SUBCMD_CFG_DEV_WORKPANID_DSTADDR)==CMD_CFG_DEV_INFO_ACK) 		//修改PANID和DstAddr
+    434                  {
+    435                    zig_bind_step=STEP_BIND_OK;          
+    436                    eeprom_backup_info.eeprom_zigbee_panid_dstaddr=(u32)(zig_rx_workpanid_dstaddr.work_panid<<16) | zig_rx_workpanid_dstaddr.dst_addr;
+    437                    Eeprom_Write(USER_DATA_EEPROM_BASE,(u8*)&eeprom_backup_info,sizeof(EEPROM_BACKUP_INFO_TYPEDEF));
+    438                  }        
+    439                  else
+    440                  {
+    441                    zig_bind_step=STEP_CFG_DEV_WORKPANID_DSTADDR;	
+    442                    bind_over_time++;
+    443                  }	
+    444                break;
+    445                
+    446                default:
+    447                break;
+    448              }
+    449              Led_Run_Toggle();
+    450              HAL_Delay(100);
+    451              if(bind_over_time>(BIND_OVER_TIME*2))
+    452                zig_bind_step=OVERTIME_FAUSE;	    
+    453            }
+    454            if(zig_bind_step==OVERTIME_FAUSE)
+    455              LED_RUN_ON();  //绑定失败led常亮
+    456            else
+    457              LED_RUN_OFF();//绑定成功led熄灭
+    458            
+    459            Led_DeInit();
+    460            return zig_bind_step;
+    461          }
+    462          
+    463          RESULT_TYPEDEF Zigbee_Get_Set_Info(void)
+    464          {
+    465            RESULT_TYPEDEF ret=RET_OK;
+    466            u16 set_myaddr=0;
+    467            
+    468            if(Zig_Send_Cmd(Zig_Uart_Buf.Tx_Buf,CMD_GET_DEV_INFO)==CMD_GET_DEV_INFO_ACK)
+    469            {
+    470              set_myaddr=(u16)(zig_dev_info.MyIEEE[1]<<8)+zig_dev_info.MyIEEE[3];	
+    471              if(zig_dev_info.MyAddr!=set_myaddr)
+    472              {
+    473                if(Zig_Send_Cmd(Zig_Uart_Buf.Tx_Buf,SUBCMD_CFG_DEV_MYADDR)!=CMD_CFG_DEV_INFO_ACK)	//获取zigbee配置信息后配置MyAddr(取MAC其中2个字节)
+    474                  ret=RET_ERR;
+    475              }
+    476              
+    477              Eeprom_Read_DEV_INFO(&eeprom_backup_info);
+    478              if(eeprom_backup_info.eeprom_zigbee_panid_dstaddr!=0 && eeprom_backup_info.eeprom_zigbee_panid_dstaddr!=0xffffffff)
+    479              {
+    480                if(Zig_Send_Cmd(Zig_Uart_Buf.Tx_Buf,SUBCMD_CFG_DEV_BACKUP_PANID_DSTADDR)!=CMD_CFG_DEV_INFO_ACK)	//配置设备PANID和DSTADD为备份值
+    481                  ret=RET_ERR; 
+    482              }
+    483            }
+    484            else
+    485            {
+    486              ret=RET_ERR;  
+    487            }
+    488             
+    489            return ret;
+    490          }
+    491          
+    492          void Zigbee_Set_BackUpInfo(void)
+    493          {
+    494            if(zig_dev_info.PanID==SEARCH_PANID)
+    495            {
+    496              if(Zig_Send_Cmd(Zig_Uart_Buf.Tx_Buf,SUBCMD_CFG_DEV_BACKUP_PANID_DSTADDR)!=CMD_CFG_DEV_INFO_ACK)	//配置设备PANID和DSTADD为备份值
+    497              {
+    498                Led_Run_Error();  
+    499              }
+    500            }				
+    501          }
+    502          
+    503          void Zig_RxData_Analysis(ZIG_UART_BUF_TYPEDEF *p_zig_uart_buf)
+    504          {  
+    505            u8 i;
+    506            SWITCH_CHK_CMD_TYPEDEF *p_switch_chk_cmd=NULL;
+    507            
+    508            if(p_zig_uart_buf->Rx_Len>0)
+    509            {
+    510              if(p_zig_uart_buf->Rx_Len == sizeof(SWITCH_CHK_CMD_TYPEDEF))
+    511              {
+    512                p_switch_chk_cmd=(SWITCH_CHK_CMD_TYPEDEF*)p_zig_uart_buf->Rx_Buf;
+    513                if(p_switch_chk_cmd->head=='H' && p_switch_chk_cmd->tail=='T')
+    514                {
+    515                  switch_chk_info.head=p_switch_chk_cmd->head;
+    516                  switch_chk_info.dev_type=p_switch_chk_cmd->dev_type;
+    517                  memcpy(switch_chk_info.dev_id,p_switch_chk_cmd->dev_id,8);        
+    518                  for(i=0;i<MAX_SWITCH_NUM;i++)
+    519                  {
+    520                    if(i==0)
+    521                      switch_chk_info.switch_id[i]=S0_ID; 
+    522                    else if(i==1)
+    523                      switch_chk_info.switch_id[i]=S1_ID;  
+    524                    else if(i==2)
+    525                      switch_chk_info.switch_id[i]=S2_ID;    
+    526                    else if(i==3)
+    527                      switch_chk_info.switch_id[i]=S3_ID;             
+    528                  }
+    529                  switch_chk_info.tail=p_switch_chk_cmd->tail;        
+    530                  Zig_Send_Data((u8*)&switch_chk_info,sizeof(SWITCH_CHK_INFO_TYPEDEF));
+    531                }
+    532              }                    
+    533              p_zig_uart_buf->Rx_Len=0;
+    534            }
+    535          }
+    536          
+    537          
+    538          
+    539          
+    540          
+    541          
+    542          
+    543          
+    544          
+    545          
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+      16   Eeprom_Read_DEV_INFO
+        16   -> Eeprom_Read
+        16   -> Eeprom_Write
+       8   Sum_Check
+      24   Zig_RxCmd_Analysis
+        24   -> Sum_Check
+        24   -> Zig_Send_Cmd
+        24   -> __aeabi_memcpy
+      24   Zig_RxData_Analysis
+        24   -> Zig_Send_Data
+        24   -> __aeabi_memcpy
+      24   Zig_Send_Cmd
+        24   -> Eeprom_Read_DEV_INFO
+        24   -> HAL_Delay
+        24   -> Sum_Check
+        24   -> Zig_RxCmd_Analysis
+        24   -> Zig_Send_Data
+        24   -> __aeabi_memcpy
+       8   Zig_Send_Data
+         8   -> HAL_UART_Transmit_DMA
+      24   Zigbee_Bind_Handle
+        24   -> Eeprom_Write
+        24   -> HAL_Delay
+        24   -> HAL_GPIO_WritePin
+        24   -> Led_DeInit
+        24   -> Led_Init
+        24   -> Led_Run_Toggle
+        24   -> Zig_RxCmd_Analysis
+        24   -> Zig_Send_Cmd
+      24   Zigbee_DeInit
+        24   -> HAL_GPIO_Init
+        24   -> HAL_UART_DeInit
+      16   Zigbee_Get_Set_Info
+        16   -> Eeprom_Read_DEV_INFO
+        16   -> Zig_Send_Cmd
+       8   Zigbee_Init
+         8   -> Led_Run_Error
+         8   -> Zigbee_Get_Set_Info
+         8   -> Zigbee_Uart_Init
+       8   Zigbee_Set_BackUpInfo
+         8   -> Led_Run_Error
+         8   -> Zig_Send_Cmd
+       8   Zigbee_Sleep
+         8   -> HAL_Delay
+         8   -> Zig_Send_Cmd
+      24   Zigbee_Uart_Init
+        24   -> HAL_GPIO_Init
+        24   -> HAL_UARTx_Init
+        24   -> Zigbee_WakeUp
+       8   Zigbee_WakeUp
+         8   -> GPIOx_PINx_RESET
+         8   -> GPIOx_PINx_SET
+         8   -> HAL_Delay
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable5
+       4  ??DataTable5_1
+       4  ??DataTable6
+       4  ??DataTable6_1
+       4  ??DataTable6_2
+       4  ??DataTable6_3
+       4  ??DataTable6_4
+       4  ??DataTable6_5
+       4  ??DataTable7
+       4  ??DataTable8
+       4  ??DataTable8_1
+       4  ??DataTable9
+       4  ??DataTable9_1
+       4  ??DataTable9_2
+       4  ??DataTable9_3
+       4  ??DataTable9_4
+       4  ??DataTable9_5
+       4  ??DataTable9_6
+       8  ?Subroutine0
+      50  Eeprom_Read_DEV_INFO
+      28  Sum_Check
+     152  Zig_RxCmd_Analysis
+     108  Zig_RxData_Analysis
+     486  Zig_Send_Cmd
+      24  Zig_Send_Data
+     204  Zig_Uart_Buf
+     248  Zigbee_Bind_Handle
+      36  Zigbee_DeInit
+      98  Zigbee_Get_Set_Info
+      14  Zigbee_Init
+      26  Zigbee_Set_BackUpInfo
+      18  Zigbee_Sleep
+      50  Zigbee_Uart_Init
+      36  Zigbee_WakeUp
+      68  zig_dev_info
+      24  zig_rx_workpanid_dstaddr
+          zig_backup_dev_info
+          eeprom_backup_info
+
+ 
+   296 bytes in section .bss
+ 1 454 bytes in section .text
+ 
+ 1 454 bytes of CODE memory
+   296 bytes of DATA memory
+
+Errors: none
+Warnings: 2

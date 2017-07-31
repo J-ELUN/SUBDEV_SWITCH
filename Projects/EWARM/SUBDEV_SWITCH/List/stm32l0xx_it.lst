@@ -1,0 +1,366 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        21/Jul/2017  09:11:44
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  F:\demo\SUBDEV_SWITCH\Projects\Src\stm32l0xx_it.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Projects\Src\stm32l0xx_it.c -D STM32L053xx -D
+#        USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\stm32l0xx_it.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\stm32l0xx_it.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Projects\Src\stm32l0xx_it.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    Templates/Src/stm32l0xx_it.c 
+      4            * @author  MCD Application Team
+      5            * @version V1.0.0
+      6            * @date    18-June-2014
+      7            * @brief   Main Interrupt Service Routines.
+      8            *          This file provides template for all exceptions handler and 
+      9            *          peripherals interrupt service routine.
+     10            ******************************************************************************
+     11            * @attention
+     12            *
+     13            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+     14            *
+     15            * Redistribution and use in source and binary forms, with or without modification,
+     16            * are permitted provided that the following conditions are met:
+     17            *   1. Redistributions of source code must retain the above copyright notice,
+     18            *      this list of conditions and the following disclaimer.
+     19            *   2. Redistributions in binary form must reproduce the above copyright notice,
+     20            *      this list of conditions and the following disclaimer in the documentation
+     21            *      and/or other materials provided with the distribution.
+     22            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+     23            *      may be used to endorse or promote products derived from this software
+     24            *      without specific prior written permission.
+     25            *
+     26            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+     27            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     28            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     29            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+     30            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+     31            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+     32            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+     33            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+     34            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     35            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     36            *
+     37            ******************************************************************************
+     38            */
+     39          
+     40          /* Includes ------------------------------------------------------------------*/
+     41          
+     42          #include "stm32l0xx_it.h"
+     43          #include "main.h"
+     44          #include "stm32l0xx_hal_msp.h" 
+     45          #include "zigbee.h"
+     46          #include "adc.h"
+     47          #include "switch.h"
+     48          #include <string.h>
+     49          
+     50          /** @addtogroup STM32L0xx_HAL_Examples
+     51            * @{
+     52            */
+     53          
+     54          /** @addtogroup Templates
+     55            * @{
+     56            */
+     57          
+     58          /* Private typedef -----------------------------------------------------------*/
+     59          /* Private define ------------------------------------------------------------*/
+     60          /* Private macro -------------------------------------------------------------*/
+     61          /* Private variables ---------------------------------------------------------*/
+     62          
+     63          /* Private function prototypes -----------------------------------------------*/
+     64          /* Private functions ---------------------------------------------------------*/
+     65          /******************************************************************************/
+     66          /*            Cortex-M0+ Processor Exceptions Handlers                         */
+     67          /******************************************************************************/
+     68          
+     69          /**
+     70            * @brief   This function handles NMI exception.
+     71            * @param  None
+     72            * @retval None
+     73            */
+     74          void NMI_Handler(void)
+     75          {
+     76          }
+     77          
+     78          
+     79          /**
+     80            * @brief  This function handles Hard Fault exception.
+     81            * @param  None
+     82            * @retval None
+     83            */
+     84          void HardFault_Handler(void)
+     85          {
+     86            /* Go to infinite loop when Hard Fault exception occurs */
+     87            while (1)
+     88            { 
+     89              HAL_NVIC_SystemReset();
+     90            }
+     91          }
+     92          
+     93          /**
+     94            * @brief  This function handles TIM21 global interrupt request.
+     95            * @param  None
+     96            * @retval None
+     97            */
+     98          //void IWDG_IRQHandler(void)
+     99          //{ 
+    100          //  HAL_TIM_IRQHandler(&Input_Handle);
+    101          //}
+    102          
+    103          /**
+    104            * @brief  This function handles SVCall exception.
+    105            * @param  None
+    106            * @retval None
+    107            */
+    108          void SVC_Handler(void)
+    109          {
+    110          }
+    111          
+    112          /**
+    113            * @brief  This function handles Debug Monitor exception.
+    114            * @param  None
+    115            * @retval None
+    116            */
+    117          void DebugMon_Handler(void)
+    118          {
+    119          }
+    120          
+    121          /**
+    122            * @brief  This function handles PendSVC exception.
+    123            * @param  None
+    124            * @retval None
+    125            */
+    126          void PendSV_Handler(void)
+    127          {
+    128          }
+    129          
+    130          /**
+    131            * @brief  This function handles SysTick Handler.
+    132            * @param  None
+    133            * @retval None
+    134            */
+    135          void SysTick_Handler(void)
+    136          {
+    137            HAL_IncTick();
+    138          }
+    139          
+    140          
+    141          /**
+    142            * @brief   Debug&ZigbeeDMA发送中断
+    143            * @param  None
+    144            * @retval None
+    145            */
+    146          void USARTx_DMA_TX_IRQHandler(void)
+    147          {
+    148            HAL_DMA_IRQHandler(huartx_zigbee.hdmatx);
+    149            //HAL_DMA_IRQHandler(huartx_debug.hdmatx);
+    150          }
+    151          
+    152          
+    153          
+    154          /**
+    155            * @brief   Debug串口总线空闲中断
+    156            * @param  None
+    157            * @retval None
+    158            */
+    159          //void USARTx_DEBUG_IRQHandler(void)
+    160          //{
+    161          //  u16 CurrDataCount=0;
+    162          //  u16 rx_len=0;
+    163          //  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+    164          //      
+    165          //  if(__HAL_UART_GET_FLAG(&huartx_debug,UART_FLAG_IDLE)!= RESET)
+    166          //  {
+    167          //    CurrDataCount = USART2->ISR;
+    168          //    CurrDataCount = USART2->RDR; 
+    169          //    
+    170          //    __HAL_UART_CLEAR_IT(&huartx_debug, UART_CLEAR_IDLEF); 
+    171          //     /* Disable DMA */
+    172          //    __HAL_DMA_DISABLE(huartx_debug.hdmarx); 
+    173          //    CurrDataCount = huartx_debug.hdmarx->Instance->CNDTR; 
+    174          //    rx_len=  UART_MAX_RX_LEN - CurrDataCount;
+    175          //    
+    176          //    if(rx_len>0 && rx_len<UART_MAX_RX_LEN) 
+    177          //    {
+    178          //      Debug_DMA_Rx_Buf.len=rx_len;
+    179          //      /* Send To Queue*/
+    180          //      xQueueSendToBackFromISR(MsgQueue_Debug,&Debug_DMA_Rx_Buf,0); 
+    181          //    }    
+    182          //    /* Set CNDTR */
+    183          //    huartx_debug.hdmarx->Instance->CNDTR=UART_MAX_RX_LEN;  
+    184          //           
+    185          //    /* Enable DMA*/
+    186          //     __HAL_DMA_ENABLE(huartx_debug.hdmarx); 
+    187          //    
+    188          //    /* 上下文切换*/
+    189          //    if(xHigherPriorityTaskWoken == pdTRUE )
+    190          //    {
+    191          //      portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );    
+    192          //    }
+    193          //  }
+    194          //}
+    195          
+    196          
+    197            
+    198          /**
+    199            * @brief   ZIGBEE串口总线空闲中断
+    200            * @param  None
+    201            * @retval None
+    202            */
+    203          void USARTx_ZIGBEE_IRQHandler(void)  
+    204          {
+    205            u16 CurrDataCount=0;
+    206            u16 rx_len=0;
+    207                
+    208            if(__HAL_UART_GET_FLAG(&huartx_zigbee,UART_FLAG_IDLE)!= RESET)
+    209            {
+    210              CurrDataCount = LPUART1->ISR;
+    211              CurrDataCount = LPUART1->RDR; 
+    212              
+    213              __HAL_UART_CLEAR_IT(&huartx_zigbee, UART_CLEAR_IDLEF); 
+    214               /* Disable DMA */
+    215              __HAL_DMA_DISABLE(huartx_zigbee.hdmarx); 
+    216              CurrDataCount = huartx_zigbee.hdmarx->Instance->CNDTR; 
+    217                 
+    218              rx_len=  UART_MAX_RX_LEN - CurrDataCount; 
+    219              if(rx_len>0 && rx_len<UART_MAX_RX_LEN && (Zig_Uart_Buf.Rx_Len==0))    
+    220              {
+    221                Zig_Uart_Buf.Rx_Len =rx_len;  
+    222                memcpy(Zig_Uart_Buf.Rx_Buf,Zig_DMA_RxBuf,rx_len);
+    223              }    
+    224              /* Set CNDTR */
+    225              huartx_zigbee.hdmarx->Instance->CNDTR=UART_MAX_RX_LEN;  
+    226                     
+    227              /* Enable DMA*/
+    228               __HAL_DMA_ENABLE(huartx_zigbee.hdmarx); 
+    229             
+    230            }
+    231          }
+    232          
+    233          /**
+    234          * @brief This function handles EXTI line 4 to 15 interrupts.
+    235          */
+    236          void SWITCH_IRQHandler(void)
+    237          {
+    238            /* USER CODE BEGIN EXTI4_15_IRQn 0 */
+    239            /* USER CODE END EXTI4_15_IRQn 0 */
+    240            HAL_GPIO_EXTI_IRQHandler(SWITCH_1_PIN);
+    241            HAL_GPIO_EXTI_IRQHandler(SWITCH_2_PIN);
+    242            HAL_GPIO_EXTI_IRQHandler(SWITCH_3_PIN);
+    243            HAL_GPIO_EXTI_IRQHandler(SWITCH_4_PIN); 
+    244            HAL_GPIO_EXTI_IRQHandler(SWITCH_SET_PIN);
+    245            /* USER CODE BEGIN EXTI4_15_IRQn 1 */
+    246          
+    247            /* USER CODE END EXTI4_15_IRQn 1 */
+    248          }
+    249          
+    250          
+    251          /**
+    252            * @brief  This function handles the PVD Output interrupt request.
+    253            * @param  None
+    254            * @retval None
+    255            */
+    256          void PVD_IRQHandler(void)
+    257          {
+    258            HAL_PWR_PVD_IRQHandler();
+    259          }
+    260          
+    261          
+    262          /******************************************************************************/
+    263          /*                 STM32L0xx Peripherals Interrupt Handlers                   */
+    264          /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
+    265          /*  available peripheral interrupt handler's name please refer to the startup */
+    266          /*  file (startup_stm32l0xx.s).                                               */
+    267          /******************************************************************************/
+    268          
+    269          /**
+    270            * @brief  This function handles PPP interrupt request.
+    271            * @param  None
+    272            * @retval None
+    273            */
+    274          /*void PPP_IRQHandler(void)
+    275          {
+    276          }*/
+    277          
+    278          
+    279          /**
+    280            * @}
+    281            */ 
+    282          
+    283          /**
+    284            * @}
+    285            */
+    286          
+    287          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+       8   DMA1_Channel4_5_6_7_IRQHandler
+         8   -> HAL_DMA_IRQHandler
+       0   DebugMon_Handler
+       8   EXTI4_15_IRQHandler
+         8   -> HAL_GPIO_EXTI_IRQHandler
+       8   HardFault_Handler
+         8   -> HAL_NVIC_SystemReset
+       0   NMI_Handler
+       8   PVD_IRQHandler
+         8   -> HAL_PWR_PVD_IRQHandler
+       0   PendSV_Handler
+       8   RNG_LPUART1_IRQHandler
+         8   -> __aeabi_memcpy
+       0   SVC_Handler
+       8   SysTick_Handler
+         8   -> HAL_IncTick
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable1
+       4  ??DataTable1_1
+       4  ??DataTable1_2
+       4  ??DataTable1_3
+      12  DMA1_Channel4_5_6_7_IRQHandler
+       2  DebugMon_Handler
+      42  EXTI4_15_IRQHandler
+       8  HardFault_Handler
+       2  NMI_Handler
+       8  PVD_IRQHandler
+       2  PendSV_Handler
+      86  RNG_LPUART1_IRQHandler
+       2  SVC_Handler
+       8  SysTick_Handler
+
+ 
+ 188 bytes in section .text
+ 
+ 188 bytes of CODE memory
+
+Errors: none
+Warnings: none

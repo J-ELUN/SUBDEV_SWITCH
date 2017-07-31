@@ -1,0 +1,439 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        04/May/2017  13:19:33
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  H:\demo\SUBDEV_SWITCH_0426\Projects\Src\ir.c
+#    Command line =  
+#        H:\demo\SUBDEV_SWITCH_0426\Projects\Src\ir.c -D STM32L053xx -D
+#        USE_HAL_DRIVER -lc
+#        H:\demo\SUBDEV_SWITCH_0426\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        H:\demo\SUBDEV_SWITCH_0426\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        H:\demo\SUBDEV_SWITCH_0426\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I H:\demo\SUBDEV_SWITCH_0426\Projects\EWARM\..\Inc\ -I
+#        H:\demo\SUBDEV_SWITCH_0426\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I
+#        H:\demo\SUBDEV_SWITCH_0426\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        H:\demo\SUBDEV_SWITCH_0426\Projects\EWARM\SUBDEV_SWITCH\List\ir.lst
+#    Object file  =  
+#        H:\demo\SUBDEV_SWITCH_0426\Projects\EWARM\SUBDEV_SWITCH\Obj\ir.o
+#
+###############################################################################
+
+H:\demo\SUBDEV_SWITCH_0426\Projects\Src\ir.c
+      1          #include "ir.h"
+      2          #include "stm32l0xx_hal_msp.h"    
+      3          #include "main.h"
+      4          
+      5          TIM_HandleTypeDef htim2;
+      6          
+      7          void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef* htim_pwm)
+      8          {
+      9          
+     10            if(htim_pwm->Instance==TIM2)   
+     11            {
+     12            /* USER CODE BEGIN TIM2_MspInit 0 */
+     13          
+     14            /* USER CODE END TIM2_MspInit 0 */
+     15              /* Peripheral clock enable */
+     16              __TIM2_CLK_ENABLE();
+     17            /* USER CODE BEGIN TIM2_MspInit 1 */
+     18          
+     19            /* USER CODE END TIM2_MspInit 1 */
+     20            }
+     21          
+     22          }
+     23          
+     24          void HAL_TIM_PWM_MspDeInit(TIM_HandleTypeDef* htim_pwm)
+     25          {
+     26            GPIO_InitTypeDef GPIO_InitStruct;
+     27            if(htim_pwm->Instance==TIM2)
+     28            {
+     29              __TIM2_CLK_DISABLE();
+     30              GPIO_InitStruct.Pin = IR_PIN;
+     31              GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+     32              GPIO_InitStruct.Pull = GPIO_NOPULL;
+     33              HAL_GPIO_Init(IR_GPIO, &GPIO_InitStruct);
+     34            }
+     35          }
+     36          
+     37          static void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
+     38          {
+     39          
+     40            GPIO_InitTypeDef GPIO_InitStruct;
+     41            if(htim->Instance==TIM2)
+     42            {
+     43            /* USER CODE BEGIN TIM2_MspPostInit 0 */
+     44          
+     45            /* USER CODE END TIM2_MspPostInit 0 */
+     46            
+     47              /**TIM2 GPIO Configuration    
+     48              PA5     ------> TIM2_CH1 
+     49              */
+     50              IR_GPIO_CLK_ENABLE();
+     51              GPIO_InitStruct.Pin = IR_PIN;
+     52              GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+     53              GPIO_InitStruct.Pull = GPIO_NOPULL;
+     54              GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+     55              GPIO_InitStruct.Alternate = GPIO_AF5_TIM2;
+     56              HAL_GPIO_Init(IR_GPIO, &GPIO_InitStruct);
+     57          
+     58            /* USER CODE BEGIN TIM2_MspPostInit 1 */
+     59          
+     60            /* USER CODE END TIM2_MspPostInit 1 */
+     61            }
+     62          
+     63          }
+     64          
+     65          /* TIM2 init function */
+     66          void TIM2_PWM_Init(void)  //2MHZ
+     67          {
+     68            TIM_OC_InitTypeDef sConfigOC;
+     69          
+     70            htim2.Instance = TIM2;
+     71            htim2.Init.Prescaler = 0;
+     72            htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+     73            htim2.Init.Period = 2000/38;
+     74            htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+     75            if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+     76            {
+     77              Error_Handler();
+     78            }
+     79          
+     80            sConfigOC.OCMode = TIM_OCMODE_PWM1;
+     81            sConfigOC.Pulse = 2000/38/2;
+     82            sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+     83            sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+     84            if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+     85            {
+     86              Error_Handler();
+     87            }
+     88          
+     89            HAL_TIM_MspPostInit(&htim2);
+     90          }
+     91          
+     92          void TIM2_PWM_DeInit(void)
+     93          {
+     94            HAL_TIM_PWM_DeInit(&htim2);
+     95          }
+     96          
+     97          static void TIM2_PWM_ENABLE(void)
+     98          {
+     99            if (HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
+    100            {
+    101              /* PWM Generation Error */
+    102              Error_Handler();
+    103            }
+    104          }
+    105          
+    106          static void TIM2_PWM_DISABLE(void)
+    107          {
+    108            if (HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1) != HAL_OK)
+    109            {
+    110              /* PWM Generation Error */
+    111              Error_Handler();
+    112            }
+    113          }
+    114          
+    115          
+    116          void IR_Send_Byte(u8 getdata) 
+    117          { 
+    118            u8 senddata,i; 
+    119            senddata=getdata; 
+    120            for(i=0;i<8;i++) 
+    121            { 
+    122              if(senddata&0x01) 
+    123              { 
+    124                //1 
+    125                TIM2_PWM_ENABLE(); 
+    126                HAL_Delay_100us(6); 
+    127                TIM2_PWM_DISABLE(); 
+    128                HAL_Delay_100us(5);  
+    129                HAL_Delay_100us(5); 
+    130                HAL_Delay_100us(6); 
+    131              } 
+    132              else 
+    133              { 
+    134                //0 
+    135                TIM2_PWM_ENABLE(); 
+    136                HAL_Delay_100us(6); 
+    137                TIM2_PWM_DISABLE(); 
+    138                HAL_Delay_100us(6); 
+    139              } 
+    140              senddata=senddata>>1; 
+    141            } 
+    142          }
+    143          
+    144          
+    145          void IR_Send1(void) 
+    146          { 
+    147            //9ms 
+    148            TIM2_PWM_ENABLE(); 
+    149            HAL_Delay(9);
+    150            //4.5ms 
+    151            TIM2_PWM_DISABLE(); 
+    152            HAL_Delay(4);
+    153           
+    154            IR_Send_Byte(0x12);	//用户码 
+    155            IR_Send_Byte(0x34);	//用户反码 
+    156            IR_Send_Byte(0x56);	//数据码 
+    157            IR_Send_Byte(0x78);	//数据反码 
+    158            
+    159            //下面增加是为了避免在发送最后一位时出现错码 
+    160            TIM2_PWM_ENABLE(); 
+    161            HAL_Delay_100us(6); 
+    162            TIM2_PWM_DISABLE(); 
+    163            HAL_Delay_100us(6); 
+    164          } 
+    165          
+    166          void IR_Send2(void) 
+    167          { 
+    168            //9ms 
+    169            TIM2_PWM_ENABLE(); 
+    170            HAL_Delay(9);
+    171            //4.5ms 
+    172            TIM2_PWM_DISABLE(); 
+    173            HAL_Delay(4);
+    174            IR_Send_Byte(0x78);	//用户码 
+    175            IR_Send_Byte(0x56);	//用户反码 
+    176            IR_Send_Byte(0x32);	//数据码 
+    177            IR_Send_Byte(0x12);	//数据反码 
+    178            
+    179            //下面增加是为了避免在发送最后一位时出现错码 
+    180            TIM2_PWM_ENABLE(); 
+    181            HAL_Delay_100us(6); 
+    182            TIM2_PWM_DISABLE(); 
+    183            HAL_Delay_100us(6); 
+    184          } 
+    185          
+    186          
+    187          
+    188          u8 NECGREE_check(u8 * dat)
+    189          {
+    190            u8 chk;
+    191            chk=(*dat&0x07)-1+(*(dat+1)&0x0f)+5+(*(dat+4)&0x10)+(*(dat+3)&0x01);
+    192            chk&=0x0f;
+    193            chk<<=4;
+    194            return chk;
+    195          }
+    196          
+    197          void NECGREE_Send_link(void)
+    198          {
+    199           
+    200            //0.7ms 1
+    201            TIM2_PWM_ENABLE(); 
+    202            HAL_Delay_100us(7); 
+    203            TIM2_PWM_DISABLE(); 
+    204            HAL_Delay(20);  
+    205          }
+    206          
+    207          //发送0
+    208          void NECGREE_Send_Bit_0(void)
+    209          {
+    210            //0 
+    211            TIM2_PWM_ENABLE(); 
+    212            HAL_Delay_100us(6); 
+    213            TIM2_PWM_DISABLE(); 
+    214            HAL_Delay_100us(6); 
+    215          
+    216          }
+    217          
+    218          //发送1
+    219          void NECGREE_Send_Bit_1(void)
+    220          {
+    221            TIM2_PWM_ENABLE(); 
+    222            HAL_Delay_100us(6); 
+    223            TIM2_PWM_DISABLE(); 
+    224            HAL_Delay_100us(5);  
+    225            HAL_Delay_100us(5); 
+    226            HAL_Delay_100us(6); 
+    227          }
+    228          
+    229          //发送引导码  发送方:9ms高电平 4.5ms低电平
+    230          void NECGREE_Send_Start_Bit(void)    
+    231          {
+    232            //9ms 
+    233            TIM2_PWM_ENABLE(); 
+    234            HAL_Delay(9);
+    235            //4.5ms 
+    236            TIM2_PWM_DISABLE(); 
+    237            HAL_Delay(4);
+    238          }
+    239          
+    240          void NECGREE_Send_Char(u8 * dat)
+    241          {
+    242            u8 j;
+    243            NECGREE_Send_Start_Bit();
+    244            for(j=0; j<4; j++)
+    245            {
+    246              IR_Send_Byte(*(dat+j));
+    247            }
+    248            NECGREE_Send_Bit_0();
+    249            NECGREE_Send_Bit_1();
+    250            NECGREE_Send_Bit_0();
+    251            NECGREE_Send_link();
+    252            for(j=4; j<8; j++)
+    253            {
+    254              IR_Send_Byte(*(dat+j));
+    255            }
+    256            NECGREE_Send_Bit_0();
+    257          }
+    258          
+    259          void NECGREE_Send_Data(AIR_CTRL_TYPEDEF *p_air_ctrl)
+    260          {
+    261          	u8 GREE[8] = {0x0c,0x00,0x00,0x50,0x00,0x20,0x00,0x88};
+    262          	u8 NECGREE_temp=0;
+    263          	if(p_air_ctrl->power_sta==POWER_OFF)		//开机进入设置模式
+    264          	{
+    265          		GREE[0]&=(~(1<<3));
+    266          
+    267          		GREE[7]&=0x0f;
+    268          		GREE[7]|=NECGREE_check(GREE);
+    269          
+    270          		GREE[7]-=0x80;
+    271          		NECGREE_Send_Char( GREE );
+    272          		
+    273          	}
+    274          	else
+    275          	{
+    276          		/*****温度******/
+    277          		NECGREE_temp=(p_air_ctrl->Set_Temp[0]-0x30)*10 + p_air_ctrl->Set_Temp[1]-0x30;
+    278          		if(NECGREE_temp<16) NECGREE_temp=16;
+    279          		if(NECGREE_temp>30) NECGREE_temp=30;
+    280          		
+    281          		GREE[1]&=0xf0;										
+    282          		GREE[1]|=(NECGREE_temp-16);
+    283          		
+    284          		GREE[7]&=0x0f;
+    285          		GREE[7]|=NECGREE_check(GREE);
+    286          		
+    287          		/*****模式******/
+    288          		GREE[0]&=0xf8;
+    289          		GREE[0]|=p_air_ctrl->Work_Mode;
+    290          		
+    291          		GREE[7]&=0x0f;
+    292          		GREE[7]|=NECGREE_check(GREE);
+    293          		
+    294          		/*****风速******/
+    295          		GREE[0]&=0xcf;
+    296          		GREE[0]|=((p_air_ctrl->Fan_Speed)<<4);
+    297          		
+    298          		GREE[7]&=0x0f;
+    299          		GREE[7]|=NECGREE_check(GREE);
+    300          		
+    301          		NECGREE_Send_Char( GREE ); 
+    302          	}	
+    303          }
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+      24   HAL_TIM_PWM_MspDeInit
+        24   -> HAL_GPIO_Init
+       0   HAL_TIM_PWM_MspInit
+       8   IR_Send1
+         8   -> HAL_Delay
+         8   -> HAL_Delay_100us
+         8   -> IR_Send_Byte
+         8   -> TIM2_PWM_DISABLE
+         8   -> TIM2_PWM_ENABLE
+       8   IR_Send2
+         8   -> HAL_Delay
+         8   -> HAL_Delay_100us
+         8   -> IR_Send_Byte
+         8   -> TIM2_PWM_DISABLE
+         8   -> TIM2_PWM_ENABLE
+      16   IR_Send_Byte
+        16   -> HAL_Delay_100us
+        16   -> TIM2_PWM_DISABLE
+        16   -> TIM2_PWM_ENABLE
+       8   NECGREE_Send_Bit_0
+         8   -> HAL_Delay_100us
+         8   -> TIM2_PWM_DISABLE
+         8   -> TIM2_PWM_ENABLE
+       8   NECGREE_Send_Bit_1
+         8   -> HAL_Delay_100us
+         8   -> TIM2_PWM_DISABLE
+         8   -> TIM2_PWM_ENABLE
+      16   NECGREE_Send_Char
+        16   -> IR_Send_Byte
+        16   -> NECGREE_Send_Bit_0
+        16   -> NECGREE_Send_Bit_1
+        16   -> NECGREE_Send_Start_Bit
+        16   -> NECGREE_Send_link
+      24   NECGREE_Send_Data
+        24   -> NECGREE_Send_Char
+        24   -> NECGREE_check
+       8   NECGREE_Send_Start_Bit
+         8   -> HAL_Delay
+         8   -> TIM2_PWM_DISABLE
+         8   -> TIM2_PWM_ENABLE
+       8   NECGREE_Send_link
+         8   -> HAL_Delay
+         8   -> HAL_Delay_100us
+         8   -> TIM2_PWM_DISABLE
+         8   -> TIM2_PWM_ENABLE
+       0   NECGREE_check
+       8   TIM2_PWM_DISABLE
+         8   -> Error_Handler
+         8   -> HAL_TIM_PWM_Stop
+       8   TIM2_PWM_DeInit
+         8   -> HAL_TIM_PWM_DeInit
+       8   TIM2_PWM_ENABLE
+         8   -> Error_Handler
+         8   -> HAL_TIM_PWM_Start
+      56   TIM2_PWM_Init
+        56   -> Error_Handler
+        56   -> HAL_GPIO_Init
+        56   -> HAL_TIM_PWM_ConfigChannel
+        56   -> HAL_TIM_PWM_Init
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable5
+       4  ??DataTable5_1
+       4  ??DataTable5_2
+      14  ??Subroutine2_0
+       8  ??Subroutine3_0
+       4  ?Subroutine0
+      10  ?Subroutine1
+       8  ?_0
+      52  HAL_TIM_PWM_MspDeInit
+      22  HAL_TIM_PWM_MspInit
+      44  IR_Send1
+      42  IR_Send2
+      66  IR_Send_Byte
+       4  NECGREE_Send_Bit_0
+      30  NECGREE_Send_Bit_1
+      58  NECGREE_Send_Char
+     176  NECGREE_Send_Data
+      24  NECGREE_Send_Start_Bit
+      24  NECGREE_Send_link
+      26  NECGREE_check
+      16  TIM2_PWM_DISABLE
+      10  TIM2_PWM_DeInit
+      12  TIM2_PWM_ENABLE
+     112  TIM2_PWM_Init
+      56  htim2
+
+ 
+  56 bytes in section .bss
+ 774 bytes in section .text
+ 
+ 774 bytes of CODE memory
+  56 bytes of DATA memory
+
+Errors: none
+Warnings: none

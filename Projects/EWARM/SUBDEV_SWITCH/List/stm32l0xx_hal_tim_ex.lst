@@ -1,0 +1,295 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:23
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_tim_ex.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_tim_ex.c
+#        -D STM32L053xx -D USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\stm32l0xx_hal_tim_ex.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\stm32l0xx_hal_tim_ex.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_tim_ex.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    stm32l0xx_hal_tim_ex.c
+      4            * @author  MCD Application Team
+      5            * @version V1.1.0
+      6            * @date    18-June-2014
+      7            * @brief   TIM HAL module driver.
+      8            * @brief   This file provides firmware functions to manage the following 
+      9            *          functionalities of the Timer (TIM) peripheral:
+     10            *           + Time Hall Sensor Interface Initialization
+     11            *           + Time Hall Sensor Interface Start
+     12            *           + Time Master and Slave synchronization configuration
+     13            @verbatim 
+     14          ================================================================================
+     15                    ##### TIM specific features integration #####
+     16          ================================================================================
+     17                     
+     18              [..] The Timer features include: 
+     19                   (#) 16-bit up, down, up/down auto-reload counter.
+     20                   (#) 16-bit programmable prescaler allowing dividing (also on the fly) the counter clock
+     21                       frequency either by any factor between 1 and 65536.
+     22                   (#) Up to 4 independent channels for:
+     23                     Input Capture
+     24                     Output Compare
+     25                     PWM generation (Edge and Center-aligned Mode)
+     26                     One-pulse mode output
+     27                   (#) Synchronization circuit to control the timer with external signals and to interconnect
+     28                      several timers together.
+     29                   (#) Supports incremental (quadrature) encoder and hall-sensor circuitry for positioning
+     30                     purposes               
+     31             
+     32                      ##### How to use this driver #####
+     33          ================================================================================
+     34              [..]
+     35               (#) Enable the TIM interface clock using 
+     36                   __TIMx_CLK_ENABLE(); 
+     37                 
+     38               (#) TIM pins configuration
+     39                    (++) Enable the clock for the TIM GPIOs using the following function:
+     40                        __GPIOx_CLK_ENABLE();   
+     41                    (++) Configure these TIM pins in Alternate function mode using HAL_GPIO_Init();  
+     42          
+     43               (#) The external Clock can be configured, if needed (the default clock is the internal clock from the APBx), 
+     44                   using the following function:
+     45                   HAL_TIM_ConfigClockSource, the clock configuration should be done before any start function.
+     46            
+     47               (#) Configure the TIM in the desired operating mode using one of the 
+     48                   configuration function of this driver:
+     49                    (++) HAL_TIMEx_MasterConfigSynchronization() to configure the peripheral in master mode.
+     50          
+     51               (#) Remap the Timer I/O using HAL_TIMEx_RemapConfig() API.
+     52          
+     53            
+     54            @endverbatim
+     55            ******************************************************************************
+     56            * @attention
+     57            *
+     58            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+     59            *
+     60            * Redistribution and use in source and binary forms, with or without modification,
+     61            * are permitted provided that the following conditions are met:
+     62            *   1. Redistributions of source code must retain the above copyright notice,
+     63            *      this list of conditions and the following disclaimer.
+     64            *   2. Redistributions in binary form must reproduce the above copyright notice,
+     65            *      this list of conditions and the following disclaimer in the documentation
+     66            *      and/or other materials provided with the distribution.
+     67            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+     68            *      may be used to endorse or promote products derived from this software
+     69            *      without specific prior written permission.
+     70            *
+     71            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+     72            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     73            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     74            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+     75            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+     76            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+     77            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+     78            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+     79            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     80            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     81            *
+     82            ******************************************************************************
+     83            */ 
+     84          
+     85          /* Includes ------------------------------------------------------------------*/
+     86          #include "stm32l0xx_hal.h"
+     87          
+     88          /** @addtogroup STM32L0xx_HAL_Driver
+     89            * @{
+     90            */
+     91          
+     92          /** @defgroup TIMEx 
+     93            * @brief TIMEx HAL module driver
+     94            * @{
+     95            */
+     96          
+     97          #ifdef HAL_TIM_MODULE_ENABLED
+     98          
+     99          /* Private typedef -----------------------------------------------------------*/
+    100          /* Private define ------------------------------------------------------------*/
+    101          /* Private macro -------------------------------------------------------------*/
+    102          /* Private variables ---------------------------------------------------------*/
+    103          /* Private function prototypes -----------------------------------------------*/   
+    104          /* Private functions ---------------------------------------------------------*/
+    105          
+    106          /** @defgroup TIMEx_Private_Functions
+    107            * @{
+    108            */
+    109          
+    110          
+    111          /** @defgroup TIMEx_Group1 Peripheral Control functions
+    112           *  @brief   	Peripheral Control functions 
+    113           *
+    114          @verbatim   
+    115           ===============================================================================
+    116                       ##### Peripheral Control functions #####
+    117           ===============================================================================  
+    118              [..]  This section provides functions allowing to:
+    119                (+) Configure Master and the Slave synchronization.
+    120                
+    121          @endverbatim
+    122            * @{
+    123            */
+    124          
+    125          /**
+    126            * @brief  Configures the TIM in master mode.
+    127            * @param  htim: TIM handle.   
+    128            * @param  sMasterConfig: pointer to a TIM_MasterConfigTypeDef structure that
+    129            *         contains the selected trigger output (TRGO) and the Master/Slave 
+    130            *         mode. 
+    131            * @retval HAL status
+    132            */
+    133          HAL_StatusTypeDef HAL_TIMEx_MasterConfigSynchronization(TIM_HandleTypeDef *htim, TIM_MasterConfigTypeDef * sMasterConfig)
+    134          {
+    135            /* Check the parameters */
+    136            assert_param(IS_TIM_MASTER_INSTANCE(htim->Instance));
+    137            assert_param(IS_TIM_TRGO_SOURCE(sMasterConfig->MasterOutputTrigger));
+    138            assert_param(IS_TIM_MSM_STATE(sMasterConfig->MasterSlaveMode));
+    139            
+    140            __HAL_LOCK(htim);
+    141            
+    142            /* Change the handler state */
+    143            htim->State = HAL_TIM_STATE_BUSY;
+    144          
+    145            /* Reset the MMS Bits */
+    146            htim->Instance->CR2 &= ~TIM_CR2_MMS;
+    147            /* Select the TRGO source */
+    148            htim->Instance->CR2 |= sMasterConfig->MasterOutputTrigger;
+    149          
+    150            /* Reset the MSM Bit */
+    151            htim->Instance->SMCR &= ~TIM_SMCR_MSM;
+    152            /* Set or Reset the MSM Bit */
+    153            htim->Instance->SMCR |= sMasterConfig->MasterSlaveMode;
+    154          
+    155            htim->State = HAL_TIM_STATE_READY;
+    156            
+    157            __HAL_UNLOCK(htim);
+    158            
+    159            return HAL_OK;
+    160          }  
+    161          
+    162          /**
+    163            * @brief  Configures the TIM2, TIM21 and TIM22 Remapping input capabilities.
+    164            * @param  htim: pointer to a TIM_HandleTypeDef structure that contains
+    165            *                the configuration information for TIM module.
+    166            * @param  TIM_Remap: specifies the TIM input remapping source.
+    167            *          This parameter can be one of the following values:
+    168            *            @arg TIM2_ETR_GPIO: TIM2  ETR is connected to GPIO (default)
+    169            *            @arg TIM2_ETR_HSI48: TIM2  ETR is connected to HSI48
+    170            *            @arg TIM2_ETR_LSE: TIM2  ETR is connected to LSE
+    171            *            @arg TIM2_ETR_COMP2_OUT: TIM2  ETR is connected to COMP2 output
+    172            *            @arg TIM2_ETR_COMP1_OUT: TIM2  ETR is connected to COMP1 output
+    173            *            @arg TIM2_TI4_GPIO1: TIM2  TI4 is connected to GPIO1(default)
+    174            *            @arg TIM2_TI4_COMP1: TIM2  TI4 is connected to COMP1
+    175            *            @arg TIM2_TI4_COMP2: TIM2  TI4 is connected to COMP2
+    176            *            @arg TIM2_TI4_GPIO2: TIM2  TI4 is connected to GPIO2
+    177            *            @arg TIM21_ETR_GPIO: TIM21 ETR is connected to GPIO(default)
+    178            *            @arg TIM21_ETR_COMP2_OUT: TIM21 ETR is connected to COMP2 output
+    179            *            @arg TIM21_ETR_COMP1_OUT: TIM21 ETR is connected to COMP1 output
+    180            *            @arg TIM21_ETR_LSE: TIM21 ETR is connected to LSE
+    181            *            @arg TIM21_TI1_MCO: TIM21 TI1 is connected to MCO
+    182            *            @arg TIM21_TI1_RTC_WKUT_IT: TIM21 TI1 is connected to RTC WAKEUP interrupt
+    183            *            @arg TIM21_TI1_HSE_RTC: TIM21 TI1 is connected to HSE_RTC 
+    184            *            @arg TIM21_TI1_MSI: TIM21 TI1 is connected to MSI clock
+    185            *            @arg TIM21_TI1_LSE: TIM21 TI1 is connected to LSE
+    186            *            @arg TIM21_TI1_LSI: TIM21 TI1 is connected to LSI  
+    187            *            @arg TIM21_TI1_COMP1_OUT: TIM21 TI1 is connected to COMP1_OUT
+    188            *            @arg TIM21_TI1_GPIO: TIM21 TI1 is connected to GPIO(default)
+    189            *            @arg TIM21_TI2_GPIO: TIM21 TI2 is connected to GPIO(default)
+    190            *            @arg TIM21_TI2_COMP2_OUT: TIM21 TI2 is connected to COMP2 output
+    191            *            @arg TIM22_ETR_LSE: TIM22 ETR is connected to LSE
+    192            *            @arg TIM22_ETR_COMP2_OUT: TIM22 ETR is connected to COMP2 output
+    193            *            @arg TIM22_ETR_COMP1_OUT: TIM22 ETR is connected to COMP1 output
+    194            *            @arg TIM22_ETR_GPIO: TIM22 ETR is connected to GPIO(default)  
+    195            *            @arg TIM22_TI1_GPIO1: TIM22 TI1 is connected to GPIO(default)
+    196            *            @arg TIM22_TI1_COMP2_OUT: TIM22 TI1 is connected to COMP2 output 
+    197            *            @arg TIM22_TI1_COMP1_OUT: TIM22 TI1 is connected to COMP1 output
+    198            *            @arg TIM22_TI1_GPIO2: TIM22 TI1 is connected to GPIO 
+    199            * @retval HAL status
+    200            */
+    201          HAL_StatusTypeDef HAL_TIMEx_RemapConfig(TIM_HandleTypeDef *htim, uint32_t Remap)
+    202          {
+    203            __HAL_LOCK(htim);
+    204              
+    205            /* Check parameters */
+    206            assert_param(IS_TIM_REMAP_INSTANCE(htim->Instance));
+    207            assert_param(IS_TIM_REMAP(Remap));
+    208            
+    209            /* Change the handler state */
+    210            htim->State = HAL_TIM_STATE_BUSY;
+    211            
+    212            /* Set the Timer remapping configuration */
+    213            htim->Instance->OR &=  (uint32_t)(Remap >> 16);
+    214            htim->Instance->OR |=  Remap;
+    215            
+    216            /* Change the handler state */
+    217            htim->State = HAL_TIM_STATE_READY;
+    218            
+    219            __HAL_UNLOCK(htim);  
+    220            
+    221            return HAL_OK;
+    222          }
+    223          
+    224          /**
+    225            * @}
+    226            */
+    227          
+    228          /**
+    229            * @}
+    230            */
+    231          
+    232          #endif /* HAL_TIM_MODULE_ENABLED */
+    233          /**
+    234            * @}
+    235            */ 
+    236          
+    237          /**
+    238            * @}
+    239            */ 
+    240          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+      12   HAL_TIMEx_MasterConfigSynchronization
+      12   HAL_TIMEx_RemapConfig
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      14  ?Subroutine0
+      68  HAL_TIMEx_MasterConfigSynchronization
+      44  HAL_TIMEx_RemapConfig
+
+ 
+ 126 bytes in section .text
+ 
+ 126 bytes of CODE memory
+
+Errors: none
+Warnings: none

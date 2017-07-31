@@ -1,0 +1,271 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:07
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  F:\demo\SUBDEV_SWITCH\Projects\Src\adc.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Projects\Src\adc.c -D STM32L053xx -D
+#        USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\adc.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\adc.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Projects\Src\adc.c
+      1          #include "adc.h"
+      2          #include "stm32l0xx_hal_msp.h"
+      3          
+      4          /* ADC handle declaration */
+      5          ADC_HandleTypeDef             AdcHandle;
+      6          
+      7          /* ADC channel configuration structure declaration */
+      8          ADC_ChannelConfTypeDef        sConfig;
+      9          
+     10          /* Converted value declaration */
+     11          u32 aResultDMA[10];
+     12          
+     13          /**
+     14          * @brief  ADC MSP Init
+     15          * @param  hadc : ADC handle
+     16          * @retval None
+     17          */
+     18          void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
+     19          {
+     20            GPIO_InitTypeDef                 GPIO_InitStruct;
+     21            static DMA_HandleTypeDef         DmaHandle;
+     22            
+     23            /*##-1- Enable peripherals and GPIO Clocks #################################*/
+     24            /* Enable GPIO clock ****************************************/
+     25            ADCx_CHANNELa_GPIO_CLK_ENABLE();
+     26            /* ADC1 Periph clock enable */
+     27            ADCx_CLK_ENABLE();
+     28            /* Enable DMA1 clock */
+     29            ADCx_DMA_CLK_ENABLE();
+     30          
+     31            
+     32            /*##- 2- Configure peripheral GPIO #########################################*/
+     33            /* ADC3 Channel8 GPIO pin configuration */
+     34            GPIO_InitStruct.Pin = ADCx_CHANNELa_PIN ;
+     35            GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+     36            GPIO_InitStruct.Pull = GPIO_NOPULL;
+     37            HAL_GPIO_Init(ADCx_CHANNELa_GPIO_PORT, &GPIO_InitStruct);
+     38            
+     39            /*##- 3- Configure DMA #####################################################*/ 
+     40          
+     41            /*********************** Configure DMA parameters ***************************/
+     42            DmaHandle.Instance                 = ADCx_DMA_CHANNEL;
+     43            DmaHandle.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+     44            DmaHandle.Init.PeriphInc           = DMA_PINC_DISABLE;
+     45            DmaHandle.Init.MemInc              = DMA_MINC_ENABLE;
+     46            DmaHandle.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+     47            DmaHandle.Init.MemDataAlignment    = DMA_MDATAALIGN_WORD;
+     48            DmaHandle.Init.Mode                = DMA_CIRCULAR;
+     49            DmaHandle.Init.Priority            = DMA_PRIORITY_MEDIUM;
+     50            DmaHandle.Init.Request             = ADCx_DMA_REQUEST;
+     51            
+     52            /* Deinitialize  & Initialize the DMA for new transfer */
+     53            HAL_DMA_DeInit(&DmaHandle);  
+     54            HAL_DMA_Init(&DmaHandle);
+     55            
+     56            /* Associate the DMA handle */
+     57            __HAL_LINKDMA(hadc, DMA_Handle, DmaHandle);
+     58            
+     59          //  /* NVIC configuration for DMA Input data interrupt */
+     60          //  HAL_NVIC_SetPriority(ADCx_DMA_IRQn, 1, 1);
+     61          //  HAL_NVIC_EnableIRQ(ADCx_DMA_IRQn);
+     62          }
+     63          
+     64          
+     65          /**
+     66          * @brief  ADC MSP DeInit
+     67          * @param  hadc : ADC handle
+     68          * @retval None
+     69          */
+     70          void HAL_ADC_MspDeInit(ADC_HandleTypeDef *hadc)
+     71          {  
+     72            /*##-1- Enable peripherals and GPIO Clocks #################################*/
+     73            /* Disable GPIO clock ****************************************/
+     74            ADCx_CHANNELa_GPIO_CLK_DISABLE();
+     75            /* ADC1 Periph clock Disable */
+     76            ADCx_CLK_DISABLE();
+     77            /* Disable DMA1 clock */
+     78            ADCx_DMA_CLK_DISABLE();
+     79          }
+     80          
+     81          void ADC_Init(void)
+     82          {
+     83            /* ### - 1 - Initialize ADC peripheral #################################### */
+     84            /*
+     85             *  Instance                  = ADC1.
+     86             *  OversamplingMode          = Disabled
+     87             *  ClockPrescaler            = PCLK clock with no division.
+     88             *  LowPowerAutoOff           = Disabled (For this exemple continuous mode is enabled with software start)
+     89             *  LowPowerFrequencyMode     = Enabled (To be enabled only if ADC clock is lower than 2.8MHz) 
+     90             *  LowPowerAutoWait          = Enabled (New conversion starts only when the previous conversion is completed)       
+     91             *  Resolution                = 12 bit (increased to 16 bit with oversampler)
+     92             *  SamplingTime              = 7.5 cycles od ADC clock.
+     93             *  ScanDirection             = Upward 
+     94             *  DataAlign                 = Right
+     95             *  ContinuousConvMode        = Enabled
+     96             *  DiscontinuousConvMode     = Enabled
+     97             *  ExternalTrigConvEdge      = None (Software start)
+     98             *  EOCSelection              = End Of Conversion event
+     99             *  DMAContinuousRequests     = ENABLE
+    100             */
+    101            GPIO_InitTypeDef GPIO_InitStruct;
+    102          
+    103            /* GPIO Ports Clock Enable */
+    104          	__GPIOA_CLK_ENABLE();
+    105            
+    106            GPIO_InitStruct.Pin = GPIO_PIN_1;
+    107            GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    108            GPIO_InitStruct.Pull = GPIO_NOPULL;
+    109            HAL_GPIO_Init(GPIOA, &GPIO_InitStruct); 
+    110            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
+    111            
+    112            AdcHandle.Instance = ADC1;
+    113            
+    114            AdcHandle.Init.OversamplingMode      = DISABLE;
+    115            
+    116            AdcHandle.Init.ClockPrescaler        = ADC_CLOCKPRESCALER_PCLK_DIV1;
+    117            AdcHandle.Init.LowPowerAutoOff       = ENABLE;
+    118            AdcHandle.Init.LowPowerFrequencyMode = ENABLE;
+    119            AdcHandle.Init.LowPowerAutoWait      = ENABLE;
+    120              
+    121            AdcHandle.Init.Resolution            = ADC_RESOLUTION12b;
+    122            AdcHandle.Init.SamplingTime          = ADC_SAMPLETIME_239CYCLES_5;
+    123            AdcHandle.Init.ScanDirection         = ADC_SCAN_DIRECTION_UPWARD;
+    124            AdcHandle.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
+    125            AdcHandle.Init.ContinuousConvMode    = ENABLE;
+    126            AdcHandle.Init.DiscontinuousConvMode = DISABLE;
+    127            AdcHandle.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIG_EDGE_NONE;
+    128            AdcHandle.Init.EOCSelection          = EOC_SINGLE_CONV;
+    129            AdcHandle.Init.DMAContinuousRequests = ENABLE;
+    130           
+    131            /* Initialize ADC peripheral according to the passed parameters */
+    132            if (HAL_ADC_Init(&AdcHandle) != HAL_OK)
+    133            {
+    134              Error_Handler();
+    135            }
+    136            
+    137            
+    138            /* ### - 2 - Start calibration ############################################ */
+    139            if (HAL_ADCEx_Calibration_Start(&AdcHandle, ADC_SINGLE_ENDED) != HAL_OK)
+    140            {
+    141              Error_Handler();
+    142            }
+    143            
+    144            /* ### - 3 - Channel configuration ######################################## */
+    145            /* Select Channel 0 to be converted */
+    146            sConfig.Channel = ADCx_CHANNELa;    
+    147            if (HAL_ADC_ConfigChannel(&AdcHandle, &sConfig) != HAL_OK)
+    148            {
+    149              Error_Handler();
+    150            }
+    151            
+    152            /* ### - 4 - Start conversion in DMA mode ################################# */
+    153            if (HAL_ADC_Start_DMA(&AdcHandle, aResultDMA, 10) != HAL_OK)
+    154            {
+    155              Error_Handler();
+    156            }
+    157            
+    158          }
+    159          
+    160          void ADC_DeInit(void)
+    161          {
+    162            HAL_ADC_DeInit(&AdcHandle);
+    163          }
+    164          
+    165          u16 Read_ADC_Voltage(void)
+    166          {
+    167            u8 i;
+    168            u16 Vdd=0;
+    169            u32 temp=0;
+    170            for(i=0;i<10;i++)
+    171              temp+=COMPUTATION_DIGITAL_12BITS_TO_VOLTAGE(aResultDMA[i]);
+    172            Vdd=temp/10;
+    173            return Vdd;
+    174          }
+    175          
+    176          
+    177          
+    178          
+    179          
+    180          
+    181          
+    182          
+    183          
+    184          
+    185          
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+       8   ADC_DeInit
+         8   -> HAL_ADC_DeInit
+      40   ADC_Init
+        40   -> Error_Handler
+        40   -> HAL_ADCEx_Calibration_Start
+        40   -> HAL_ADC_ConfigChannel
+        40   -> HAL_ADC_Init
+        40   -> HAL_ADC_Start_DMA
+        40   -> HAL_GPIO_Init
+        40   -> HAL_GPIO_WritePin
+       0   HAL_ADC_MspDeInit
+      40   HAL_ADC_MspInit
+        40   -> HAL_DMA_DeInit
+        40   -> HAL_DMA_Init
+        40   -> HAL_GPIO_Init
+      12   Read_ADC_Voltage
+        12 __aeabi_uidiv
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable4
+       4  ??DataTable4_1
+       4  ??DataTable4_2
+       4  ??DataTable4_3
+       4  ??DataTable4_4
+       4  ??DataTable4_5
+       4  ??DataTable4_6
+       4  ??DataTable4_7
+       4  ??DataTable4_8
+      10  ADC_DeInit
+     160  ADC_Init
+      92  AdcHandle
+      60  DmaHandle
+      28  HAL_ADC_MspDeInit
+     102  HAL_ADC_MspInit
+      40  Read_ADC_Voltage
+      44  sConfig
+          aResultDMA
+
+ 
+ 196 bytes in section .bss
+ 376 bytes in section .text
+ 
+ 376 bytes of CODE memory
+ 196 bytes of DATA memory
+
+Errors: none
+Warnings: none

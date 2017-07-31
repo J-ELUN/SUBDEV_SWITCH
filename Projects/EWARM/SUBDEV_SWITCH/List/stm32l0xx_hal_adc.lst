@@ -1,0 +1,1763 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:09
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_adc.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_adc.c
+#        -D STM32L053xx -D USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\stm32l0xx_hal_adc.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\stm32l0xx_hal_adc.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_adc.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    stm32l0xx_hal_adc.c
+      4            * @author  MCD Application Team
+      5            * @version V1.1.0
+      6            * @date    18-June-2014
+      7            * @brief   This file provides firmware functions to manage the following 
+      8            *          functionalities of the Analog to Digital Convertor (ADC)
+      9            *          peripheral:
+     10            *           + Initialization and de-initialization functions
+     11            *             ++ Initialization and Configuration of ADC
+     12            *           + Operation functions
+     13            *             ++ Start, stop, get result of conversions of regular 
+     14            *             groups, using 3 possible modes : polling, interruption or DMA.
+     15            *             ++ Calibration feature
+     16            *           + Control functions
+     17            *             ++ Analog Watchdog configuration
+     18            *             ++ Regular Channels Configuration
+     19            *           + State functions
+     20            *             ++ ADC state machine management
+     21            *             ++ Interrupts and flags management
+     22            *         
+     23            @verbatim
+     24            ==============================================================================
+     25                              ##### ADC specific features #####
+     26            ==============================================================================
+     27            [..] 
+     28            (#) 12-bit, 10-bit, 8-bit or 6-bit configurable resolution.
+     29          
+     30            (#) A built-in hardware oversampler allows to improve analog performances
+     31                while off-loading the related computational burden from the CPU.
+     32          
+     33            (#) Interrupt generation at the end of conversion and in case of analog
+     34                watchdog or overrun events.
+     35            
+     36            (#) Single and continuous conversion modes.
+     37            
+     38            (#) Scan or discontinuous mode conversion of channel 0 to channel 18.
+     39          
+     40            (#) Configurable scan direction (Upward from channel 0 to 18 or Backward from
+     41                channel 18 to channel 0)
+     42            
+     43            (#) Data alignment with in-built data coherency.
+     44            
+     45            (#) Channel-wise programmable sampling time.
+     46          
+     47            (#) External trigger option with configurable polarity.
+     48          
+     49            (#) DMA request generation during regular channel conversion.
+     50            
+     51            (#) ADC supply requirements: 2.4 V to 3.6 V at full speed and down to 1.8 V at 
+     52                slower speed.
+     53            
+     54            (#) ADC input range: VREF- =VIN =VREF+.
+     55          
+     56            (#) ADC self-calibration.
+     57          
+     58            (#) ADC is automatically powered off (AutoOff mode) except during the active
+     59                conversion phase. This dramatically reduces the power consumption of the
+     60                ADC.
+     61          
+     62            (#) Wait mode to prevent ADC overrun in applications with low frequency.
+     63          
+     64          
+     65                               ##### How to use this driver #####
+     66            ==============================================================================
+     67              [..]
+     68          
+     69              (#) Enable the ADC interface 
+     70                  As prerequisite, into HAL_ADC_MspInit(), ADC clock must be configured  
+     71                  at RCC top level.
+     72          
+     73                  Depending on both possible clock sources: PCLK clock or ADC asynchronous
+     74                  clock. 
+     75                    __ADC1_CLK_ENABLE();                                                            
+     76          
+     77          
+     78              (#) ADC pins configuration
+     79                   (++) Enable the clock for the ADC GPIOs using the following function:
+     80                       __GPIOx_CLK_ENABLE();   
+     81                   (++) Configure these ADC pins in analog mode using HAL_GPIO_Init();  
+     82            
+     83               (#) Configure the ADC parameters (conversion resolution, oversampler, 
+     84                   data alignment, continuous mode,...) using the HAL_ADC_Init() function.
+     85          
+     86               (#) Activate the ADC peripheral using one of the start functions: 
+     87                   HAL_ADC_Start(), HAL_ADC_Start_IT() or HAL_ADC_Start_DMA()
+     88            
+     89               *** Channels configuration ***
+     90               ===============================
+     91               [..]    
+     92                 (+) To configure the ADC channels group, use HAL_ADC_ConfigChannel() function.   
+     93                 (+) To read the ADC converted values, use the HAL_ADC_GetValue() function.
+     94                      
+     95               *** DMA feature configuration ***
+     96               =================================
+     97               [..]
+     98                 (+) To enable the DMA mode, use the HAL_ADC_Start_DMA() function.
+     99                 (+) To enable the generation of DMA requests continuously at the end of 
+    100                     the last DMA transfer, set .Init.DMAContinuousRequests to ENABLE and
+    101                     call HAL_ADC_Init() function.
+    102          
+    103            
+    104              @endverbatim
+    105            ******************************************************************************
+    106            * @attention
+    107            *
+    108            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+    109            *
+    110            * Redistribution and use in source and binary forms, with or without modification,
+    111            * are permitted provided that the following conditions are met:
+    112            *   1. Redistributions of source code must retain the above copyright notice,
+    113            *      this list of conditions and the following disclaimer.
+    114            *   2. Redistributions in binary form must reproduce the above copyright notice,
+    115            *      this list of conditions and the following disclaimer in the documentation
+    116            *      and/or other materials provided with the distribution.
+    117            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+    118            *      may be used to endorse or promote products derived from this software
+    119            *      without specific prior written permission.
+    120            *
+    121            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    122            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    123            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    124            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    125            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    126            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    127            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    128            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    129            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    130            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    131            *
+    132            ******************************************************************************  
+    133            */
+    134          
+    135          /* Includes ------------------------------------------------------------------*/
+    136          #include "stm32l0xx_hal.h"
+    137          
+    138          /** @addtogroup STM32L0xx_HAL_Driver
+    139            * @{
+    140            */
+    141          
+    142          /** @addtogroup ADC 
+    143            * @brief ADC driver modules
+    144            * @{
+    145            */ 
+    146          
+    147          #ifdef HAL_ADC_MODULE_ENABLED
+    148              
+    149          /* Private typedef -----------------------------------------------------------*/
+    150          /* Private define ------------------------------------------------------------*/
+    151          /* Private macro -------------------------------------------------------------*/
+    152          /* Private variables ---------------------------------------------------------*/
+    153          /* Private function prototypes -----------------------------------------------*/
+    154          static HAL_StatusTypeDef ADC_Enable(ADC_HandleTypeDef* hadc);
+    155          static void ADC_DMAConvCplt(DMA_HandleTypeDef *hdma);
+    156          static void ADC_DMAHalfConvCplt(DMA_HandleTypeDef *hdma);
+    157          static void ADC_DMAError(DMA_HandleTypeDef *hdma);
+    158          static HAL_StatusTypeDef ADC_ConversionStop(ADC_HandleTypeDef* hadc, uint32_t ConversionGroup);
+    159          static HAL_StatusTypeDef ADC_Disable(ADC_HandleTypeDef* hadc);
+    160          
+    161          /* Private functions ---------------------------------------------------------*/
+    162          
+    163          /** @defgroup ADC_Private_Functions
+    164            * @{
+    165            */ 
+    166          
+    167          /** @defgroup ADC_Group1 Initialization/de-initialization functions 
+    168           *  @brief    Initialization and Configuration functions 
+    169           *
+    170          @verbatim    
+    171           ===============================================================================
+    172                        ##### Initialization and de-initialization functions #####
+    173           ===============================================================================
+    174              [..]  This section provides functions allowing to:
+    175                (+) Initialize and configure the ADC. 
+    176                (+) De-initialize the ADC. 
+    177                   
+    178          @endverbatim
+    179            * @{
+    180            */
+    181          
+    182          
+    183          /**
+    184            * @brief  Initializes the ADCx peripheral according to the specified parameters 
+    185            *         in the ADC_InitStruct.
+    186            * @note   This function is used to configure the global features of the ADC 
+    187            *         (ClockPrescaler, Resolution, Data Alignment and number of conversion), however,
+    188            *         the rest of the configuration parameters are specific to the regular
+    189            *         channels group (scan mode activation, continuous mode activation,
+    190            *         External trigger source and edge, DMA continuous request after the  
+    191            *         last transfer and End of conversion selection).
+    192            *         
+    193            *         As prerequisite, into HAL_ADC_MspInit(), ADC clock must be 
+    194            *         configured at RCC top level.
+    195            *         See commented example code below that can be copied 
+    196            *         and uncommented into HAL_ADC_MspInit().
+    197            *         
+    198            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+    199            *         the configuration information for the specified ADC.  
+    200            * @retval HAL status
+    201            */
+    202          HAL_StatusTypeDef HAL_ADC_Init(ADC_HandleTypeDef* hadc)
+    203          {
+    204            uint32_t tickstart = 0x00;
+    205            
+    206            /* Check ADC handle */
+    207            if(hadc == NULL)
+    208            {
+    209               return HAL_ERROR;
+    210            }
+    211            
+    212            /* Check the parameters */
+    213            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+    214            assert_param(IS_ADC_CLOCKPRESCALER(hadc->Init.ClockPrescaler));
+    215            assert_param(IS_ADC_RESOLUTION(hadc->Init.Resolution));
+    216            assert_param(IS_ADC_SAMPLE_TIME(hadc->Init.SamplingTime));
+    217            assert_param(IS_ADC_SCAN_DIRECTION(hadc->Init.ScanDirection));  
+    218            assert_param(IS_ADC_DATA_ALIGN(hadc->Init.DataAlign)); 
+    219            assert_param(IS_FUNCTIONAL_STATE(hadc->Init.ContinuousConvMode));	    
+    220            assert_param(IS_FUNCTIONAL_STATE(hadc->Init.DiscontinuousConvMode));
+    221            assert_param(IS_ADC_EXTTRIG_EDGE(hadc->Init.ExternalTrigConvEdge));
+    222            assert_param(IS_ADC_EXTERNAL_TRIG_CONV(hadc->Init.ExternalTrigConv));   
+    223            assert_param(IS_FUNCTIONAL_STATE(hadc->Init.DMAContinuousRequests));	    
+    224            assert_param(IS_ADC_EOC_SELECTION(hadc->Init.EOCSelection));
+    225            assert_param(IS_ADC_OVERRUN(hadc->Init.Overrun));	    
+    226            assert_param(IS_FUNCTIONAL_STATE(hadc->Init.LowPowerAutoWait));
+    227            assert_param(IS_FUNCTIONAL_STATE(hadc->Init.LowPowerFrequencyMode));
+    228            assert_param(IS_FUNCTIONAL_STATE(hadc->Init.LowPowerAutoOff));
+    229            assert_param(IS_FUNCTIONAL_STATE(hadc->Init.OversamplingMode));
+    230          
+    231            if(hadc->State == HAL_ADC_STATE_RESET)
+    232            {
+    233              /* Init the low level hardware */
+    234              HAL_ADC_MspInit(hadc);
+    235            }
+    236            
+    237            /* Initialize the ADC state */
+    238            hadc->State = HAL_ADC_STATE_BUSY;
+    239            
+    240            /* Configuration of ADC clock: clock source PCLK or asynchronous with 
+    241            selectable prescaler */
+    242            __HAL_ADC_CLOCK_PRESCALER(hadc);
+    243            
+    244            /* Set the Low Frequency mode */
+    245            ADC->CCR &= (uint32_t)~ADC_CCR_LFMEN;
+    246            ADC->CCR |=__HAL_ADC_CCR_LOWFREQUENCY(hadc->Init.LowPowerFrequencyMode);  
+    247             
+    248            /* Enable voltage regulator (if disabled at this step) */
+    249            if (HAL_IS_BIT_CLR(hadc->Instance->CR, ADC_CR_ADVREGEN))
+    250            {
+    251              /* Note: The software must wait for the startup time of the ADC voltage   */
+    252              /*       regulator before launching a calibration or enabling the ADC.    */
+    253              /*       This temporization must be implemented by software and is equal  */ 
+    254              /*       to 10 micro seconds in the worst case process/temperature/power supply.     */
+    255              
+    256              /* Disable the ADC (if not already disabled) */
+    257              if (__HAL_ADC_IS_ENABLED(hadc) != RESET )
+    258              {
+    259                /* Check if conditions to disable the ADC are fulfilled */
+    260                if (__HAL_ADC_DISABLING_CONDITIONS(hadc) != RESET)
+    261                {
+    262                  __HAL_ADC_DISABLE(hadc);    
+    263                }
+    264                else  
+    265                {
+    266                  hadc->State= HAL_ADC_STATE_ERROR;
+    267                  
+    268                  /* Process unlocked */
+    269                  __HAL_UNLOCK(hadc);
+    270                  
+    271                  return HAL_ERROR;
+    272                }   
+    273                
+    274                /* Get timeout */
+    275                tickstart = HAL_GetTick();
+    276          
+    277                /* Wait for disabling completion */
+    278                while(HAL_IS_BIT_SET(hadc->Instance->CR, ADC_CR_ADEN))
+    279                {
+    280                  /* Check for the Timeout */
+    281                  if(ADC_ENABLE_TIMEOUT != HAL_MAX_DELAY)
+    282                  {          
+    283                    if((HAL_GetTick() - tickstart ) > ADC_DISABLE_TIMEOUT)
+    284                    {
+    285                      hadc->State= HAL_ADC_STATE_TIMEOUT;
+    286                      
+    287                      /* Process unlocked */
+    288                      __HAL_UNLOCK(hadc);
+    289                      
+    290                      return HAL_TIMEOUT;
+    291                    }
+    292                  }
+    293                }
+    294                
+    295              }
+    296            
+    297              /* Set ADVREGEN bit */
+    298              hadc->Instance->CR |= ADC_CR_ADVREGEN;
+    299              /* Delay of 10 microseconds minimum (value from design, cf reference manual) */
+    300              /* Delay fixed to worst case: maximum CPU frequency                       */
+    301              HAL_Delay(10);
+    302            }
+    303            
+    304            /* Configuration of ADC:                                                    */
+    305            /*  - Resolution                                                            */
+    306            /*  - Data alignment                                                        */
+    307            /*  - Scan direction                                                         */
+    308            /*  - External trigger to start conversion                                  */
+    309            /*  - External trigger polarity                                             */
+    310            /*  - Continuous conversion mode                                            */
+    311            /*  - DMA continuous request                                                */
+    312            /*  - Overrun                                                               */
+    313            /*  - AutoDelay feature                                                     */
+    314            /*  - Discontinuous mode                                                    */
+    315            hadc->Instance->CFGR1 &= ~( ADC_CFGR1_RES   |
+    316                                       ADC_CFGR1_ALIGN  |
+    317                                       ADC_CFGR1_SCANDIR  |
+    318                                       ADC_CFGR1_EXTSEL |
+    319                                       ADC_CFGR1_EXTEN  |
+    320                                       ADC_CFGR1_CONT   |
+    321                                       ADC_CFGR1_DMACFG |
+    322                                       ADC_CFGR1_OVRMOD |
+    323                                       ADC_CFGR1_AUTDLY |
+    324                                       ADC_CFGR1_AUTOFF |
+    325                                       ADC_CFGR1_DISCEN);
+    326            
+    327            hadc->Instance->CFGR1 |= ( hadc->Init.Resolution                                       |
+    328                                      hadc->Init.DataAlign                                         |
+    329                                      hadc->Init.ScanDirection                                     |
+    330                                      hadc->Init.ExternalTrigConvEdge                              |
+    331                                      __HAL_ADC_CFGR1_CONTINUOUS(hadc->Init.ContinuousConvMode)    | 
+    332                                      __HAL_ADC_CFGR1_DMAContReq(hadc->Init.DMAContinuousRequests) |
+    333                                      hadc->Init.Overrun                                           |
+    334                                      __HAL_ADC_CFGR1_AutoDelay(hadc->Init.LowPowerAutoWait)       |
+    335                                      __HAL_ADC_CFGR1_AUTOFF(hadc->Init.LowPowerAutoOff));
+    336            
+    337            /* Configure the external trigger only if Conversion edge is not "NONE" */
+    338            if (hadc->Init.ExternalTrigConvEdge != ADC_EXTERNALTRIG_EDGE_NONE)
+    339            {
+    340              hadc->Instance->CFGR1 |= hadc->Init.ExternalTrigConv;
+    341            }
+    342            
+    343            /* Enable discontinuous mode only if continuous mode is disabled */
+    344            if ((hadc->Init.DiscontinuousConvMode == ENABLE) && (hadc->Init.ContinuousConvMode == DISABLE))
+    345            {  
+    346              /* Enable the selected ADC discontinuous mode */   
+    347              hadc->Instance->CFGR1 |= ( ADC_CFGR1_DISCEN);
+    348            }
+    349            
+    350            if (hadc->Init.OversamplingMode == ENABLE)
+    351            {
+    352              assert_param(IS_ADC_OVERSAMPLING_RATIO(hadc->Init.Oversample.Ratio));
+    353              assert_param(IS_ADC_RIGHT_BIT_SHIFT(hadc->Init.Oversample.RightBitShift));
+    354              assert_param(IS_ADC_TRIGGERED_OVERSAMPLING_MODE(hadc->Init.Oversample.TriggeredMode));
+    355          
+    356              /* Configuration of Oversampler:                                          */
+    357              /*  - Oversampling Ratio                                                  */
+    358              /*  - Right bit shift                                                     */
+    359              /*  - Triggered mode                                                      */
+    360              
+    361              hadc->Instance->CFGR2 &= ~( ADC_CFGR2_OVSR |
+    362                                          ADC_CFGR2_OVSS |
+    363                                          ADC_CFGR2_TOVS );
+    364              
+    365              hadc->Instance->CFGR2 |= ( hadc->Init.Oversample.Ratio         |
+    366                                         hadc->Init.Oversample.RightBitShift             |
+    367                                         hadc->Init.Oversample.TriggeredMode );
+    368              
+    369              /* Enable OverSampling mode */
+    370               hadc->Instance->CFGR2 |= ADC_CFGR2_OVSE;
+    371            }
+    372            else
+    373            {
+    374              /* Disable OverSampling mode */
+    375               hadc->Instance->CFGR2 &= ~ADC_CFGR2_OVSE;
+    376            }    
+    377            
+    378            /* Clear the old sampling time */
+    379            hadc->Instance->SMPR &= (uint32_t)(~ADC_SMPR_SMPR);
+    380            
+    381            /* Set the new sample time */
+    382            hadc->Instance->SMPR |= hadc->Init.SamplingTime;
+    383            
+    384            
+    385            /* Set ADC error code to none */
+    386            hadc->ErrorCode = HAL_ADC_ERROR_NONE;
+    387            
+    388            /* Initialize the ADC state */
+    389            hadc->State = HAL_ADC_STATE_READY;
+    390            
+    391            /* Return function status */
+    392            return HAL_OK;
+    393          }
+    394          
+    395          /**
+    396            * @brief  Deinitialize the ADC peripheral registers to its default reset values.
+    397            * @note   To not impact other ADCs, reset of common ADC registers have been
+    398            *         left commented below.
+    399            *         If needed, the example code can be copied and uncommented into
+    400            *         function HAL_ADC_MspDeInit().
+    401            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+    402            *         the configuration information for the specified ADC.  
+    403            * @retval HAL status
+    404            */
+    405          HAL_StatusTypeDef HAL_ADC_DeInit(ADC_HandleTypeDef* hadc)
+    406          {
+    407            uint32_t tickstart = 0;
+    408            
+    409            /* Check ADC handle */
+    410            if(hadc == NULL)
+    411            {
+    412               return HAL_ERROR;
+    413            }
+    414            
+    415            /* Check the parameters */
+    416            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+    417            
+    418            /* Change ADC state */
+    419            hadc->State = HAL_ADC_STATE_BUSY;
+    420            
+    421            /* Stop potential conversion ongoing */
+    422            if (HAL_IS_BIT_SET(hadc->Instance->CR, ADC_CR_ADSTART) && HAL_IS_BIT_CLR(hadc->Instance->CR, ADC_CR_ADDIS))
+    423            {
+    424              /* Stop regular conversion */
+    425              hadc->Instance->CR |= ADC_CR_ADSTP;
+    426            }
+    427            
+    428            /* Disable ADC: Solution to recover from an unknown ADC state (for example, */
+    429            /* in case of forbidden action on register bits)                            */
+    430            /* Procedure to disable the ADC peripheral: wait for conversions            */
+    431            /* effectively stopped, then disable ADC                                    */
+    432            /* 1. Wait until ADSTART = 0 */
+    433            
+    434            /* Get timeout */
+    435            tickstart = HAL_GetTick();  
+    436            
+    437            while(HAL_IS_BIT_SET(hadc->Instance->CR, ADC_CR_ADSTART))
+    438            {
+    439              /* Check for the Timeout */
+    440              if(ADC_STOP_CONVERSION_TIMEOUT != HAL_MAX_DELAY)
+    441              {
+    442                if((HAL_GetTick() - tickstart ) > ADC_STOP_CONVERSION_TIMEOUT)
+    443                {
+    444                  hadc->State= HAL_ADC_STATE_TIMEOUT;
+    445                  
+    446                  /* Process unlocked */
+    447                  __HAL_UNLOCK(hadc);
+    448                  
+    449                  return HAL_TIMEOUT;
+    450                }
+    451              }
+    452            }
+    453            
+    454            /* 2. Disable the ADC peripheral */
+    455            __HAL_ADC_DISABLE(hadc);
+    456            
+    457              
+    458            /* Reset ADC registers****************/
+    459            /* Reset register IER */
+    460            __HAL_ADC_DISABLE_IT(hadc, (ADC_IT_AWD | ADC_IT_OVR | ADC_IT_EOCAL | ADC_IT_EOS |  \
+    461                                        ADC_IT_EOC | ADC_IT_RDY | ADC_IT_EOSMP ));
+    462                
+    463            /* Reset register ISR */
+    464            __HAL_ADC_CLEAR_FLAG(hadc, (ADC_FLAG_AWD | ADC_FLAG_EOCAL | ADC_FLAG_OVR | ADC_FLAG_EOS |  \
+    465                                        ADC_FLAG_EOC | ADC_FLAG_EOSMP | ADC_FLAG_RDY));
+    466            
+    467            /* Reset register CR */
+    468            /* Disable voltage regulator */
+    469            /* Note: Regulator disable useful for power saving */
+    470            /* Reset ADVREGEN bit */
+    471            hadc->Instance->CR &= ~ADC_CR_ADVREGEN;
+    472            
+    473            /* Bits ADC_CR_ADSTP, ADC_CR_ADSTART are in access mode "read-set": no direct reset applicable */
+    474            /* No action */
+    475            
+    476            /* Reset register CFGR1 */
+    477            hadc->Instance->CFGR1 &= ~(ADC_CFGR1_AWDCH  | ADC_CFGR1_AWDEN  | ADC_CFGR1_AWDSGL | \
+    478                                       ADC_CFGR1_DISCEN | ADC_CFGR1_AUTOFF | ADC_CFGR1_AUTDLY | \
+    479                                       ADC_CFGR1_CONT   | ADC_CFGR1_OVRMOD | ADC_CFGR1_EXTEN  | \
+    480                                       ADC_CFGR1_EXTSEL | ADC_CFGR1_ALIGN  | ADC_CFGR1_RES    | \
+    481                                       ADC_CFGR1_SCANDIR| ADC_CFGR1_DMACFG | ADC_CFGR1_DMAEN);
+    482          
+    483            /* Reset register CFGR2 */
+    484            hadc->Instance->CFGR2 &= ~(ADC_CFGR2_TOVS  | ADC_CFGR2_OVSS  | ADC_CFGR2_OVSR | \
+    485                                       ADC_CFGR2_OVSE  | ADC_CFGR2_CKMODE );
+    486            
+    487            /* Reset register SMPR */
+    488            hadc->Instance->SMPR &= ~(ADC_SMPR_SMPR);
+    489            
+    490            /* Reset register TR */
+    491            hadc->Instance->TR &= ~(ADC_TR_LT | ADC_TR_HT);
+    492            
+    493            /* Reset register CALFACT */
+    494            hadc->Instance->CALFACT &= ~(ADC_CALFACT_CALFACT);
+    495            
+    496            /* Reset register DR */
+    497            /* bits in access mode read only, no direct reset applicable*/
+    498          
+    499            /* Reset register CALFACT */
+    500            hadc->Instance->CALFACT &= ~(ADC_CALFACT_CALFACT);
+    501          
+    502              
+    503            /* DeInit the low level hardware */
+    504            HAL_ADC_MspDeInit(hadc);
+    505            
+    506            /* Set ADC error code to none */
+    507            hadc->ErrorCode = HAL_ADC_ERROR_NONE;
+    508            
+    509            /* Change ADC state */
+    510            hadc->State = HAL_ADC_STATE_RESET; 
+    511            
+    512            /* Return function status */
+    513            return HAL_OK;
+    514          }
+    515          
+    516          /**
+    517            * @brief  Initializes the ADC MSP.
+    518            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+    519            *         the configuration information for the specified ADC.  
+    520            * @retval None
+    521            */
+    522          __weak void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
+    523          {
+    524            /* NOTE : This function Should not be modified, when the callback is needed,
+    525                      the HAL_ADC_MspInit could be implemented in the user file
+    526             */ 
+    527          }
+    528          
+    529          /**
+    530            * @brief  DeInitializes the ADC MSP.
+    531            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+    532            *         the configuration information for the specified ADC.  
+    533            * @retval None
+    534            */
+    535          __weak void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
+    536          {
+    537            /* NOTE : This function Should not be modified, when the callback is needed,
+    538                      the HAL_ADC_MspDeInit could be implemented in the user file
+    539             */ 
+    540          }
+    541          
+    542          /**
+    543            * @}
+    544            */
+    545          
+    546          /** @defgroup ADC_Group2 I/O operation functions
+    547           *  @brief    I/O operation functions 
+    548           *
+    549          @verbatim   
+    550           ===============================================================================
+    551                       ##### IO operation functions #####
+    552           ===============================================================================  
+    553              [..]  This section provides functions allowing to:
+    554                (+) Start conversion.
+    555                (+) Stop conversion.
+    556                (+) poll for conversion complete.
+    557                (+) poll for conversion event.
+    558                (+) Start conversion and enable interrupt.
+    559                (+) Stop conversion and disable interrupt.
+    560                (+) handle ADC interrupt request.
+    561                (+) Start conversion of regular channel and enable DMA transfer.
+    562                (+) Stop conversion of regular channel and disable DMA transfer.
+    563                (+) Get result of regular channel conversion.
+    564                (+) Handle ADC interrupt request.
+    565          
+    566          @endverbatim
+    567            * @{
+    568            */
+    569          
+    570          
+    571          /**
+    572            * @brief  Enables ADC and starts conversion of the regular channels.
+    573            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+    574            *         the configuration information for the specified ADC.
+    575            * @retval HAL status
+    576            */
+    577          HAL_StatusTypeDef HAL_ADC_Start(ADC_HandleTypeDef* hadc)
+    578          {
+    579            HAL_StatusTypeDef tmpHALStatus = HAL_OK;
+    580            
+    581            /* Check the parameters */
+    582            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+    583            
+    584            /* Process locked */
+    585            __HAL_LOCK(hadc);
+    586            
+    587            /* Change ADC state */
+    588            hadc->State = HAL_ADC_STATE_BUSY_REG;
+    589            
+    590            /* Set ADC error code to none */
+    591            hadc->ErrorCode = HAL_ADC_ERROR_NONE;
+    592          
+    593            /* Enable ADC */
+    594            tmpHALStatus = ADC_Enable(hadc);
+    595            
+    596            /* Start conversion if ADC is effectively enabled */
+    597            if (tmpHALStatus != HAL_ERROR)
+    598            {
+    599              /* ADC start conversion command */
+    600              hadc->Instance->CR |= ADC_CR_ADSTART;
+    601            }
+    602                
+    603            /* Process unlocked */
+    604            __HAL_UNLOCK(hadc);
+    605            
+    606            /* Return function status */
+    607            return HAL_OK;
+    608          }
+    609          
+    610          /**
+    611            * @brief  Stop ADC conversion of regular channels, disable ADC peripheral.
+    612            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+    613            *         the configuration information for the specified ADC.
+    614            * @retval None
+    615            */
+    616          HAL_StatusTypeDef HAL_ADC_Stop(ADC_HandleTypeDef* hadc)
+    617          {
+    618            HAL_StatusTypeDef tmpHALStatus = HAL_OK;
+    619            
+    620            /* Process locked */
+    621            __HAL_LOCK(hadc);
+    622            
+    623            /* 1. Stop potential conversion ongoing (regular conversion) */
+    624            tmpHALStatus = ADC_ConversionStop(hadc, REGULAR_GROUP);
+    625            
+    626            /* 2. Disable ADC peripheral if conversions are effectively stopped */
+    627            if (tmpHALStatus != HAL_ERROR)
+    628            {
+    629              /* Disable the ADC peripheral */
+    630              ADC_Disable(hadc);
+    631              
+    632              /* Check if ADC is effectively disabled */
+    633              if (hadc->State != HAL_ADC_STATE_ERROR)
+    634              {
+    635                /* Change ADC state */
+    636                hadc->State = HAL_ADC_STATE_READY;
+    637              }
+    638              else
+    639              {
+    640                return HAL_ERROR;
+    641              }
+    642            }
+    643            else
+    644            {   
+    645              return HAL_ERROR;
+    646            }  
+    647            
+    648            /* Process unlocked */
+    649            __HAL_UNLOCK(hadc);
+    650            
+    651            /* Return function status */
+    652            return HAL_OK;
+    653          }
+    654          
+    655          /**
+    656            * @brief  Poll for conversion complete.
+    657            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+    658            *         the configuration information for the specified ADC.
+    659            * @param  Timeout: Timeout value in millisecond.  
+    660            * @retval HAL status
+    661            */
+    662          HAL_StatusTypeDef HAL_ADC_PollForConversion(ADC_HandleTypeDef* hadc, uint32_t Timeout)
+    663          {
+    664            uint32_t tickstart = 0;
+    665            uint32_t tmp_Flag_EOC;
+    666           
+    667            /* Check the parameters */
+    668            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+    669            
+    670            /* If interruption after each sequence */
+    671            if (hadc->Init.EOCSelection == EOC_SEQ_CONV)
+    672            {
+    673              tmp_Flag_EOC = ADC_FLAG_EOS;
+    674            }
+    675            /* If interruption after each conversion */
+    676            else /* EOC_SINGLE_CONV */
+    677            {
+    678              tmp_Flag_EOC = (ADC_FLAG_EOC | ADC_FLAG_EOS);
+    679            }
+    680              
+    681            /* Get timeout */ 
+    682            tickstart = HAL_GetTick();
+    683               
+    684            /* Wait until End of Conversion flag is raised */
+    685            while(HAL_IS_BIT_CLR(hadc->Instance->ISR, tmp_Flag_EOC))
+    686            {
+    687              /* Check for the Timeout */
+    688              if(Timeout != HAL_MAX_DELAY)
+    689              {
+    690                if((Timeout == 0)|| ((HAL_GetTick()  - tickstart ) > Timeout))
+    691                {
+    692                  hadc->State= HAL_ADC_STATE_TIMEOUT;
+    693                  
+    694                  /* Process unlocked */
+    695                  __HAL_UNLOCK(hadc);
+    696                  
+    697                  return HAL_TIMEOUT;
+    698                }
+    699              }
+    700            }
+    701            
+    702            /* Clear end of conversion flag of regular group if low power feature       */
+    703            /* "LowPowerAutoWait " is disabled, to not interfere with this feature      */
+    704            /* until data register is read using function HAL_ADC_GetValue().           */
+    705            if (hadc->Init.LowPowerAutoWait == DISABLE)
+    706            {
+    707              /* Clear regular group conversion flag */
+    708              __HAL_ADC_CLEAR_FLAG(hadc, (ADC_FLAG_EOC | ADC_FLAG_EOS));
+    709            }
+    710          
+    711            /* Change ADC state */
+    712            hadc->State = HAL_ADC_STATE_EOC;
+    713            
+    714            /* Return ADC state */
+    715            return HAL_OK;
+    716          }
+    717          
+    718          /**
+    719            * @brief  Poll for conversion event.
+    720            * @param  hadc: ADC handle.
+    721            * @param  EventType: the ADC event type.
+    722            *          This parameter can be one of the following values:
+    723            *            @arg AWD_EVENT: ADC Analog watchdog event.
+    724            *            @arg OVR_EVENT: ADC Overrun event.
+    725            * @param  Timeout: Timeout value in millisecond.
+    726            * @retval HAL status
+    727            */
+    728          HAL_StatusTypeDef HAL_ADC_PollForEvent(ADC_HandleTypeDef* hadc, uint32_t EventType, uint32_t Timeout)
+    729          {
+    730            uint32_t tickstart = 0; 
+    731            
+    732            /* Check the parameters */
+    733            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+    734            assert_param(IS_ADC_EVENT_TYPE(EventType));
+    735            
+    736            /* Get timeout */
+    737            tickstart = HAL_GetTick();
+    738            
+    739            /* Check selected event flag */
+    740            while(!(__HAL_ADC_GET_FLAG(hadc,EventType)))
+    741            {
+    742              /* Check if timeout is disabled (set to infinite wait) */
+    743              if(Timeout != HAL_MAX_DELAY)
+    744              {
+    745                if((Timeout == 0)||((HAL_GetTick() - tickstart ) > Timeout))
+    746                {
+    747                  /* Update ADC state machine to timeout */
+    748                  hadc->State = HAL_ADC_STATE_TIMEOUT;
+    749                  
+    750                  /* Process unlocked */
+    751                  __HAL_UNLOCK(hadc);
+    752                  
+    753                  return HAL_TIMEOUT;
+    754                }
+    755              }
+    756            }
+    757            
+    758            switch(EventType)
+    759            {
+    760              /* Check analog watchdog flag */
+    761            case AWD_EVENT:
+    762              /* Change ADC state */
+    763              hadc->State = HAL_ADC_STATE_AWD;
+    764              
+    765              /* Clear ADC analog watchdog flag */
+    766              __HAL_ADC_CLEAR_FLAG(hadc, ADC_FLAG_AWD);
+    767              break;
+    768              
+    769              /* Case OVR_EVENT */
+    770            default:
+    771              /* Change ADC state */
+    772              hadc->State = HAL_ADC_STATE_ERROR;
+    773              
+    774              /* Clear ADC Overrun flag */
+    775              __HAL_ADC_CLEAR_FLAG(hadc, ADC_FLAG_OVR);
+    776              break;
+    777            }
+    778            
+    779            /* Return ADC state */
+    780            return HAL_OK;
+    781          }
+    782          
+    783          /**
+    784            * @brief  Enables the interrupt and starts ADC conversion of regular channels.
+    785            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+    786            *         the configuration information for the specified ADC.
+    787            * @retval HAL status.
+    788            */
+    789          HAL_StatusTypeDef HAL_ADC_Start_IT(ADC_HandleTypeDef* hadc)
+    790          {
+    791            HAL_StatusTypeDef tmpHALStatus = HAL_OK;
+    792              
+    793            /* Check the parameters */
+    794            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+    795            
+    796            /* Process locked */
+    797            __HAL_LOCK(hadc);
+    798            
+    799            /* State machine update: Change ADC state */
+    800            hadc->State = HAL_ADC_STATE_BUSY_REG;
+    801            
+    802            /* Set ADC error code to none */
+    803            hadc->ErrorCode = HAL_ADC_ERROR_NONE;
+    804            
+    805            /* Enable the ADC peripheral */
+    806            tmpHALStatus = ADC_Enable(hadc);
+    807            
+    808            /* Start conversion if ADC is effectively enabled */
+    809            if (tmpHALStatus != HAL_ERROR)
+    810            {
+    811              /* Enable ADC overrun interrupt */
+    812              __HAL_ADC_ENABLE_IT(hadc, ADC_IT_OVR);
+    813              
+    814              /* Enable ADC end of conversion interrupt */
+    815              switch(hadc->Init.EOCSelection)
+    816              {
+    817                case EOC_SEQ_CONV: 
+    818                  __HAL_ADC_DISABLE_IT(hadc, ADC_IT_EOC);
+    819                  __HAL_ADC_ENABLE_IT(hadc, ADC_IT_EOS);
+    820                  break;
+    821                /* case EOC_SINGLE_CONV */
+    822                default:
+    823                  __HAL_ADC_DISABLE_IT(hadc, ADC_IT_EOS);
+    824                  __HAL_ADC_ENABLE_IT(hadc, ADC_IT_EOC);
+    825                  break;
+    826              }
+    827              
+    828              /* ADC start conversion command */
+    829              hadc->Instance->CR |= ADC_CR_ADSTART;
+    830            }
+    831            
+    832            else
+    833            {
+    834              return HAL_ERROR;
+    835            }
+    836            
+    837              /* Process unlocked */
+    838            __HAL_UNLOCK(hadc);
+    839            
+    840            /* Return function status */
+    841            return HAL_OK;
+    842          }
+    843          
+    844          /**
+    845            * @brief  Stop ADC conversion of regular channels, disable interruptions
+    846            *         EOC/EOS/OVR, disable ADC peripheral.
+    847            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+    848            *         the configuration information for the specified ADC.
+    849            * @retval None
+    850            */
+    851          HAL_StatusTypeDef HAL_ADC_Stop_IT(ADC_HandleTypeDef* hadc)
+    852          {
+    853            HAL_StatusTypeDef tmpHALStatus = HAL_OK;
+    854              
+    855            /* Process locked */
+    856            __HAL_LOCK(hadc);
+    857            
+    858            /* 1. Stop potential conversion ongoing (regular conversion) */
+    859            tmpHALStatus = ADC_ConversionStop(hadc, REGULAR_GROUP);
+    860            
+    861            /* 2. Disable ADC peripheral if conversions are effectively stopped */
+    862            if (tmpHALStatus != HAL_ERROR)
+    863            {
+    864              /* Disable ADC interrupts */
+    865              __HAL_ADC_DISABLE_IT(hadc, (ADC_IT_EOC | ADC_IT_EOS | ADC_IT_OVR));
+    866              
+    867              /* Disable the ADC peripheral */
+    868              ADC_Disable(hadc);
+    869              
+    870              /* Check if ADC is effectively disabled */
+    871              if (hadc->State != HAL_ADC_STATE_ERROR)
+    872              {
+    873                /* Change ADC state */
+    874                hadc->State = HAL_ADC_STATE_READY;
+    875              }
+    876              else
+    877              {
+    878                return HAL_ERROR;
+    879              }
+    880            }
+    881            else
+    882            {   
+    883              return HAL_ERROR;
+    884            }
+    885            
+    886            
+    887            /* Process unlocked */
+    888            __HAL_UNLOCK(hadc);
+    889            
+    890            /* Return function status */
+    891            return HAL_OK;
+    892          }
+    893          
+    894          /**
+    895            * @brief  Handles ADC interrupt request  
+    896            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+    897            *         the configuration information for the specified ADC.
+    898            * @retval None
+    899            */
+    900          void HAL_ADC_IRQHandler(ADC_HandleTypeDef* hadc)
+    901          {
+    902            /* Check the parameters */
+    903            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+    904            assert_param(IS_ADC_EOC_SELECTION(hadc->Init.EOCSelection));
+    905            
+    906            
+    907            /* Check End of Conversion flag for regular channels */
+    908            if( (__HAL_ADC_GET_FLAG(hadc, ADC_FLAG_EOC) && __HAL_ADC_GET_IT_SOURCE(hadc, ADC_IT_EOC)) || \
+    909                (__HAL_ADC_GET_FLAG(hadc, ADC_FLAG_EOS) && __HAL_ADC_GET_IT_SOURCE(hadc, ADC_IT_EOS)) )
+    910            {
+    911              /* Change ADC state */
+    912              hadc->State = HAL_ADC_STATE_EOC;
+    913          
+    914              
+    915              /* Disable interruption if no further conversion upcoming by continuous mode or external trigger */
+    916              if((hadc->Init.ContinuousConvMode == DISABLE) && \
+    917                 (hadc->Init.ExternalTrigConvEdge == ADC_EXTERNALTRIG_EDGE_NONE)
+    918                 )
+    919              {
+    920                /* Allowed to modify bits ADC_IT_EOC/ADC_IT_EOS only if bit ADSTART==0 (no conversion on going) */
+    921                if (HAL_IS_BIT_CLR(hadc->Instance->CR, ADC_CR_ADSTART))
+    922                {
+    923                  /* Cases of interruption after each conversion or after each sequence */
+    924                  /* If interruption after each sequence */
+    925                  if (hadc->Init.EOCSelection == EOC_SEQ_CONV)
+    926                  {
+    927                    /* If End of Sequence is reached, disable interrupts */
+    928                    if( __HAL_ADC_GET_FLAG(hadc, ADC_FLAG_EOS) )
+    929                    {
+    930                      /* DISABLE ADC end of sequence conversion interrupt  */
+    931                      /* DISABLE ADC overrun interrupt */
+    932                      __HAL_ADC_DISABLE_IT(hadc, ADC_IT_EOC | ADC_IT_EOS | ADC_IT_OVR);
+    933                    }
+    934                  }
+    935                  /* If interruption after each conversion */
+    936                  else
+    937                  {
+    938                    /* DISABLE ADC end of single conversion interrupt */
+    939                    /* DISABLE ADC overrun interrupt */
+    940                    __HAL_ADC_DISABLE_IT(hadc, ADC_IT_EOC | ADC_IT_OVR);
+    941                  }
+    942                }
+    943                else
+    944                {
+    945                  /* Change ADC state to error state */
+    946                  hadc->State = HAL_ADC_STATE_ERROR;
+    947                }       
+    948              }    
+    949          
+    950              /* Conversion complete callback */
+    951              /* Note: into callback, to determine if callback has been triggered from EOC or EOS, */
+    952              /*       it is possible to use: if( __HAL_ADC_GET_FLAG(hadc, ADC_FLAG_EOS))         */
+    953              HAL_ADC_ConvCpltCallback(hadc);
+    954              
+    955              /* Clear regular channels conversion flag */
+    956              if (hadc->Init.LowPowerAutoWait != ENABLE)
+    957              {
+    958                __HAL_ADC_CLEAR_FLAG(hadc, (ADC_FLAG_EOC | ADC_FLAG_EOS) );
+    959              }
+    960            }
+    961            
+    962             
+    963            /* Check Analog watchdog flags */
+    964            if( (__HAL_ADC_GET_FLAG(hadc, ADC_FLAG_AWD) && __HAL_ADC_GET_IT_SOURCE(hadc, ADC_IT_AWD)))
+    965            {
+    966              /* Change ADC state */
+    967              hadc->State = HAL_ADC_STATE_AWD;
+    968              
+    969              /* Level out of window callback */
+    970              HAL_ADC_LevelOutOfWindowCallback(hadc);
+    971              
+    972              /* Clear ADC Analog watchdog flag */
+    973              __HAL_ADC_CLEAR_FLAG(hadc, ADC_FLAG_AWD);    
+    974            }  
+    975            
+    976            /* Check Overrun flag */
+    977            if(__HAL_ADC_GET_FLAG(hadc, ADC_FLAG_OVR) && __HAL_ADC_GET_IT_SOURCE(hadc, ADC_IT_OVR))
+    978            {
+    979              /* Change ADC state to overrun state */
+    980              hadc->State = HAL_ADC_STATE_ERROR;
+    981              
+    982              /* Set ADC error code to overrun */
+    983              hadc->ErrorCode |= HAL_ADC_ERROR_OVR;
+    984              
+    985              /* Clear the Overrun flag */
+    986              __HAL_ADC_CLEAR_FLAG(hadc,ADC_FLAG_OVR);
+    987              
+    988              /* Error callback */ 
+    989              HAL_ADC_ErrorCallback(hadc);
+    990            }
+    991          }
+    992          
+    993          /**
+    994            * @brief  Enables ADC DMA request after last transfer (Single-ADC mode) and enables ADC peripheral  
+    995            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+    996            *         the configuration information for the specified ADC.
+    997            * @param  pData: The destination Buffer address.
+    998            * @param  Length: The length of data to be transferred from ADC peripheral to memory.
+    999            * @retval None
+   1000            */
+   1001          HAL_StatusTypeDef HAL_ADC_Start_DMA(ADC_HandleTypeDef* hadc, uint32_t* pData, uint32_t Length)
+   1002          {
+   1003            HAL_StatusTypeDef tmpHALStatus = HAL_OK;
+   1004            
+   1005            /* Check the parameters */
+   1006            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+   1007            
+   1008            /* Process locked */
+   1009            __HAL_LOCK(hadc);
+   1010            
+   1011            /* Change ADC state */
+   1012            hadc->State = HAL_ADC_STATE_BUSY_REG;
+   1013            
+   1014            /* Set ADC error code to none */
+   1015            hadc->ErrorCode = HAL_ADC_ERROR_NONE;
+   1016          
+   1017            /* Enable ADC */
+   1018            tmpHALStatus = ADC_Enable(hadc);
+   1019            
+   1020            /* Start conversion if ADC is effectively enabled */
+   1021            if (tmpHALStatus != HAL_ERROR)
+   1022            {
+   1023              /* Enable ADC DMA mode */
+   1024              hadc->Instance->CFGR1 |= ADC_CFGR1_DMAEN;
+   1025              
+   1026              /* Set the DMA transfer complete callback */
+   1027              hadc->DMA_Handle->XferCpltCallback = ADC_DMAConvCplt;
+   1028          
+   1029              /* Set the DMA half transfer complete callback */
+   1030              hadc->DMA_Handle->XferHalfCpltCallback = ADC_DMAHalfConvCplt;
+   1031              
+   1032              /* Set the DMA error callback */
+   1033              hadc->DMA_Handle->XferErrorCallback = ADC_DMAError;
+   1034              
+   1035              /* Manage ADC and DMA start: ADC overrun interruption, DMA start,
+   1036                 ADC start (in case of SW start) */
+   1037              
+   1038              /* Enable ADC overrun interrupt */
+   1039              __HAL_ADC_ENABLE_IT(hadc, ADC_IT_OVR);
+   1040              
+   1041              /* Enable the DMA Stream */
+   1042              HAL_DMA_Start_IT(hadc->DMA_Handle, (uint32_t)&hadc->Instance->DR, (uint32_t)pData, Length);
+   1043               
+   1044              
+   1045              /* ADC start conversion command */
+   1046              hadc->Instance->CR |= ADC_CR_ADSTART;
+   1047            }
+   1048                
+   1049            /* Process unlocked */
+   1050            __HAL_UNLOCK(hadc);
+   1051            
+   1052            /* Return function status */
+   1053            return HAL_OK;
+   1054          }
+   1055          
+   1056          /**
+   1057            * @brief  Disable ADC DMA (Single-ADC mode), disable ADC peripheral
+   1058            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+   1059            *         the configuration information for the specified ADC.
+   1060            * @retval None
+   1061            */
+   1062          HAL_StatusTypeDef HAL_ADC_Stop_DMA(ADC_HandleTypeDef* hadc)
+   1063          {
+   1064            HAL_StatusTypeDef tmpHALStatus = HAL_OK;
+   1065            
+   1066            /* Process locked */
+   1067            __HAL_LOCK(hadc);
+   1068            
+   1069            /* 1. Stop potential conversion ongoing (regular conversion) */
+   1070            tmpHALStatus = ADC_ConversionStop(hadc, REGULAR_GROUP);
+   1071            
+   1072            /* 2. Disable ADC peripheral if conversions are effectively stopped */
+   1073            if (tmpHALStatus != HAL_ERROR)
+   1074            {
+   1075              /* Disable ADC DMA (ADC DMA configuration ADC_CFGR_DMACFG is kept) */
+   1076              hadc->Instance->CFGR1 &= ~ADC_CFGR1_DMAEN;
+   1077              
+   1078              /* Disable the DMA Stream */
+   1079              if (HAL_DMA_Abort(hadc->DMA_Handle) != HAL_OK)
+   1080              {
+   1081                /* Update ADC state machine to error */
+   1082                hadc->State = HAL_ADC_STATE_ERROR;
+   1083                
+   1084                /* Process unlocked */
+   1085                __HAL_UNLOCK(hadc);
+   1086                
+   1087                return HAL_ERROR;
+   1088              }
+   1089              
+   1090              /* Disable ADC overrun interrupt */
+   1091              __HAL_ADC_DISABLE_IT(hadc, ADC_IT_OVR);
+   1092              
+   1093              /* Disable the ADC peripheral */
+   1094              ADC_Disable(hadc);
+   1095              
+   1096              /* Check if ADC is effectively disabled */
+   1097              if (hadc->State != HAL_ADC_STATE_ERROR)
+   1098              {
+   1099                /* Change ADC state */
+   1100                hadc->State = HAL_ADC_STATE_READY;
+   1101              }
+   1102              else
+   1103              {
+   1104                return HAL_ERROR;
+   1105              }
+   1106            }
+   1107            else
+   1108            {   
+   1109              return HAL_ERROR;
+   1110            }  
+   1111            
+   1112            /* Process unlocked */
+   1113            __HAL_UNLOCK(hadc);
+   1114            
+   1115            /* Return function status */
+   1116            return HAL_OK;
+   1117          }
+   1118          
+   1119          /**
+   1120            * @brief  Gets the converted value from data register of regular channel.
+   1121            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+   1122            *         the configuration information for the specified ADC.
+   1123            * @retval Converted value
+   1124            */
+   1125          uint32_t HAL_ADC_GetValue(ADC_HandleTypeDef* hadc)
+   1126          {       
+   1127            /* Return the selected ADC converted value */ 
+   1128            return hadc->Instance->DR;
+   1129          }
+   1130          
+   1131          /**
+   1132            * @brief  Regular conversion complete callback in non blocking mode 
+   1133            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+   1134            *         the configuration information for the specified ADC.
+   1135            * @retval None
+   1136            */
+   1137          __weak void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+   1138          {
+   1139            /* NOTE : This function Should not be modified, when the callback is needed,
+   1140                      the HAL_ADC_ConvCpltCallback could be implemented in the user file
+   1141             */
+   1142          }
+   1143          
+   1144          /**
+   1145            * @brief  Regular conversion half DMA transfer callback in non blocking mode 
+   1146            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+   1147            *         the configuration information for the specified ADC.
+   1148            * @retval None
+   1149            */
+   1150          __weak void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
+   1151          {
+   1152            /* NOTE : This function Should not be modified, when the callback is needed,
+   1153                      the HAL_ADC_ConvHalfCpltCallback could be implemented in the user file
+   1154             */
+   1155          }
+   1156          
+   1157          /**
+   1158            * @brief  Analog watchdog callback in non blocking mode 
+   1159            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+   1160            *         the configuration information for the specified ADC.
+   1161            * @retval None
+   1162            */
+   1163          __weak void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
+   1164          {
+   1165            /* NOTE : This function Should not be modified, when the callback is needed,
+   1166                      the HAL_ADC_LevelOoutOfWindowCallback could be implemented in the user file
+   1167             */
+   1168          }
+   1169          
+   1170          /**
+   1171            * @brief  Error ADC callback.
+   1172            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+   1173            *         the configuration information for the specified ADC.
+   1174            * @retval None
+   1175            */
+   1176          __weak void HAL_ADC_ErrorCallback(ADC_HandleTypeDef *hadc)
+   1177          {
+   1178            /* NOTE : This function Should not be modified, when the callback is needed,
+   1179                      the HAL_ADC_ErrorCallback could be implemented in the user file
+   1180             */
+   1181          }
+   1182          
+   1183          /**
+   1184            * @}
+   1185            */
+   1186          
+   1187          /** @defgroup ADC_Group3 Peripheral Control functions
+   1188           *  @brief   	Peripheral Control functions 
+   1189           *
+   1190          @verbatim   
+   1191           ===============================================================================
+   1192                       ##### Peripheral Control functions #####
+   1193           ===============================================================================  
+   1194              [..]  This section provides functions allowing to:
+   1195                (+) Configure channels.
+   1196                (+) Configure the analog watch dog.
+   1197                
+   1198          @endverbatim
+   1199            * @{
+   1200            */
+   1201          
+   1202          
+   1203          /**
+   1204            * @brief  Configures the selected ADC regular channel: sampling time,
+   1205            *         offset,.
+   1206            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+   1207            *         the configuration information for the specified ADC.
+   1208            * @param  sConfig: ADC regular channel configuration structure.
+   1209            * @retval HAL status
+   1210            */
+   1211          HAL_StatusTypeDef HAL_ADC_ConfigChannel(ADC_HandleTypeDef* hadc, ADC_ChannelConfTypeDef* sConfig)
+   1212          {
+   1213              
+   1214            /* Check the parameters */
+   1215            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+   1216            assert_param(IS_ADC_CHANNEL(sConfig->Channel));
+   1217            
+   1218            /* Process locked */
+   1219            __HAL_LOCK(hadc);    
+   1220            
+   1221            /* Enable selected channels */
+   1222            hadc->Instance->CHSELR |= (uint32_t)(sConfig->Channel & ADC_CHANNEL_MASK);
+   1223            
+   1224            /* Management of internal measurement channels: Vlcd/VrefInt/TempSensor     */
+   1225            /* internal measurement paths enable: If internal channel selected, enable  */
+   1226            /* dedicated internal buffers and path.                                     */
+   1227            
+   1228            /* If Temperature sensor channel is selected, then enable the internal      */
+   1229            /* buffers and path  */
+   1230            if (((sConfig->Channel & ADC_CHANNEL_MASK) & ADC_CHANNEL_TEMPSENSOR ) == (ADC_CHANNEL_TEMPSENSOR & ADC_CHANNEL_MASK))
+   1231            {
+   1232              ADC->CCR |= ADC_CCR_TSEN;   
+   1233            }
+   1234            
+   1235            /* If VRefInt channel is selected, then enable the internal buffers and path   */
+   1236            if (((sConfig->Channel & ADC_CHANNEL_MASK) & ADC_CHANNEL_VREFINT) == (ADC_CHANNEL_VREFINT & ADC_CHANNEL_MASK))
+   1237            {
+   1238              ADC->CCR |= ADC_CCR_VREFEN;   
+   1239            }
+   1240            
+   1241            /* If Vlcd channel is selected, then enable the internal buffers and path   */
+   1242            if (((sConfig->Channel & ADC_CHANNEL_MASK) & ADC_CHANNEL_VLCD) == (ADC_CHANNEL_VLCD & ADC_CHANNEL_MASK))
+   1243            {
+   1244              ADC->CCR |= ADC_CCR_VLCDEN;   
+   1245            }
+   1246           
+   1247            /* Process unlocked */
+   1248            __HAL_UNLOCK(hadc);
+   1249            
+   1250            /* Return function status */
+   1251            return HAL_OK;
+   1252          }
+   1253          
+   1254          /**
+   1255            * @brief  Configures the analog watchdog.
+   1256            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+   1257            *         the configuration information for the specified ADC.
+   1258            * @param  AnalogWDGConfig : pointer to an ADC_AnalogWDGConfTypeDef structure 
+   1259            *         that contains the configuration information of ADC analog watchdog.
+   1260            * @retval HAL status	  
+   1261            */
+   1262          HAL_StatusTypeDef HAL_ADC_AnalogWDGConfig(ADC_HandleTypeDef* hadc, ADC_AnalogWDGConfTypeDef* AnalogWDGConfig)
+   1263          {
+   1264            uint32_t tmpAWDHighThresholdShifted;
+   1265            uint32_t tmpAWDLowThresholdShifted;
+   1266            
+   1267            /* Check the parameters */
+   1268            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+   1269            assert_param(IS_ADC_ANALOG_WATCHDOG_MODE(AnalogWDGConfig->WatchdogMode));
+   1270            assert_param(IS_ADC_CHANNEL(AnalogWDGConfig->Channel));
+   1271            assert_param(IS_FUNCTIONAL_STATE(AnalogWDGConfig->ITMode));
+   1272            
+   1273            assert_param(IS_ADC_RANGE(__HAL_ADC_GET_RESOLUTION(hadc), AnalogWDGConfig->HighThreshold));
+   1274            assert_param(IS_ADC_RANGE(__HAL_ADC_GET_RESOLUTION(hadc), AnalogWDGConfig->LowThreshold));
+   1275            
+   1276            /* Process locked */
+   1277            __HAL_LOCK(hadc);
+   1278            
+   1279            /* Configure ADC Analog watchdog interrupt */
+   1280            if(AnalogWDGConfig->ITMode == ENABLE)
+   1281            {
+   1282              /* Enable the ADC Analog watchdog interrupt */
+   1283              __HAL_ADC_ENABLE_IT(hadc, ADC_IT_AWD);
+   1284            }
+   1285            else
+   1286            {
+   1287              /* Disable the ADC Analog watchdog interrupt */
+   1288              __HAL_ADC_DISABLE_IT(hadc, ADC_IT_AWD);
+   1289            }
+   1290              
+   1291            /* Configuration of analog watchdog:                                        */
+   1292            /*  - Set the analog watchdog mode                                          */
+   1293            /*  - Set the Analog watchdog channel (is not used if watchdog              */
+   1294            /*    mode "all channels": ADC_CFGR1_AWD1SGL=0)                             */
+   1295            hadc->Instance->CFGR1 &= ~( ADC_CFGR1_AWDSGL |
+   1296                                       ADC_CFGR1_AWDEN  |
+   1297                                       ADC_CFGR1_AWDCH   );
+   1298            
+   1299            hadc->Instance->CFGR1 |= ( AnalogWDGConfig->WatchdogMode |
+   1300                                      (AnalogWDGConfig->Channel & ADC_CHANNEL_AWD_MASK));
+   1301            
+   1302            
+   1303            /* Shift the offset in function of the selected ADC resolution: Thresholds  */
+   1304            /* have to be left-aligned on bit 11, the LSB (right bits) are set to 0     */
+   1305            tmpAWDHighThresholdShifted = __HAL_ADC_AWD1Threshold_shift_resolution(hadc, AnalogWDGConfig->HighThreshold);
+   1306            tmpAWDLowThresholdShifted  = __HAL_ADC_AWD1Threshold_shift_resolution(hadc, AnalogWDGConfig->LowThreshold);
+   1307            
+   1308            /* Clear High & Low high thresholds */
+   1309            hadc->Instance->TR &= (uint32_t) ~ (ADC_TR_HT | ADC_TR_LT);
+   1310            
+   1311            /* Set the high threshold */
+   1312            hadc->Instance->TR = __HAL_ADC_TRx_HighThreshold (tmpAWDHighThresholdShifted);
+   1313            /* Set the low threshold */
+   1314            hadc->Instance->TR |= tmpAWDLowThresholdShifted;  
+   1315            
+   1316            /* Process unlocked */
+   1317            __HAL_UNLOCK(hadc);
+   1318            
+   1319            /* Return function status */
+   1320            return HAL_OK;
+   1321          }
+   1322          
+   1323          /**
+   1324            * @}
+   1325            */
+   1326          
+   1327          /** @defgroup ADC_Group4 ADC Peripheral State functions
+   1328           *  @brief   ADC Peripheral State functions 
+   1329           *
+   1330          @verbatim   
+   1331           ===============================================================================
+   1332                      ##### ADC Peripheral State functions #####
+   1333           ===============================================================================  
+   1334              [..]
+   1335              This subsection provides functions allowing to
+   1336                (+) Check the ADC state.
+   1337                (+) handle ADC interrupt request.
+   1338                   
+   1339          @endverbatim
+   1340            * @{
+   1341            */
+   1342          
+   1343          /**
+   1344            * @brief  return the ADC state
+   1345            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+   1346            *         the configuration information for the specified ADC.
+   1347            * @retval HAL state
+   1348            */
+   1349          HAL_ADC_StateTypeDef HAL_ADC_GetState(ADC_HandleTypeDef* hadc)
+   1350          {
+   1351            /* Return ADC state */
+   1352            return hadc->State;
+   1353          }
+   1354          
+   1355          /**
+   1356            * @brief  Return the ADC error code
+   1357            * @param  hadc: pointer to a ADC_HandleTypeDef structure that contains
+   1358            *         the configuration information for the specified ADC.
+   1359            * @retval ADC Error Code
+   1360            */
+   1361          uint32_t HAL_ADC_GetError(ADC_HandleTypeDef *hadc)
+   1362          {
+   1363            return hadc->ErrorCode;
+   1364          }
+   1365          
+   1366          
+   1367          /**
+   1368            * @}
+   1369            */
+   1370          
+   1371          /**
+   1372            * @brief  Enable the selected ADC.
+   1373            * @note   Prerequisite condition to use this function: ADC must be disabled
+   1374            *         and voltage regulator must be enabled (done into HAL_ADC_Init()).
+   1375            * @param  hadc: ADC handle
+   1376            * @retval HAL status.
+   1377            */
+   1378          static HAL_StatusTypeDef ADC_Enable(ADC_HandleTypeDef* hadc)
+   1379          {
+   1380            uint32_t tickstart = 0;
+   1381            
+   1382            /* ADC enable and wait for ADC ready (in case of ADC is disabled or         */
+   1383            /* enabling phase not yet completed: flag ADC ready not yet set).           */
+   1384            /* Timeout implemented to not be stuck if ADC cannot be enabled (possible   */
+   1385            /* causes: ADC clock not running, ...).                                     */
+   1386            if (__HAL_ADC_IS_ENABLED(hadc) == RESET)
+   1387            {
+   1388              /* Check if conditions to enable the ADC are fulfilled */
+   1389              if (__HAL_ADC_ENABLING_CONDITIONS(hadc) == RESET)
+   1390              {
+   1391                /* Update ADC state machine to error */
+   1392                hadc->State = HAL_ADC_STATE_ERROR;
+   1393                
+   1394                /* Set ADC error code to ADC IP internal error */
+   1395                hadc->ErrorCode |= HAL_ADC_ERROR_INTERNAL;
+   1396                
+   1397                return HAL_ERROR;
+   1398              }
+   1399              
+   1400              /* Enable the ADC peripheral */
+   1401              __HAL_ADC_ENABLE(hadc);
+   1402              
+   1403              /* Wait for ADC effectively enabled */
+   1404              /* Get timeout */
+   1405              tickstart = HAL_GetTick();  
+   1406              
+   1407              /* Skip polling for RDY ADRDY when AutoOFF is enabled  */
+   1408              if (hadc->Init.LowPowerAutoOff != ENABLE)
+   1409              {      
+   1410                while(__HAL_ADC_GET_FLAG(hadc, ADC_FLAG_RDY) == RESET)
+   1411                {
+   1412                  /* Check for the Timeout */
+   1413                  if(ADC_ENABLE_TIMEOUT != HAL_MAX_DELAY)
+   1414                  {
+   1415                    if((HAL_GetTick() - tickstart ) > ADC_ENABLE_TIMEOUT)
+   1416                    {
+   1417                      /* Update ADC state machine to error */
+   1418                      hadc->State = HAL_ADC_STATE_ERROR;
+   1419                      
+   1420                      /* Set ADC error code to ADC IP internal error */
+   1421                      hadc->ErrorCode |= HAL_ADC_ERROR_INTERNAL;
+   1422                      
+   1423                      return HAL_ERROR;
+   1424                    }
+   1425                  }
+   1426                }
+   1427              }
+   1428            }
+   1429             
+   1430            /* Return HAL status */
+   1431            return HAL_OK;
+   1432          }
+   1433          
+   1434          /**
+   1435            * @brief  Disable the selected ADC.
+   1436            * @note   Prerequisite condition to use this function: ADC conversions must be
+   1437            *         stopped to disable the ADC.
+   1438            * @param  hadc: ADC handle
+   1439            * @retval HAL status.
+   1440            */
+   1441          static HAL_StatusTypeDef ADC_Disable(ADC_HandleTypeDef* hadc)
+   1442          {
+   1443            uint32_t tickstart = 0;
+   1444            
+   1445            /* Verification if ADC is not already disabled:                             */
+   1446            /* forbidden to disable ADC (set bit ADC_CR_ADDIS) if ADC is already        */
+   1447            /* disabled.                                                                */
+   1448            if (__HAL_ADC_IS_ENABLED(hadc) != RESET )
+   1449            {
+   1450              /* Check if conditions to disable the ADC are fulfilled */
+   1451              if (__HAL_ADC_DISABLING_CONDITIONS(hadc) != RESET)
+   1452              {
+   1453                /* Disable the ADC peripheral */
+   1454                __HAL_ADC_DISABLE(hadc);
+   1455              }
+   1456              else
+   1457              {
+   1458                /* Update ADC state machine to error */
+   1459                hadc->State = HAL_ADC_STATE_ERROR;
+   1460                
+   1461                /* Set ADC error code to ADC internal error */
+   1462                hadc->ErrorCode |= HAL_ADC_ERROR_INTERNAL;
+   1463                
+   1464                return HAL_ERROR;
+   1465              }
+   1466               
+   1467              /* Wait for ADC effectively disabled */
+   1468              /* Get timeout */
+   1469              tickstart = HAL_GetTick();
+   1470              
+   1471              while(HAL_IS_BIT_SET(hadc->Instance->CR, ADC_CR_ADEN))
+   1472              {
+   1473                /* Check for the Timeout */
+   1474                if(ADC_ENABLE_TIMEOUT != HAL_MAX_DELAY)
+   1475                {
+   1476                  if((HAL_GetTick() - tickstart ) > ADC_DISABLE_TIMEOUT)
+   1477                  {
+   1478                    /* Update ADC state machine to error */
+   1479                    hadc->State = HAL_ADC_STATE_ERROR;
+   1480                    
+   1481                    /* Set ADC error code to ADC internal error */
+   1482                    hadc->ErrorCode |= HAL_ADC_ERROR_INTERNAL;
+   1483                    
+   1484                    return HAL_ERROR;
+   1485                  }
+   1486                }
+   1487              }
+   1488            }
+   1489            
+   1490            /* Return HAL status */
+   1491            return HAL_OK;
+   1492          }
+   1493          
+   1494          /**
+   1495            * @brief  Stop ADC conversion.
+   1496            * @note   Prerequisite condition to use this function: ADC conversions must be
+   1497            *         stopped to disable the ADC.
+   1498            * @param  hadc: ADC handle
+   1499            * @param  ConversionGroup: Only ADC group regular.
+   1500            *          This parameter can be one of the following values:
+   1501            *            @arg REGULAR_GROUP: ADC regular conversion type.
+   1502            * @retval HAL status.
+   1503            */
+   1504          static HAL_StatusTypeDef ADC_ConversionStop(ADC_HandleTypeDef* hadc, uint32_t ConversionGroup)
+   1505          {
+   1506            uint32_t tickstart = 0 ;
+   1507          
+   1508            /* Check the parameters */
+   1509            assert_param(IS_ADC_ALL_INSTANCE(hadc->Instance));
+   1510            assert_param(IS_ADC_CONVERSION_GROUP(ConversionGroup));
+   1511              
+   1512            /* Verification: if ADC is not already stopped, bypass this function */
+   1513            if (HAL_IS_BIT_SET(hadc->Instance->CR, ADC_CR_ADSTART))
+   1514            {    
+   1515              /* Stop potential conversion on regular group */
+   1516              if (ConversionGroup == REGULAR_GROUP)
+   1517              {
+   1518                /* Software is allowed to set ADSTP only when ADSTART=1 and ADDIS=0 */
+   1519                if (HAL_IS_BIT_SET(hadc->Instance->CR, ADC_CR_ADSTART) && \
+   1520                    HAL_IS_BIT_CLR(hadc->Instance->CR, ADC_CR_ADDIS)                  )
+   1521                {
+   1522                  /* Stop conversions on regular group */
+   1523                  hadc->Instance->CR |= ADC_CR_ADSTP;
+   1524                }
+   1525              }
+   1526              
+   1527              /* Wait for conversion effectively stopped */
+   1528              /* Get timeout */
+   1529              tickstart = HAL_GetTick();
+   1530                
+   1531              while((hadc->Instance->CR & ADC_CR_ADSTART) != RESET)
+   1532              {
+   1533                /* Check for the Timeout */
+   1534                if(ADC_STOP_CONVERSION_TIMEOUT != HAL_MAX_DELAY)
+   1535                {
+   1536                  if((HAL_GetTick() - tickstart ) > ADC_STOP_CONVERSION_TIMEOUT)
+   1537                  {
+   1538                    /* Update ADC state machine to error */
+   1539                    hadc->State = HAL_ADC_STATE_ERROR;
+   1540                    
+   1541                    /* Set ADC error code to ADC IP internal error */
+   1542                    hadc->ErrorCode |= HAL_ADC_ERROR_INTERNAL;
+   1543                    
+   1544                    return HAL_ERROR;
+   1545                  }
+   1546                }
+   1547              }    
+   1548            }
+   1549             
+   1550            /* Return HAL status */
+   1551            return HAL_OK;
+   1552          }
+   1553          
+   1554          /**
+   1555            * @brief  DMA transfer complete callback. 
+   1556            * @param  hdma: pointer to DMA handle.
+   1557            * @retval None
+   1558            */
+   1559          static void ADC_DMAConvCplt(DMA_HandleTypeDef *hdma)   
+   1560          {
+   1561              ADC_HandleTypeDef* hadc = ( ADC_HandleTypeDef* )((DMA_HandleTypeDef* )hdma)->Parent;
+   1562          
+   1563              /* Change ADC state */
+   1564              hadc->State = HAL_ADC_STATE_EOC;
+   1565              
+   1566              HAL_ADC_ConvCpltCallback(hadc); 
+   1567          }
+   1568          
+   1569          /**
+   1570            * @brief  DMA half transfer complete callback. 
+   1571            * @param  hdma: pointer to DMA handle.
+   1572            * @retval None
+   1573            */
+   1574          static void ADC_DMAHalfConvCplt(DMA_HandleTypeDef *hdma)   
+   1575          {
+   1576              ADC_HandleTypeDef* hadc = ( ADC_HandleTypeDef* )((DMA_HandleTypeDef* )hdma)->Parent;
+   1577              
+   1578              /* Conversion complete callback */
+   1579              HAL_ADC_ConvHalfCpltCallback(hadc); 
+   1580          }
+   1581          
+   1582          /**
+   1583            * @brief  DMA error callback 
+   1584            * @param  hdma: pointer to DMA handle.
+   1585            * @retval None
+   1586            */
+   1587          static void ADC_DMAError(DMA_HandleTypeDef *hdma)   
+   1588          {
+   1589              ADC_HandleTypeDef* hadc = ( ADC_HandleTypeDef* )((DMA_HandleTypeDef* )hdma)->Parent;
+   1590              hadc->State= HAL_ADC_STATE_ERROR;
+   1591              /* Set ADC error code to DMA error */
+   1592              hadc->ErrorCode |= HAL_ADC_ERROR_DMA;
+   1593              HAL_ADC_ErrorCallback(hadc); 
+   1594          }
+   1595          
+   1596          /**
+   1597            * @}
+   1598            */
+   1599          
+   1600          #endif /* HAL_ADC_MODULE_ENABLED */
+   1601          /**
+   1602            * @}
+   1603            */
+   1604          
+   1605          /**
+   1606            * @}
+   1607            */ 
+   1608          
+   1609          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+      16   ADC_ConversionStop
+        16   -> HAL_GetTick
+       8   ADC_DMAConvCplt
+         8   -> HAL_ADC_ConvCpltCallback
+       8   ADC_DMAError
+         8   -> HAL_ADC_ErrorCallback
+       8   ADC_DMAHalfConvCplt
+         8   -> HAL_ADC_ConvHalfCpltCallback
+      24   ADC_Disable
+        24   -> HAL_GetTick
+      24   ADC_Enable
+        24   -> HAL_GetTick
+      16   HAL_ADC_AnalogWDGConfig
+       8   HAL_ADC_ConfigChannel
+       0   HAL_ADC_ConvCpltCallback
+       0   HAL_ADC_ConvHalfCpltCallback
+      24   HAL_ADC_DeInit
+        24   -> HAL_ADC_MspDeInit
+        24   -> HAL_GetTick
+       0   HAL_ADC_ErrorCallback
+       0   HAL_ADC_GetError
+       0   HAL_ADC_GetState
+       0   HAL_ADC_GetValue
+      16   HAL_ADC_IRQHandler
+        16   -> HAL_ADC_ConvCpltCallback
+        16   -> HAL_ADC_ErrorCallback
+        16   -> HAL_ADC_LevelOutOfWindowCallback
+      24   HAL_ADC_Init
+        24   -> HAL_ADC_MspInit
+        24   -> HAL_Delay
+        24   -> HAL_GetTick
+       0   HAL_ADC_LevelOutOfWindowCallback
+       0   HAL_ADC_MspDeInit
+       0   HAL_ADC_MspInit
+      24   HAL_ADC_PollForConversion
+        24   -> HAL_GetTick
+      24   HAL_ADC_PollForEvent
+        24   -> HAL_GetTick
+      16   HAL_ADC_Start
+        16   -> ADC_Enable
+      24   HAL_ADC_Start_DMA
+        24   -> ADC_Enable
+        24   -> HAL_DMA_Start_IT
+      16   HAL_ADC_Start_IT
+        16   -> ADC_Enable
+      16   HAL_ADC_Stop
+        16   -> ADC_ConversionStop
+        16   -> ADC_Disable
+      16   HAL_ADC_Stop_DMA
+        16   -> ADC_ConversionStop
+        16   -> ADC_Disable
+        16   -> HAL_DMA_Abort
+      16   HAL_ADC_Stop_IT
+        16   -> ADC_ConversionStop
+        16   -> ADC_Disable
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable1
+       4  ??DataTable1_1
+       4  ??DataTable1_10
+       4  ??DataTable1_11
+       4  ??DataTable1_2
+       4  ??DataTable1_3
+       4  ??DataTable1_4
+       4  ??DataTable1_5
+       4  ??DataTable1_6
+       4  ??DataTable1_7
+       4  ??DataTable1_8
+       4  ??DataTable1_9
+       4  ??DataTable5
+       4  ??DataTable5_1
+       4  ??DataTable5_2
+       4  ??DataTable5_3
+       4  ??DataTable5_4
+       4  ??DataTable5_5
+       4  ??DataTable5_6
+      16  ?Subroutine0
+      14  ?Subroutine1
+      82  ADC_ConversionStop
+      16  ADC_DMAConvCplt
+      24  ADC_DMAError
+      10  ADC_DMAHalfConvCplt
+      78  ADC_Disable
+      76  ADC_Enable
+     124  HAL_ADC_AnalogWDGConfig
+      94  HAL_ADC_ConfigChannel
+       2  HAL_ADC_ConvCpltCallback
+       2  HAL_ADC_ConvHalfCpltCallback
+     184  HAL_ADC_DeInit
+       2  HAL_ADC_ErrorCallback
+       4  HAL_ADC_GetError
+       6  HAL_ADC_GetState
+       6  HAL_ADC_GetValue
+     176  HAL_ADC_IRQHandler
+     398  HAL_ADC_Init
+       2  HAL_ADC_LevelOutOfWindowCallback
+       2  HAL_ADC_MspDeInit
+       2  HAL_ADC_MspInit
+      78  HAL_ADC_PollForConversion
+      76  HAL_ADC_PollForEvent
+      60  HAL_ADC_Start
+     112  HAL_ADC_Start_DMA
+     110  HAL_ADC_Start_IT
+      58  HAL_ADC_Stop
+     106  HAL_ADC_Stop_DMA
+      74  HAL_ADC_Stop_IT
+
+ 
+ 2 070 bytes in section .text
+ 
+ 2 070 bytes of CODE memory
+
+Errors: none
+Warnings: none

@@ -1,0 +1,1372 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V7.30.1.7746/W32 for ARM        13/Jul/2017  14:23:13
+# Copyright 1999-2014 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_flash_ex.c
+#    Command line =  
+#        F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_flash_ex.c
+#        -D STM32L053xx -D USE_HAL_DRIVER -lc
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\ -o
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\ --debug
+#        --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        7.0\arm\INC\c\DLib_Config_Full.h" -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\STM32L0xx_HAL_Driver\Inc\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\Inc\ -I
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Device\ST\STM32L0xx\Include\
+#        -I F:\demo\SUBDEV_SWITCH\Projects\EWARM\..\..\Drivers\CMSIS\Include\
+#        -Ohz --use_c++_inline -I "C:\Program Files (x86)\IAR Systems\Embedded
+#        Workbench 7.0\arm\CMSIS\Include\"
+#    List file    =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\List\stm32l0xx_hal_flash_ex.lst
+#    Object file  =  
+#        F:\demo\SUBDEV_SWITCH\Projects\EWARM\SUBDEV_SWITCH\Obj\stm32l0xx_hal_flash_ex.o
+#
+###############################################################################
+
+F:\demo\SUBDEV_SWITCH\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_flash_ex.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    stm32l0xx_hal_flash_ex.c
+      4            * @author  MCD Application Team
+      5            * @version V1.1.0
+      6            * @date    18-June-2014
+      7            * @brief   FLASH HAL module driver.
+      8            *          This file provides firmware functions to manage the following 
+      9            *          functionalities of the internal FLASH memory:
+     10            *            + FLASH Interface configuration
+     11            *            + FLASH Memory Programming
+     12            *            + DATA EEPROM Programming
+     13            *            + Option Bytes Programming
+     14            *            + Interrupts and flags management
+     15            *
+     16            *  @verbatim
+     17            ==============================================================================
+     18                         ##### Flash peripheral Extended features  #####
+     19            ==============================================================================
+     20                     
+     21            [..] Comparing to other products, the FLASH interface for STM32L0xx
+     22                 devices contains the following additional features        
+     23                 (+) DATA_EEPROM memory management
+     24                 (+) BOOT option bit configuration       
+     25                 (+) PCROP protection for all sectors
+     26             
+     27                                ##### How to use this driver #####
+     28            ==============================================================================
+     29            [..] This driver provides functions to configure and program the FLASH memory 
+     30                 of all STM32L0xx. It includes:       
+     31                 (+) Full DATA_EEPROM erase and program management
+     32                 (+) Boot activation
+     33                 (+) PCROP protection configuration and control for all pages
+     34            
+     35            @endverbatim
+     36            ******************************************************************************
+     37            * @attention
+     38            *
+     39            * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+     40            *
+     41            * Redistribution and use in source and binary forms, with or without modification,
+     42            * are permitted provided that the following conditions are met:
+     43            *   1. Redistributions of source code must retain the above copyright notice,
+     44            *      this list of conditions and the following disclaimer.
+     45            *   2. Redistributions in binary form must reproduce the above copyright notice,
+     46            *      this list of conditions and the following disclaimer in the documentation
+     47            *      and/or other materials provided with the distribution.
+     48            *   3. Neither the name of STMicroelectronics nor the names of its contributors
+     49            *      may be used to endorse or promote products derived from this software
+     50            *      without specific prior written permission.
+     51            *
+     52            * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+     53            * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+     54            * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+     55            * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+     56            * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+     57            * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+     58            * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+     59            * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+     60            * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     61            * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     62            *
+     63            ******************************************************************************
+     64            */ 
+     65          
+     66          /* Includes ------------------------------------------------------------------*/
+     67          #include "stm32l0xx_hal.h"
+     68          /** @addtogroup STM32L0XX_HAL_Driver
+     69            * @{
+     70            */
+     71          
+     72          /** @defgroup FLASHEx HAL FLASH Driver
+     73            * @brief FLASH HAL Extension module driver
+     74            * @{
+     75            */
+     76          
+     77          #ifdef HAL_FLASH_MODULE_ENABLED
+     78          
+     79          /* Private typedef -----------------------------------------------------------*/
+     80          /* Private define ------------------------------------------------------------*/
+     81          #define HAL_FLASH_TIMEOUT_VALUE   ((uint32_t)0x50000
+     82          #define WRP01_MASK                ((uint32_t)0x0000FFFF)
+     83          #define PAGESIZE                  ((uint32_t)0x00000080)
+     84          
+     85          /* Private macro -------------------------------------------------------------*/
+     86          /* Private variables ---------------------------------------------------------*/
+     87          /* Private function prototypes -----------------------------------------------*/
+     88          static HAL_StatusTypeDef FLASH_OB_PCROPConfig(uint32_t OB_WRP, FunctionalState NewState);
+     89          static HAL_StatusTypeDef FLASH_OB_PCROPSelectionConfig(uint16_t OB_PcROP);
+     90          static HAL_StatusTypeDef FLASH_OB_BootConfig(uint16_t OB_BOOT);
+     91          static HAL_StatusTypeDef FLASH_DATAEEPROM_FastProgramByte(uint32_t Address, uint8_t Data);
+     92          static HAL_StatusTypeDef FLASH_DATAEEPROM_FastProgramHalfWord(uint32_t Address, uint16_t Data);
+     93          static HAL_StatusTypeDef FLASH_DATAEEPROM_FastProgramWord(uint32_t Address, uint32_t Data);
+     94          static HAL_StatusTypeDef FLASH_DATAEEPROM_ProgramByte(uint32_t Address, uint8_t Data);
+     95          static HAL_StatusTypeDef FLASH_DATAEEPROM_ProgramHalfWord(uint32_t Address, uint16_t Data);
+     96          static HAL_StatusTypeDef FLASH_DATAEEPROM_ProgramWord(uint32_t Address, uint32_t Data);
+     97          static uint8_t FLASH_OB_GetUser(void);
+     98          static uint32_t FLASH_OB_GetWRP(void);
+     99          static FlagStatus FLASH_OB_GetRDP(void);
+    100          static uint8_t FLASH_OB_GetBOR(void);
+    101          static HAL_StatusTypeDef FLASH_OB_WRPConfig(uint32_t OB_WRP, FunctionalState NewState);
+    102          static HAL_StatusTypeDef FLASH_OB_RDP_LevelConfig(uint8_t OB_RDP);
+    103          static HAL_StatusTypeDef FLASH_OB_UserConfig(uint8_t OB_IWDG, uint8_t OB_STOP, uint8_t OB_STDBY);
+    104          static HAL_StatusTypeDef FLASH_OB_BOR_LevelConfig(uint8_t OB_BOR);
+    105          
+    106          /* Aliases for legacy HAL versions compatibility */
+    107          #define  DATA_EEPROM_FastProgramByte       FLASH_DATAEEPROM_FastProgramByte
+    108          #define  DATA_EEPROM_FastProgramHalfWord   FLASH_DATAEEPROM_FastProgramHalfWord
+    109          #define  DATA_EEPROM_FastProgramWord       FLASH_DATAEEPROM_FastProgramWord
+    110          #define  DATA_EEPROM_ProgramByte           FLASH_DATAEEPROM_ProgramByte
+    111          #define  DATA_EEPROM_ProgramHalfWord       FLASH_DATAEEPROM_ProgramHalfWord
+    112          #define  DATA_EEPROM_ProgramWord           FLASH_DATAEEPROM_ProgramWord
+    113          
+    114              
+    115          /* Private functions ---------------------------------------------------------*/
+    116          
+    117          /** @defgroup FLASHEx_Private_Functions Extended FLASH Private functions
+    118            * @{
+    119            */
+    120          
+    121          /** @defgroup FLASHEx_Group1 Peripheral extended features functions 
+    122           *  @brief   Data transfers functions 
+    123           *
+    124          @verbatim   
+    125           ===============================================================================
+    126                                ##### Extended Features functions #####
+    127           ===============================================================================  
+    128              [..]
+    129              This subsection provides a set of functions allowing to manage the FLASH data 
+    130              transfers.
+    131          
+    132          @endverbatim
+    133            * @{
+    134            */
+    135          
+    136          /**
+    137            * @brief  Program option bytes
+    138            * @param  pAdvOBInit: pointer to an FLASH_AdvOBProgramInitTypeDef structure that
+    139            *         contains the configuration information for the programming.
+    140            * 
+    141            * @retval HAL_StatusTypeDef HAL Status
+    142            */
+    143          HAL_StatusTypeDef HAL_FLASHEx_AdvOBProgram (FLASH_AdvOBProgramInitTypeDef *pAdvOBInit)
+    144          {
+    145            HAL_StatusTypeDef status = HAL_ERROR;
+    146            
+    147            /* Check the parameters */
+    148            assert_param(IS_OBEX(pAdvOBInit->OptionType));
+    149          
+    150            /*Program PCROP option byte*/
+    151            if ((pAdvOBInit->OptionType&OBEX_PCROP) == OBEX_PCROP)
+    152            {
+    153              /* Check the parameters */
+    154              assert_param(IS_PCROPSTATE(pAdvOBInit->PCROPState));
+    155              if (pAdvOBInit->PCROPState == PCROPSTATE_ENABLE)
+    156              {
+    157                /*Enable of Write protection on the selected Sector*/
+    158                status = FLASH_OB_PCROPConfig(pAdvOBInit->Pages, ENABLE);
+    159                status = FLASH_OB_PCROPSelectionConfig(OB_PCROP_SELECTED);
+    160              }
+    161              else
+    162              {
+    163                /*Disable of Write protection on the selected Sector*/ 
+    164                status = FLASH_OB_PCROPConfig(pAdvOBInit->Pages, DISABLE);
+    165                status = FLASH_OB_PCROPSelectionConfig(OB_PCROP_DESELECTED);
+    166              }
+    167            }   
+    168            /*Program BOOT config option byte*/
+    169            if ((pAdvOBInit->OptionType&OBEX_BOOTCONFIG) == OBEX_BOOTCONFIG)
+    170            {
+    171              status = FLASH_OB_BootConfig(pAdvOBInit->BootConfig);
+    172            }
+    173          
+    174            return status;
+    175          }
+    176          
+    177          /**
+    178            * @brief   Get the OBEX byte configuration
+    179            * @param  pAdvOBInit: pointer to an FLASH_AdvOBProgramInitTypeDef structure that
+    180            *         contains the configuration information for the programming.
+    181            * 
+    182            * @retval None
+    183            */
+    184          void HAL_FLASHEx_AdvOBGetConfig(FLASH_AdvOBProgramInitTypeDef *pAdvOBInit)
+    185          {
+    186            pAdvOBInit->OptionType = OBEX_PCROP| OBEX_BOOTCONFIG;
+    187            /*Get PCROP state */
+    188            pAdvOBInit->PCROPState = (FLASH->OBR & 0x00000100) >> 8;
+    189            /*Get PCROP protected Pages */
+    190            pAdvOBInit->Pages = FLASH->WRPR;
+    191            /*Get Boot config OB*/
+    192            pAdvOBInit->BootConfig = (FLASH->OBR & 0x80000000) >> 24;
+    193          }
+    194          
+    195          /**
+    196            * @}
+    197            */
+    198            
+    199          /** @defgroup FLASHEx_Group2 DATA EEPROM Programming functions
+    200           *  @brief   DATA EEPROM Programming functions
+    201           *
+    202          @verbatim   
+    203           ===============================================================================
+    204                               ##### DATA EEPROM Programming functions ##### 
+    205           ===============================================================================  
+    206           
+    207              [..] The FLASH_DATAEEPROM Programming_Functions, includes the following functions:
+    208                  (+) HAL_FLASHEx_DATAEEPROM_Unlock(void);
+    209                  (+) HAL_FLASHEx_DATAEEPROM_Lock(void);
+    210                  (+) HAL_FLASHEx_DATAEEPROM_Erase(uint32_t Address)
+    211                  (+) HAL_FLASHEx_DATAEEPROM_Program(uint32_t TypeProgram, uint32_t Address, uint32_t Data)
+    212             
+    213              [..] Any operation of erase or program should follow these steps:
+    214              (#) Call the HAL_FLASHEx_DATAEEPROM_Unlock() function to enable the data EEPROM access
+    215                  and Flash program erase control register access.
+    216              (#) Call the desired function to erase or program data.
+    217              (#) Call the HAL_FLASHEx_DATAEEPROM_Lock() to disable the data EEPROM access
+    218                  and Flash program erase control register access(recommended
+    219                  to protect the DATA_EEPROM against possible unwanted operation).
+    220          
+    221          @endverbatim
+    222            * @{
+    223            */
+    224          /**
+    225            * @brief  Unlocks the data memory and FLASH_PECR register access.
+    226            * @param  None
+    227            * @retval HAL_StatusTypeDef HAL Status
+    228            */
+    229          HAL_StatusTypeDef HAL_FLASHEx_DATAEEPROM_Unlock(void)  
+    230          {
+    231            if((FLASH->PECR & FLASH_PECR_PELOCK) != RESET)
+    232            {  
+    233              /* Unlocking the Data memory and FLASH_PECR register access*/
+    234              FLASH->PEKEYR = FLASH_PEKEY1;
+    235              FLASH->PEKEYR = FLASH_PEKEY2;
+    236            }
+    237            else
+    238            {
+    239              return HAL_ERROR;
+    240            }
+    241            return HAL_OK;  
+    242          }
+    243          
+    244          /**
+    245            * @brief  Locks the Data memory and FLASH_PECR register access.
+    246            * @param  None
+    247            * @retval HAL_StatusTypeDef HAL Status
+    248            */
+    249          HAL_StatusTypeDef HAL_FLASHEx_DATAEEPROM_Lock(void)
+    250          {
+    251            /* Set the PELOCK Bit to lock the data memory and FLASH_PECR register access */
+    252            FLASH->PECR |= FLASH_PECR_PELOCK;
+    253            
+    254            return HAL_OK;
+    255          }
+    256            
+    257          /**
+    258            * @brief  Erase a word in data memory.
+    259            * @param  Address: specifies the address to be erased.
+    260            * @note   To correctly run this function, the HAL_FLASHEx_DATAEEPROM_Unlock() function
+    261            *         must be called before.
+    262            *         Call the HAL_FLASHEx_DATAEEPROM_Lock() to the data EEPROM access
+    263            *         and Flash program erase control register access(recommended to protect 
+    264            *         the DATA_EEPROM against possible unwanted operation).
+    265            * @retval FLASH Status: The returned value can be: 
+    266            *   FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
+    267            */
+    268          HAL_StatusTypeDef HAL_FLASHEx_DATAEEPROM_Erase(uint32_t Address)
+    269          {
+    270            HAL_StatusTypeDef status = HAL_OK;
+    271            
+    272            /* Check the parameters */
+    273            assert_param(IS_FLASH_DATA_ADDRESS(Address));
+    274            
+    275            /* Wait for last operation to be completed */
+    276            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    277            
+    278            if(status == HAL_OK)
+    279            {
+    280              /* Write "00000000h" to valid address in the data memory" */
+    281              *(__IO uint32_t *) Address = 0x00000000;
+    282            }
+    283             
+    284            /* Return the erase status */
+    285            return status;
+    286          }  
+    287          
+    288          /**
+    289            * @brief  Program word at a specified address
+    290            * @param  TypeProgram:  Indicate the way to program at a specified address.
+    291            *                           This parameter can be a value of @ref FLASH_Type_Program
+    292            * @param  Address:  specifies the address to be programmed.
+    293            * @param  Data: specifies the data to be programmed
+    294            * 
+    295            * @retval HAL_StatusTypeDef HAL Status
+    296            */
+    297          
+    298          HAL_StatusTypeDef   HAL_FLASHEx_DATAEEPROM_Program(uint32_t TypeProgram, uint32_t Address, uint32_t Data)
+    299          {
+    300            HAL_StatusTypeDef status = HAL_ERROR;
+    301            
+    302            /* Process Locked */
+    303            __HAL_LOCK(&pFlash);
+    304          
+    305            /* Check the parameters */
+    306            assert_param(IS_TYPEPROGRAM(TypeProgram));
+    307          
+    308            /* Wait for last operation to be completed */
+    309            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    310            
+    311            if(status == HAL_OK)
+    312            {
+    313              if(TypeProgram == TYPEPROGRAM_FASTBYTE)
+    314              {
+    315                /*Program word (8-bit) at a specified address.*/
+    316                FLASH_DATAEEPROM_FastProgramByte(Address, (uint8_t) Data);
+    317                
+    318                /* Wait for last operation to be completed */
+    319                status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    320              }
+    321              
+    322              if(TypeProgram == TYPEPROGRAM_FASTHALFWORD)
+    323              {
+    324                /*Program word (16-bit) at a specified address.*/
+    325                FLASH_DATAEEPROM_FastProgramHalfWord(Address, (uint16_t) Data);
+    326                
+    327                /* Wait for last operation to be completed */
+    328                status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    329              }    
+    330              if(TypeProgram == TYPEPROGRAM_FASTWORD)
+    331              {
+    332                /*Program word (32-bit) at a specified address.*/
+    333                FLASH_DATAEEPROM_FastProgramWord(Address, (uint32_t) Data);
+    334                
+    335                /* Wait for last operation to be completed */
+    336                status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    337              }
+    338              if(TypeProgram == TYPEPROGRAM_WORD)
+    339              {
+    340                /*Program word (32-bit) at a specified address.*/
+    341                FLASH_DATAEEPROM_ProgramWord(Address, (uint32_t) Data);
+    342                
+    343                /* Wait for last operation to be completed */
+    344                status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    345              }
+    346                 
+    347              if(TypeProgram == TYPEPROGRAM_HALFWORD)
+    348              {
+    349                /*Program word (16-bit) at a specified address.*/
+    350                FLASH_DATAEEPROM_ProgramHalfWord(Address, (uint16_t) Data);
+    351                
+    352                /* Wait for last operation to be completed */
+    353                status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    354              }
+    355                  
+    356              if(TypeProgram == TYPEPROGRAM_BYTE)
+    357              {
+    358                /*Program word (8-bit) at a specified address.*/
+    359                FLASH_DATAEEPROM_ProgramByte(Address, (uint8_t) Data);
+    360                
+    361                /* Wait for last operation to be completed */
+    362                status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    363              }
+    364            } 
+    365            /* Process Unlocked */
+    366            __HAL_UNLOCK(&pFlash);
+    367          
+    368            return status;
+    369          }
+    370          
+    371          /**
+    372            * @brief  Erase the specified FLASH memory Pages 
+    373            * @param[in]  pEraseInit: pointer to an FLASH_EraseInitTypeDef structure that
+    374            *         contains the configuration information for the erasing.
+    375            * 
+    376            * @param[out]  PageError: pointer to variable  that
+    377            *         contains the configuration information on faulty sector in case of error 
+    378            *         (0xFFFFFFFF means that all the sectors have been correctly erased)
+    379            * 
+    380            * @retval HAL_StatusTypeDef HAL Status
+    381            */
+    382          HAL_StatusTypeDef HAL_FLASHEx_Erase(FLASH_EraseInitTypeDef *pEraseInit, uint32_t *PageError)
+    383          {
+    384            HAL_StatusTypeDef status = HAL_ERROR;
+    385            uint32_t index = 0;
+    386            
+    387            /* Process Locked */
+    388            __HAL_LOCK(&pFlash);
+    389          
+    390            /* Check the parameters */
+    391            assert_param(IS_TYPEERASE(pEraseInit->TypeErase));
+    392          
+    393            /* Wait for last operation to be completed */
+    394            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    395          
+    396            if (status == HAL_OK)
+    397            {
+    398              /*Initialization of PageError variable*/
+    399              *PageError = 0xFFFFFFFF;
+    400                
+    401              /* Check the parameters */
+    402                assert_param(IS_NBPAGES(pEraseInit->NbPages + pEraseInit->Page));
+    403          
+    404                /* Erase by sector by sector to be done*/
+    405                for(index = pEraseInit->Page; index < ((pEraseInit->NbPages*PAGESIZE)+ pEraseInit->Page); index+=PAGESIZE)
+    406                {        
+    407                  FLASH_Erase_Page(index);
+    408          
+    409                  /* Wait for last operation to be completed */
+    410                  status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    411                  
+    412                  /* If the erase operation is completed, disable the ERASE Bit */
+    413                  FLASH->PECR &= (~FLASH_PECR_PROG);
+    414                  FLASH->PECR &= (~FLASH_PECR_ERASE);
+    415          
+    416                  if (status != HAL_OK) 
+    417                  {
+    418                    /* In case of error, stop erase procedure and return the faulty sector*/
+    419                    *PageError = index;
+    420                    break;
+    421                  }
+    422                }
+    423              }
+    424          
+    425            /* Process Unlocked */
+    426            __HAL_UNLOCK(&pFlash);
+    427          
+    428            return status;
+    429          }
+    430          
+    431          /**
+    432            * @brief  Perform a page erase of the specified FLASH memory pages  with interrupt enabled
+    433            * @param  pEraseInit: pointer to an FLASH_EraseInitTypeDef structure that
+    434            *         contains the configuration information for the erasing.
+    435            * 
+    436            * @retval HAL_StatusTypeDef HAL Status
+    437            */
+    438          HAL_StatusTypeDef HAL_FLASHEx_Erase_IT(FLASH_EraseInitTypeDef *pEraseInit)
+    439          {
+    440            HAL_StatusTypeDef status = HAL_OK;
+    441          
+    442            /* Process Locked */
+    443            __HAL_LOCK(&pFlash);
+    444          
+    445            /* Check the parameters */
+    446            assert_param(IS_TYPEERASE(pEraseInit->TypeErase));
+    447          
+    448            /* Enable End of FLASH Operation interrupt */
+    449            __HAL_FLASH_ENABLE_IT(FLASH_IT_EOP);
+    450            
+    451            /* Enable Error source interrupt */
+    452            __HAL_FLASH_ENABLE_IT(FLASH_IT_ERR);
+    453            
+    454            /* Clear pending flags (if any) */  
+    455            __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP    | FLASH_FLAG_ENDHV | FLASH_FLAG_WRPERR |\
+    456                                   FLASH_FLAG_PGAERR | FLASH_FLAG_SIZERR| FLASH_FLAG_OPTVERR |\
+    457                                   FLASH_FLAG_RDERR  | FLASH_FLAG_NOTZEROERR);  
+    458          
+    459            if (pEraseInit->TypeErase == TYPEERASE_PAGEERASE)
+    460            {
+    461              /* Erase by sector to be done*/
+    462          
+    463              /* Check the parameters */
+    464              assert_param(IS_NBPAGES(pEraseInit->NbPages + pEraseInit->Page));
+    465          
+    466              pFlash.ProcedureOnGoing = FLASH_PROC_PAGEERASE;
+    467              pFlash.NbPagesToErase = pEraseInit->NbPages;
+    468              pFlash.Page = pEraseInit->Page;
+    469          
+    470              /*Erase 1st page and wait for IT*/
+    471              FLASH_Erase_Page(pEraseInit->Page);
+    472            }
+    473          
+    474            return status;
+    475          }
+    476          
+    477          
+    478          /**
+    479            * @brief  Program option bytes
+    480            * @param  pOBInit: pointer to an FLASH_OBInitStruct structure that
+    481            *         contains the configuration information for the programming.
+    482            * 
+    483            * @retval HAL_StatusTypeDef HAL Status
+    484            */
+    485          HAL_StatusTypeDef HAL_FLASHEx_OBProgram(FLASH_OBProgramInitTypeDef *pOBInit)
+    486          {
+    487            HAL_StatusTypeDef status = HAL_ERROR;
+    488            
+    489            /* Process Locked */
+    490            __HAL_LOCK(&pFlash);
+    491          
+    492            /* Check the parameters */
+    493            assert_param(IS_OPTIONBYTE(pOBInit->OptionType));
+    494          
+    495            /*Write protection configuration*/
+    496            if((pOBInit->OptionType & OPTIONBYTE_WRP) == OPTIONBYTE_WRP)
+    497            {
+    498              assert_param(IS_WRPSTATE(pOBInit->WRPState));
+    499              if (pOBInit->WRPState == WRPSTATE_ENABLE)
+    500              {
+    501                /*Enable of Write protection on the selected Sector*/
+    502                status = FLASH_OB_WRPConfig(pOBInit->WRPSector, ENABLE);
+    503              }
+    504              else
+    505              {
+    506                /*Disable of Write protection on the selected Sector*/
+    507                status = FLASH_OB_WRPConfig(pOBInit->WRPSector, DISABLE);
+    508              }
+    509            }
+    510          
+    511            /* Read protection configuration*/
+    512            if((pOBInit->OptionType & OPTIONBYTE_RDP) == OPTIONBYTE_RDP)
+    513            {
+    514              status = FLASH_OB_RDP_LevelConfig(pOBInit->RDPLevel);
+    515            }
+    516          
+    517            /* USER  configuration*/
+    518            if((pOBInit->OptionType & OPTIONBYTE_USER) == OPTIONBYTE_USER)
+    519            {
+    520              status = FLASH_OB_UserConfig(pOBInit->USERConfig&OB_IWDG_SW, 
+    521                                               pOBInit->USERConfig&OB_STOP_NoRST,
+    522                                               pOBInit->USERConfig&OB_STDBY_NoRST);
+    523            }
+    524          
+    525            /* BOR Level  configuration*/
+    526            if((pOBInit->OptionType & OPTIONBYTE_BOR) == OPTIONBYTE_BOR)
+    527            {
+    528              status = FLASH_OB_BOR_LevelConfig(pOBInit->BORLevel);
+    529            } 
+    530            /* Process Unlocked */
+    531            __HAL_UNLOCK(&pFlash);
+    532          
+    533            return status;
+    534          }
+    535          
+    536          /**
+    537            * @brief   Get the Option byte configuration
+    538            * @param  pOBInit: pointer to an FLASH_OBInitStruct structure that
+    539            *         contains the configuration information for the programming.
+    540            * 
+    541            * @retval None
+    542            */
+    543          void HAL_FLASHEx_OBGetConfig(FLASH_OBProgramInitTypeDef *pOBInit)
+    544          {
+    545            pOBInit->OptionType = OPTIONBYTE_WRP | OPTIONBYTE_RDP | OPTIONBYTE_USER | OPTIONBYTE_BOR;
+    546          
+    547            /*Get WRP*/
+    548            pOBInit->WRPSector = FLASH_OB_GetWRP();
+    549          
+    550            /*Get RDP Level*/
+    551            pOBInit->RDPLevel = FLASH_OB_GetRDP();
+    552          
+    553            /*Get USER*/
+    554            pOBInit->USERConfig = FLASH_OB_GetUser();
+    555          
+    556            /*Get BOR Level*/
+    557            pOBInit->BORLevel = FLASH_OB_GetBOR();
+    558          }
+    559          
+    560          /**
+    561            * @}
+    562            */
+    563            
+    564          /**
+    565            * @brief  Returns the FLASH User Option Bytes values.
+    566            * @param  None
+    567            * @retval The FLASH User Option Bytes.
+    568            */
+    569          static uint8_t FLASH_OB_GetUser(void)
+    570          {
+    571            /* Return the User Option Byte */
+    572            return (uint8_t)(FLASH->OBR >> 20);
+    573          }
+    574          
+    575          /**
+    576            * @brief  Returns the FLASH Write Protection Option Bytes value.
+    577            * @param  None
+    578            * @retval The FLASH Write Protection Option Bytes value.
+    579            */
+    580          static uint32_t FLASH_OB_GetWRP(void)
+    581          {
+    582            /* Return the FLASH write protection Register value */
+    583            return (uint32_t)(FLASH->WRPR);
+    584          }
+    585          
+    586          /**
+    587            * @brief  Checks whether the FLASH Read out Protection Status is set or not.
+    588            * @param  None
+    589            * @retval FLASH ReadOut Protection Status(SET or RESET).
+    590            */
+    591          static FlagStatus FLASH_OB_GetRDP(void)
+    592          {
+    593            FlagStatus readstatus = RESET;
+    594            
+    595            if ((uint8_t)(FLASH->OBR) != (uint8_t)OB_RDP_Level_0)
+    596            {
+    597              readstatus = SET;
+    598            }
+    599            else
+    600            {
+    601              readstatus = RESET;
+    602            }
+    603            return readstatus;
+    604          }
+    605          
+    606          /**
+    607            * @brief  Returns the FLASH BOR level.
+    608            * @param  None
+    609            * @retval The FLASH User Option Bytes.
+    610            */
+    611          static uint8_t FLASH_OB_GetBOR(void)
+    612          {
+    613            /* Return the BOR level */
+    614            return (uint8_t)((FLASH->OBR & (uint32_t)0x000F0000) >> 16);
+    615          }
+    616          
+    617          /**
+    618            * @brief  Write protects the desired pages of the first 64KB of the Flash.
+    619            * @param  OB_WRP: specifies the address of the pages to be write protected.
+    620            *   This parameter can be:
+    621            *     @arg  value between OB_WRP_Pages0to31 and OB_WRP_Pages480to511
+    622            *     @arg  OB_WRP_AllPages
+    623            * @param  NewState: new state of the specified FLASH Pages Wtite protection.
+    624            *   This parameter can be: ENABLE or DISABLE.
+    625            * @retval HAL_StatusTypeDef
+    626            */
+    627          static HAL_StatusTypeDef FLASH_OB_WRPConfig(uint32_t OB_WRP, FunctionalState NewState)
+    628          {
+    629            HAL_StatusTypeDef status = HAL_OK;
+    630            uint32_t WRP01_Data = 0;
+    631            uint32_t tmp1 = 0;
+    632            
+    633            /* Check the parameters */
+    634            assert_param(IS_OB_WRP(OB_WRP));
+    635            assert_param(IS_FUNCTIONAL_STATE(NewState));
+    636               
+    637            /* Wait for last operation to be completed */
+    638            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    639           
+    640            if(status == HAL_OK)
+    641            {
+    642              if (NewState != DISABLE)
+    643              {
+    644                WRP01_Data = (uint16_t)(((OB_WRP & WRP01_MASK) | OB->WRP01));
+    645                tmp1 = (uint32_t)(~(WRP01_Data) << 16)|(WRP01_Data);
+    646                OB->WRP01 = tmp1;
+    647              }             
+    648              else
+    649              {
+    650                WRP01_Data = (uint16_t)(~OB_WRP & (WRP01_MASK & OB->WRP01));
+    651                tmp1 = (uint32_t)((~WRP01_Data) << 16)|(WRP01_Data);
+    652                OB->WRP01 = tmp1;
+    653              }
+    654              /* Wait for last operation to be completed */
+    655              status = FLASH_WaitForLastOperation(HAL_FLASH_TIMEOUT_VALUE));
+    656            }
+    657          
+    658            /* Return the write protection operation Status */
+    659            return status;      
+    660          }
+    661          /**
+    662            * @brief  Enables or disables the read out protection.
+    663            * @note   To correctly run this function, the FLASH_OB_Unlock() function
+    664            *         must be called before.
+    665            * @param  FLASH_ReadProtection_Level: specifies the read protection level. 
+    666            *   This parameter can be:
+    667            *     @arg OB_RDP_Level_0: No protection
+    668            *     @arg OB_RDP_Level_1: Read protection of the memory
+    669            *     @arg OB_RDP_Level_2: Chip protection
+    670            * 
+    671            *  !!!Warning!!! When enabling OB_RDP_Level_2 it's no more possible to go back to level 1 or 0
+    672            *   
+    673            * @retval FLASH Status: The returned value can be: 
+    674            *         FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
+    675            */
+    676          static HAL_StatusTypeDef FLASH_OB_RDP_LevelConfig(uint8_t OB_RDP)
+    677          {
+    678            HAL_StatusTypeDef status = HAL_OK;
+    679            uint16_t tmp1 = 0;
+    680            uint32_t tmp2 = 0;
+    681            
+    682            /* Check the parameters */
+    683            assert_param(IS_OB_RDP(OB_RDP));
+    684            status = FLASH_WaitForLastOperation(HAL_FLASH_TIMEOUT_VALUE));
+    685            
+    686            /* calculate the option byte to write */
+    687            tmp1 =  ((uint16_t)(*(__IO uint16_t *)(OB_BASE)) & 0xFF00) | OB_RDP; 
+    688            tmp2 = (uint32_t)(((uint32_t)((uint32_t)(~tmp1) << 16)) | ((uint32_t)tmp1));
+    689            
+    690            if(status == HAL_OK)
+    691            {         
+    692             /* program read protection level */
+    693              OB->RDP = tmp2;
+    694            }
+    695            
+    696            /* Wait for last operation to be completed */
+    697            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    698               
+    699            /* Return the Read protection operation Status */
+    700            return status;            
+    701          }
+    702          
+    703          /**
+    704            * @brief  Programs the FLASH User Option Byte: IWDG_SW / RST_STOP / RST_STDBY.
+    705            * @param  OB_IWDG: Selects the WDG mode.
+    706            *   This parameter can be one of the following values:
+    707            *     @arg OB_IWDG_SW: Software WDG selected
+    708            *     @arg OB_IWDG_HW: Hardware WDG selected
+    709            * @param  OB_STOP: Reset event when entering STOP mode.
+    710            *   This parameter can be one of the following values:
+    711            *     @arg OB_STOP_NoRST: No reset generated when entering in STOP
+    712            *     @arg OB_STOP_RST: Reset generated when entering in STOP
+    713            * @param  OB_STDBY: Reset event when entering Standby mode.
+    714            *   This parameter can be one of the following values:
+    715            *     @arg OB_STDBY_NoRST: No reset generated when entering in STANDBY
+    716            *     @arg OB_STDBY_RST: Reset generated when entering in STANDBY
+    717            * @retval FLASH Status: The returned value can be: 
+    718            *         FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
+    719            */
+    720          static HAL_StatusTypeDef FLASH_OB_UserConfig(uint8_t OB_IWDG, uint8_t OB_STOP, uint8_t OB_STDBY)
+    721          {
+    722            HAL_StatusTypeDef status = HAL_OK; 
+    723            uint32_t tmp = 0, tmp1 = 0;
+    724          
+    725            /* Check the parameters */
+    726            assert_param(IS_OB_IWDG_SOURCE(OB_IWDG));
+    727            assert_param(IS_OB_STOP_SOURCE(OB_STOP));
+    728            assert_param(IS_OB_STDBY_SOURCE(OB_STDBY));
+    729          
+    730            /* Get the User Option byte register */
+    731            tmp1 = (FLASH->OBR & 0x800F0000) >> 16;
+    732              
+    733            /* Calculate the user option byte to write */ 
+    734            tmp = (uint32_t)(((uint32_t)~((uint32_t)((uint32_t)(OB_IWDG) | (uint32_t)(OB_STOP) | (uint32_t)(OB_STDBY) | tmp1))) << 16);
+    735            tmp |= ((uint32_t)(OB_IWDG) | ((uint32_t)OB_STOP) | (uint32_t)(OB_STDBY) | tmp1);
+    736            
+    737            /* Wait for last operation to be completed */
+    738            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    739            
+    740            if(status == HAL_OK)
+    741            {  
+    742              /* Write the User Option Byte */              
+    743              OB->USER = tmp; 
+    744            }
+    745            
+    746            /* Wait for last operation to be completed */
+    747            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    748                 
+    749            /* Return the Option Byte program Status */
+    750            return status;
+    751          }
+    752          
+    753          /**
+    754            * @brief  Programs the FLASH brownout reset threshold level Option Byte.
+    755            * @param  OB_BOR: Selects the brownout reset threshold level.
+    756            *   This parameter can be one of the following values:
+    757            *     @arg OB_BOR_OFF: BOR is disabled at power down, the reset is asserted when the VDD 
+    758            *                      power supply reaches the PDR(Power Down Reset) threshold (1.5V)
+    759            *     @arg OB_BOR_LEVEL1: BOR Reset threshold levels for 1.7V - 1.8V VDD power supply
+    760            *     @arg OB_BOR_LEVEL2: BOR Reset threshold levels for 1.9V - 2.0V VDD power supply
+    761            *     @arg OB_BOR_LEVEL3: BOR Reset threshold levels for 2.3V - 2.4V VDD power supply
+    762            *     @arg OB_BOR_LEVEL4: BOR Reset threshold levels for 2.55V - 2.65V VDD power supply
+    763            *     @arg OB_BOR_LEVEL5: BOR Reset threshold levels for 2.8V - 2.9V VDD power supply
+    764            * @retval FLASH Status: The returned value can be: 
+    765            * FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
+    766            */
+    767          static HAL_StatusTypeDef FLASH_OB_BOR_LevelConfig(uint8_t OB_BOR)
+    768          {
+    769            HAL_StatusTypeDef status = HAL_OK; 
+    770            uint32_t tmp = 0, tmp1 = 0;
+    771          
+    772            /* Check the parameters */
+    773            assert_param(IS_OB_BOR_LEVEL(OB_BOR));
+    774          
+    775            /* Get the User Option byte register */
+    776            tmp1 = (FLASH->OBR & 0x000F0000) >> 16;
+    777               
+    778            /* Calculate the option byte to write */
+    779            tmp = (uint32_t)~(OB_BOR | tmp1)<<16;
+    780            tmp |= (OB_BOR | tmp1);
+    781              
+    782            /* Wait for last operation to be completed */
+    783            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    784            
+    785            if(status == HAL_OK)
+    786            {  
+    787              /* Write the BOR Option Byte */            
+    788              OB->USER = tmp; 
+    789            }
+    790            
+    791            /* Wait for last operation to be completed */
+    792            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    793                  
+    794            /* Return the Option Byte program Status */
+    795            return status;
+    796          }
+    797          
+    798          
+    799          /**
+    800            * @brief  Enables or disables the read/write protection (PCROP) of the desired 
+    801            *         sectors, for the first 64KB of the Flash.
+    802            * @param  OB_WRP: specifies the address of the pages to be write protected.
+    803            *   This parameter can be:
+    804            *     @arg  value between OB_WRP_Pages0to31 and OB_WRP_Pages480to511
+    805            *     @arg  OB_WRP_AllPages
+    806            * @param  NewState: new state of the specified FLASH Pages Write protection.
+    807            *   This parameter can be: ENABLE or DISABLE.
+    808            * @retval FLASH Status: The returned value can be: 
+    809            *         FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
+    810            */
+    811          static HAL_StatusTypeDef FLASH_OB_PCROPConfig(uint32_t OB_WRP, FunctionalState NewState)
+    812          {
+    813            HAL_StatusTypeDef status = HAL_OK;
+    814            uint32_t WRP01_Data = 0;
+    815            uint32_t tmp1 = 0;
+    816            
+    817            /* Check the parameters */
+    818            assert_param(IS_OB_WRP(OB_WRP));
+    819            assert_param(IS_FUNCTIONAL_STATE(NewState));
+    820               
+    821            /* Wait for last operation to be completed */
+    822            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    823           
+    824            if(status == HAL_OK)
+    825            {
+    826              if (NewState != DISABLE)
+    827              {
+    828                WRP01_Data = (uint16_t)(~OB_WRP & (WRP01_MASK & OB->WRP01));
+    829          
+    830                tmp1 = (uint32_t)((~WRP01_Data) << 16)|(WRP01_Data);
+    831                OB->WRP01 = tmp1; 
+    832              }             
+    833              
+    834              else
+    835              {
+    836                WRP01_Data = (uint16_t)((OB_WRP & WRP01_MASK) | OB->WRP01);
+    837               
+    838                tmp1 = (uint32_t)(~(WRP01_Data) << 16)|(WRP01_Data);
+    839                OB->WRP01 = tmp1;
+    840              }
+    841              /* Wait for last operation to be completed */
+    842              status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    843            }
+    844          
+    845            /* Return the write protection operation Status */
+    846            return status;       
+    847          }
+    848          
+    849          /**
+    850            * @brief  Select the Protection Mode (SPRMOD).
+    851            * @note   Once SPRMOD bit is active, unprotection of a protected sector is not possible 
+    852            * @note   Read a protected sector will set RDERR Flag and write a protected sector will set WRPERR Flag
+    853            * @param  OB_PcROP: Select the Protection Mode of WPR bits. 
+    854            *   This parameter can be:
+    855            *     @arg OB_PCROP_SELECTED: nWRP control the  read&write protection (PcROP) of respective user sectors.
+    856            *     @arg OB_PCROP_DESELECTED: nWRP control the write protection of respective user sectors.
+    857            * @retval FLASH Status: The returned value can be: 
+    858            *         FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
+    859            */
+    860          static HAL_StatusTypeDef FLASH_OB_PCROPSelectionConfig(uint16_t OB_PcROP)
+    861          {
+    862            HAL_StatusTypeDef status = HAL_OK;
+    863            uint16_t tmp1 = 0;
+    864            uint32_t tmp2 = 0;
+    865            uint8_t optiontmp = 0;
+    866            uint16_t optiontmp2 = 0;
+    867            
+    868            /* Check the parameters */
+    869            assert_param(IS_OB_PCROP_SELECT(OB_PcROP));
+    870            
+    871            /* Wait for last operation to be completed */
+    872            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    873            
+    874            /* Mask RDP Byte */
+    875            optiontmp =  (uint8_t)(*(__IO uint8_t *)(OB_BASE)); 
+    876            
+    877            /* Update Option Byte */
+    878            optiontmp2 = (uint16_t)(OB_PcROP | optiontmp); 
+    879            
+    880            
+    881            /* calculate the option byte to write */
+    882            tmp1 = (uint16_t)(~(optiontmp2 ));
+    883            tmp2 = (uint32_t)(((uint32_t)((uint32_t)(tmp1) << 16)) | ((uint32_t)optiontmp2));
+    884            
+    885            if(status == HAL_OK)
+    886            {         
+    887              /* program PCRop */
+    888              OB->RDP = tmp2;
+    889            }
+    890            
+    891            /* Wait for last operation to be completed */
+    892            status = FLASH_WaitForLastOperation(HAL_FLASH_TIMEOUT_VALUE));
+    893            
+    894            /* Return the Read protection operation Status */
+    895            return status;            
+    896          }
+    897          
+    898          /**
+    899            * @brief  Select the Protection Mode (SPRMOD).
+    900            * @note   Once SPRMOD bit is active, unprotection of a protected sector is not possible 
+    901            * @note   Read a protected sector will set RDERR Flag and write a protected sector will set WRPERR Flag
+    902            * @param  None
+    903            * @retval FLASH Status: The returned value can be: 
+    904            *         FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
+    905            */
+    906          HAL_StatusTypeDef HAL_FLASHEx_OB_SelectPCROP(void)
+    907          {
+    908            HAL_StatusTypeDef status = HAL_OK;
+    909            uint16_t tmp1 = 0;
+    910            uint32_t tmp2 = 0;
+    911            uint8_t optiontmp = 0;
+    912            uint16_t optiontmp2 = 0;
+    913            
+    914            /* Wait for last operation to be completed */
+    915            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    916            
+    917            /* Mask RDP Byte */
+    918            optiontmp =  (uint8_t)(*(__IO uint8_t *)(OB_BASE)); 
+    919            
+    920            /* Update Option Byte */
+    921            optiontmp2 = (uint16_t)(FLASH_OBR_SPRMOD | optiontmp); 
+    922            
+    923            
+    924            /* calculate the option byte to write */
+    925            tmp1 = (uint16_t)(~(optiontmp2 ));
+    926            tmp2 = (uint32_t)(((uint32_t)((uint32_t)(tmp1) << 16)) | ((uint32_t)optiontmp2));
+    927            
+    928            if(status == HAL_OK)
+    929            {         
+    930              /* program PCRop */
+    931              OB->RDP = tmp2;
+    932            }
+    933            
+    934            /* Wait for last operation to be completed */
+    935            status = FLASH_WaitForLastOperation(HAL_FLASH_TIMEOUT_VALUE));
+    936            
+    937            /* Return the Read protection operation Status */
+    938            return status;            
+    939            
+    940          }
+    941          
+    942          /**
+    943            * @brief  Deselect the Protection Mode (SPRMOD).
+    944            * @note   Once SPRMOD bit is active, unprotection of a protected sector is not possible 
+    945            * @note   Read a protected sector will set RDERR Flag and write a protected sector will set WRPERR Flag
+    946            * @param  None
+    947            * @retval FLASH Status: The returned value can be: 
+    948            *         FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
+    949            */
+    950          HAL_StatusTypeDef HAL_FLASHEx_OB_DeSelectPCROP(void)
+    951          {
+    952           HAL_StatusTypeDef status = HAL_OK;
+    953            uint16_t tmp1 = 0;
+    954            uint32_t tmp2 = 0;
+    955            uint8_t optiontmp = 0;
+    956            uint16_t optiontmp2 = 0;
+    957            
+    958            /* Wait for last operation to be completed */
+    959            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+    960            
+    961            /* Mask RDP Byte */
+    962            optiontmp =  (uint8_t)(*(__IO uint8_t *)(OB_BASE)); 
+    963            
+    964            /* Update Option Byte */
+    965            optiontmp2 = (uint16_t)(optiontmp); 
+    966            
+    967            /* calculate the option byte to write */
+    968            tmp1 = (uint16_t)(~(optiontmp2 ));
+    969            tmp2 = (uint32_t)(((uint32_t)((uint32_t)(tmp1) << 16)) | ((uint32_t)optiontmp2));
+    970            
+    971            if(status == HAL_OK)
+    972            {         
+    973              /* program PCRop */
+    974              OB->RDP = tmp2;
+    975            }
+    976            
+    977            /* Wait for last operation to be completed */
+    978            status = FLASH_WaitForLastOperation(HAL_FLASH_TIMEOUT_VALUE));
+    979            
+    980            /* Return the Read protection operation Status */
+    981            return status;     
+    982          }
+    983          
+    984          
+    985          /**
+    986            * @brief  Sets or resets the BOOT1 option bit.
+    987            * @param  OB_BOOT1: Set or Reset the BOOT1 option bit.
+    988            *          This parameter can be one of the following values:
+    989            *             @arg OB_BOOT1_RESET: BOOT1 option bit reset
+    990            *             @arg OB_BOOT1_SET: BOOT1 option bit set
+    991            * @retval None
+    992            */
+    993          static HAL_StatusTypeDef FLASH_OB_BootConfig(uint16_t OB_BOOT)
+    994          {
+    995            HAL_StatusTypeDef status = HAL_OK;
+    996            uint32_t tmp = 0, tmp1 = 0;
+    997          
+    998            /* Check the parameters */
+    999            assert_param(IS_OB_BOOT1(OB_BOOT));
+   1000          
+   1001            /* Get the User Option byte register */
+   1002            tmp1 = (FLASH->OBR & 0x007F0000) >> 16;
+   1003               
+   1004            /* Calculate the option byte to write */
+   1005            tmp = (uint32_t)~(OB_BOOT | tmp1)<<16;
+   1006            tmp |= (OB_BOOT | tmp1);
+   1007              
+   1008            /* Wait for last operation to be completed */
+   1009            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1010            
+   1011            if(status == HAL_OK)
+   1012            {  
+   1013              /* Write the BOOT Option Byte */            
+   1014              OB->USER = tmp; 
+   1015            }
+   1016            
+   1017            /* Wait for last operation to be completed */
+   1018            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1019                 
+   1020            /* Return the Option Byte program Status */
+   1021            return status;
+   1022          }
+   1023          
+   1024          /**
+   1025            * @brief  Write a Byte at a specified address in data memory.
+   1026            * @note   To correctly run this function, the HAL_FLASHEx_DATAEEPROM_Unlock() function
+   1027            *         must be called before.
+   1028            *         Call the HAL_FLASHEx_DATAEEPROM_Lock() to the data EEPROM access
+   1029            *         and Flash program erase control register access(recommended to protect 
+   1030            *         the DATA_EEPROM against possible unwanted operation).
+   1031            * @param  Address: specifies the address to be written.
+   1032            * @param  Data: specifies the data to be written.
+   1033            * @note   This function assumes that data word is already erased.
+   1034            * @retval FLASH Status: The returned value can be:
+   1035            *         FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
+   1036            */
+   1037          static HAL_StatusTypeDef FLASH_DATAEEPROM_FastProgramByte(uint32_t Address, uint8_t Data)
+   1038          {
+   1039            HAL_StatusTypeDef status = HAL_ERROR;
+   1040            
+   1041            /* Check the parameters */
+   1042            assert_param(IS_FLASH_DATA_ADDRESS(Address)); 
+   1043          
+   1044            /* Wait for last operation to be completed */
+   1045            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1046              
+   1047            if(status == HAL_OK)
+   1048            {
+   1049              /* Clear the FTDW bit */
+   1050              FLASH->PECR &= (uint32_t)(~((uint32_t)FLASH_PECR_FTDW));
+   1051          
+   1052              /* If the previous operation is completed, proceed to write the new Data */
+   1053              *(__IO uint8_t *)Address = Data;
+   1054                      
+   1055              /* Wait for last operation to be completed */
+   1056              status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1057            }
+   1058            /* Return the Write Status */
+   1059            return status;
+   1060          }
+   1061          
+   1062          /**
+   1063            * @brief  Writes a half word at a specified address in data memory.
+   1064            * @note   To correctly run this function, the HAL_FLASHEx_DATAEEPROM_Unlock() function
+   1065            *         must be called before.
+   1066            *         Call the HAL_FLASHEx_DATAEEPROM_Lock() to he data EEPROM access
+   1067            *         and Flash program erase control register access(recommended to protect 
+   1068            *         the DATA_EEPROM against possible unwanted operation).
+   1069            * @param  Address: specifies the address to be written.
+   1070            * @param  Data: specifies the data to be written.
+   1071            * @note   This function assumes that the is data word is already erased.
+   1072            * @retval FLASH Status: The returned value can be: 
+   1073            *         FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or  FLASH_TIMEOUT. 
+   1074            */
+   1075          static HAL_StatusTypeDef FLASH_DATAEEPROM_FastProgramHalfWord(uint32_t Address, uint16_t Data)
+   1076          {
+   1077            HAL_StatusTypeDef status = HAL_ERROR;
+   1078            
+   1079            /* Check the parameters */
+   1080            assert_param(IS_FLASH_DATA_ADDRESS(Address));
+   1081          
+   1082            /* Wait for last operation to be completed */
+   1083            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1084              
+   1085            if(status == HAL_OK)
+   1086            {
+   1087              /* Clear the FTDW bit */
+   1088              FLASH->PECR &= (uint32_t)(~((uint32_t)FLASH_PECR_FTDW));
+   1089          
+   1090              /* If the previous operation is completed, proceed to write the new data */
+   1091              *(__IO uint16_t *)Address = Data;
+   1092            
+   1093              /* Wait for last operation to be completed */
+   1094              status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1095            }
+   1096            /* Return the Write Status */
+   1097            return status;
+   1098          }
+   1099          
+   1100          /**
+   1101            * @brief  Programs a word at a specified address in data memory.
+   1102            * @note   To correctly run this function, the HAL_FLASHEx_DATAEEPROM_Unlock() function
+   1103            *         must be called before.
+   1104            *         Call the HAL_FLASHEx_DATAEEPROM_Lock() to the data EEPROM access
+   1105            *         and Flash program erase control register access(recommended to protect 
+   1106            *         the DATA_EEPROM against possible unwanted operation).
+   1107            * @param  Address: specifies the address to be written.
+   1108            * @param  Data: specifies the data to be written.
+   1109            * @note   This function assumes that the is data word is already erased.
+   1110            * @retval FLASH Status: The returned value can be: 
+   1111            *         FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT. 
+   1112            */
+   1113          static HAL_StatusTypeDef FLASH_DATAEEPROM_FastProgramWord(uint32_t Address, uint32_t Data)
+   1114          {
+   1115            HAL_StatusTypeDef status = HAL_ERROR;
+   1116          
+   1117            /* Check the parameters */
+   1118            assert_param(IS_FLASH_DATA_ADDRESS(Address));
+   1119            
+   1120            /* Wait for last operation to be completed */
+   1121            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1122            
+   1123            if(status == HAL_OK)
+   1124            {
+   1125              /* Clear the FTDW bit */
+   1126              FLASH->PECR &= (uint32_t)(~((uint32_t)FLASH_PECR_FTDW));
+   1127            
+   1128              /* If the previous operation is completed, proceed to program the new data */    
+   1129              *(__IO uint32_t *)Address = Data;
+   1130              
+   1131              /* Wait for last operation to be completed */
+   1132              status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));       
+   1133            }
+   1134            /* Return the Write Status */
+   1135            return status;
+   1136          }
+   1137          
+   1138          /**
+   1139            * @brief  Write a Byte at a specified address in data memory without erase.
+   1140            * @note   To correctly run this function, the HAL_FLASHEx_DATAEEPROM_Unlock() function
+   1141            *         must be called before.
+   1142            *         Call the HAL_FLASHEx_DATAEEPROM_Lock() to he data EEPROM access
+   1143            *         and Flash program erase control register access(recommended to protect 
+   1144            *         the DATA_EEPROM against possible unwanted operation).
+   1145            * @param  Address: specifies the address to be written.
+   1146            * @param  Data: specifies the data to be written.
+   1147            * @retval FLASH Status: The returned value can be: 
+   1148            *   FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT. 
+   1149            */
+   1150          static HAL_StatusTypeDef FLASH_DATAEEPROM_ProgramByte(uint32_t Address, uint8_t Data)
+   1151          {
+   1152            HAL_StatusTypeDef status = HAL_ERROR;
+   1153            
+   1154            /* Check the parameters */
+   1155            assert_param(IS_FLASH_DATA_ADDRESS(Address)); 
+   1156          
+   1157            /* Wait for last operation to be completed */
+   1158            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1159            
+   1160            if(status == HAL_OK)
+   1161            {
+   1162              /* Set the FTDW bit */
+   1163              FLASH->PECR |= (uint32_t)FLASH_PECR_FTDW;
+   1164              
+   1165              *(__IO uint8_t *)Address = Data;
+   1166              
+   1167              /* Wait for last operation to be completed */
+   1168              status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1169            }
+   1170            /* Return the Write Status */
+   1171            return status;
+   1172          }
+   1173          
+   1174          /**
+   1175            * @brief  Writes a half word at a specified address in data memory without erase.
+   1176            * @note   To correctly run this function, the HAL_FLASHEx_DATAEEPROM_Unlock function
+   1177            *         must be called before.
+   1178            *         Call the HAL_FLASHEx_DATAEEPROM_Lock() to he data EEPROM access
+   1179            *         and Flash program erase control register access(recommended to protect 
+   1180            *         the DATA_EEPROM against possible unwanted operation).
+   1181            * @param  Address: specifies the address to be written.
+   1182            * @param  Data: specifies the data to be written.
+   1183            * @retval FLASH Status: The returned value can be:
+   1184            *   FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT. 
+   1185            */
+   1186          static HAL_StatusTypeDef FLASH_DATAEEPROM_ProgramHalfWord(uint32_t Address, uint16_t Data)
+   1187          {
+   1188            HAL_StatusTypeDef status = HAL_ERROR;
+   1189            
+   1190            /* Check the parameters */
+   1191            assert_param(IS_FLASH_DATA_ADDRESS(Address));
+   1192          
+   1193            /* Wait for last operation to be completed */
+   1194            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1195            
+   1196            if(status == HAL_OK)
+   1197            {
+   1198              /* Set the FTDW bit */
+   1199              FLASH->PECR |= (uint32_t)FLASH_PECR_FTDW;
+   1200              
+   1201              *(__IO uint16_t *)Address = Data;
+   1202             
+   1203              /* Wait for last operation to be completed */
+   1204              status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1205            }
+   1206            /* Return the Write Status */
+   1207            return status;
+   1208          }
+   1209          
+   1210          /**
+   1211            * @brief  Programs a word at a specified address in data memory without erase.
+   1212            * @note   To correctly run this function, the HAL_FLASHEx_DATAEEPROM_Unlock() function
+   1213            *         must be called before.
+   1214            *         Call the HAL_FLASHEx_DATAEEPROM_Lock() to he data EEPROM access
+   1215            *         and Flash program erase control register access(recommended to protect 
+   1216            *         the DATA_EEPROM against possible unwanted operation).
+   1217            * @param  Address: specifies the address to be written.
+   1218            * @param  Data: specifies the data to be written.
+   1219            * @retval FLASH Status: The returned value can be:
+   1220            *   FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or  FLASH_TIMEOUT. 
+   1221            */
+   1222          static HAL_StatusTypeDef FLASH_DATAEEPROM_ProgramWord(uint32_t Address, uint32_t Data)
+   1223          {
+   1224            HAL_StatusTypeDef status = HAL_ERROR;
+   1225            
+   1226            /* Check the parameters */
+   1227            assert_param(IS_FLASH_DATA_ADDRESS(Address));
+   1228            
+   1229            /* Wait for last operation to be completed */
+   1230            status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1231            
+   1232            if(status == HAL_OK)
+   1233            {
+   1234              /* Set the FTDW bit */
+   1235              FLASH->PECR |= (uint32_t)FLASH_PECR_FTDW;
+   1236              
+   1237              *(__IO uint32_t *)Address = Data;
+   1238          
+   1239              /* Wait for last operation to be completed */
+   1240              status = FLASH_WaitForLastOperation((uint32_t)HAL_FLASH_TIMEOUT_VALUE));
+   1241            }
+   1242            /* Return the Write Status */
+   1243            return status;
+   1244          }
+   1245          
+   1246          
+   1247          /**
+   1248            * @}
+   1249            */   
+   1250          #endif /* HAL_FLASH_MODULE_ENABLED */
+   1251          
+   1252          /**
+   1253            * @}
+   1254            */
+   1255          
+   1256          /**
+   1257            * @}
+   1258            */
+   1259          
+   1260               
+   1261          /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+   1262          
+   1263          
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+      16   FLASH_OB_PCROPConfig
+        16   -> FLASH_WaitForLastOperation
+      16   FLASH_OB_PCROPSelectionConfig
+        16   -> FLASH_WaitForLastOperation
+      16   FLASH_OB_WRPConfig
+        16   -> FLASH_WaitForLastOperation
+       0   HAL_FLASHEx_AdvOBGetConfig
+      16   HAL_FLASHEx_AdvOBProgram
+        16   -> FLASH_OB_PCROPConfig
+        16   -> FLASH_OB_PCROPSelectionConfig
+        16   -> FLASH_WaitForLastOperation
+       8   HAL_FLASHEx_DATAEEPROM_Erase
+         8   -> FLASH_WaitForLastOperation
+       0   HAL_FLASHEx_DATAEEPROM_Lock
+      32   HAL_FLASHEx_DATAEEPROM_Program
+        32   -> FLASH_WaitForLastOperation
+       0   HAL_FLASHEx_DATAEEPROM_Unlock
+      24   HAL_FLASHEx_Erase
+        24   -> FLASH_Erase_Page
+        24   -> FLASH_WaitForLastOperation
+      16   HAL_FLASHEx_Erase_IT
+        16   -> FLASH_Erase_Page
+       8   HAL_FLASHEx_OBGetConfig
+      32   HAL_FLASHEx_OBProgram
+        32   -> FLASH_OB_WRPConfig
+        32   -> FLASH_WaitForLastOperation
+       8   HAL_FLASHEx_OB_DeSelectPCROP
+         8   -> FLASH_WaitForLastOperation
+       8   HAL_FLASHEx_OB_SelectPCROP
+         8   -> FLASH_WaitForLastOperation
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable12
+       4  ??DataTable12_1
+       4  ??DataTable12_2
+       4  ??DataTable12_3
+       4  ??DataTable12_4
+       4  ??DataTable12_5
+       4  ??DataTable6
+       4  ??DataTable7
+       4  ??DataTable7_1
+       4  ??DataTable7_2
+       4  ??DataTable8
+       4  ??DataTable9
+       4  ??DataTable9_1
+       8  ?Subroutine0
+      52  FLASH_OB_PCROPConfig
+      40  FLASH_OB_PCROPSelectionConfig
+      52  FLASH_OB_WRPConfig
+      30  HAL_FLASHEx_AdvOBGetConfig
+      98  HAL_FLASHEx_AdvOBProgram
+      22  HAL_FLASHEx_DATAEEPROM_Erase
+      14  HAL_FLASHEx_DATAEEPROM_Lock
+     214  HAL_FLASHEx_DATAEEPROM_Program
+      24  HAL_FLASHEx_DATAEEPROM_Unlock
+     104  HAL_FLASHEx_Erase
+      66  HAL_FLASHEx_Erase_IT
+      42  HAL_FLASHEx_OBGetConfig
+     246  HAL_FLASHEx_OBProgram
+      34  HAL_FLASHEx_OB_DeSelectPCROP
+      36  HAL_FLASHEx_OB_SelectPCROP
+
+ 
+ 1 134 bytes in section .text
+ 
+ 1 134 bytes of CODE memory
+
+Errors: none
+Warnings: none
